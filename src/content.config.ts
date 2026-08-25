@@ -45,9 +45,13 @@ const tripSchema = z
     // Only source of truth for a trip's identity — the `<slug>.json`
     // filename convention is for humans only, never load-bearing (id is
     // derived from this field via generateId below, not the filename).
-    slug: z.string().min(1),
+    // Used directly as the [trip] URL route segment, so restricted to
+    // URL-safe slug characters.
+    slug: z.string().min(1).regex(/^[a-z0-9-]+$/, 'slug must be lowercase letters, digits, and hyphens only'),
     // ISO 8601, e.g. "2026-10-02T11:30:00" (matches the daysLeft countdown).
-    startDate: z.string().min(1),
+    // `local: true` accepts this offset-less local-time form (and an
+    // optional trailing "Z"), while still rejecting non-ISO-8601 strings.
+    startDate: z.string().datetime({ local: true }),
     accentColor: z.string().regex(/^#[0-9A-Fa-f]{6}$/, 'accentColor must be a 6-digit hex color'),
     chapters: z.array(chapterSchema),
     packingList: z.array(packingItemSchema),
@@ -60,6 +64,10 @@ const tripSchema = z
     (trip) =>
       new Set(trip.packingList.map((item) => item.id)).size === trip.packingList.length,
     { message: 'packingList[].id must be unique within a trip', path: ['packingList'] },
+  )
+  .refine(
+    (trip) => new Set(trip.chapters.map((chapter) => chapter.order)).size === trip.chapters.length,
+    { message: 'chapters[].order must be unique within a trip', path: ['chapters'] },
   );
 
 const trips = defineCollection({

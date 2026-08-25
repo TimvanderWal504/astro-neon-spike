@@ -1,5 +1,5 @@
 <!-- bmad:context -->
-<!-- Verified 2026-08-24 — no VCS yet (git not initialized). Managed by bmad-project-context; edits inside this block are replaced on refresh. Keep anything you want preserved outside the markers. -->
+<!-- Verified 2026-08-25 — git initialized, initial commit made (story 1-1-project-scaffold-stack-setup). Managed by bmad-project-context; edits inside this block are replaced on refresh. Keep anything you want preserved outside the markers. -->
 
 ## MoapMoap — Ameland Vriendenweekend PWA
 

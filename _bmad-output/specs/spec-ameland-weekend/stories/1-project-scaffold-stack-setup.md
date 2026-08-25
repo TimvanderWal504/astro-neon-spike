@@ -2,7 +2,7 @@
 title: 'Project scaffold & stack setup'
 type: 'chore'
 created: '2026-08-24'
-status: 'in-progress'
+status: 'in-review'
 review_loop_iteration: 0
 baseline_commit: 'NO_VCS'
 context: ['{project-root}/_bmad-output/planning-artifacts/architecture/architecture-MoapMoap-2026-08-24/ARCHITECTURE-SPINE.md']
@@ -68,15 +68,15 @@ Greenfield project — no existing code. Paths below are new, matching ARCHITECT
 ## Tasks & Acceptance
 
 **Execution:**
-- [ ] `package.json`, `astro.config.mjs`, `.nvmrc` -- Scaffold Astro `^7.x.x` with the Vercel Node.js-runtime adapter and `output: 'server'` using pnpm; set `packageManager`, `engines.node` -- establishes the toolchain every later story builds on, reproducibly, and avoids the static/dynamic build-error mismatch a default `output: 'static'` would cause.
-- [ ] `.gitignore` + `git init` + initial commit -- Initialize version control -- no VCS currently exists; needed for Vercel's GitHub-based deploy flow.
-- [ ] `src/content.config.ts` -- Define the TripContent Zod schema exactly per AD-7 via the Content Layer API (`glob()` loader, `**/*.json` pattern, over `src/content/trips/`, `generateId` from `data.slug`), with `.refine()` uniqueness on `chapters[].id`/`packingList[].id` -- the data contract stories 2, 3, and 10 build against; the pre-Astro-5 `src/content/config.ts` path silently no-ops under Astro 7, and deriving id from `slug` prevents filename/field disagreement.
-- [ ] `src/lib/db.ts` -- Neon HTTP client behind a memoized `getSql()`, lazily reading `DATABASE_URL` on first call (never at module scope) -- the single DB entry point stories 3, 5, 8, 9 reuse; makes the "boots with no `DATABASE_URL`" AC actually hold.
-- [ ] `migrations/README.md` -- Document the migration convention: numbered SQL files, applied via a future `Pool`/`pg`-based runner (never the HTTP driver, which can't run transactional DDL), each file + its `_migrations` ledger insert in one transaction, plus the manual `DATABASE_URL=<prod> pnpm migrate` prod-apply step -- stories 3, 5, 8, 9 each add a table/column and need one shared convention to follow; the runner implementation itself is deferred (`deferred-work.md`).
-- [ ] `.env.example` -- List every env var with purpose, consuming story, and the exact command to generate it -- prevents later stories from inventing their own var names or generation method.
-- [ ] `typecheck` script wired to `astro check` (+ `@astrojs/check`/`typescript` devDeps) -- Verifies the typed data contract this story exists to establish actually typechecks.
-- [ ] Stub files for `src/pages/[trip]/*.astro`, `src/pages/api/**/*.ts`, `src/lib/push.ts`, `public/manifest.json` (minimal valid, unlinked) -- Files matching the Structural Seed, with endpoints under `src/pages/api/` (Astro only routes server endpoints from `src/pages/`), `prerender = true` on `index.astro` and `prerender = false` on `admin.astro` + every API route -- gives every later story a fixed, pre-agreed, actually-routable, build-clean location instead of deciding layout ad hoc. `public/sw.js` is explicitly excluded (see Never).
-- [ ] `SETUP.md` -- Numbered manual guide: create the Vercel project, import the repo, add Neon via Vercel Marketplace (dev+prod branches), pin Vercel's Node version to `.nvmrc`, generate + populate real secret values -- cloud account/project creation needs interactive login and can't be automated.
+- [x] `package.json`, `astro.config.mjs`, `.nvmrc` -- Scaffold Astro `^7.x.x` with the Vercel Node.js-runtime adapter and `output: 'server'` using pnpm; set `packageManager`, `engines.node` -- establishes the toolchain every later story builds on, reproducibly, and avoids the static/dynamic build-error mismatch a default `output: 'static'` would cause.
+- [x] `.gitignore` + `git init` + initial commit -- Initialize version control -- no VCS currently exists; needed for Vercel's GitHub-based deploy flow.
+- [x] `src/content.config.ts` -- Define the TripContent Zod schema exactly per AD-7 via the Content Layer API (`glob()` loader, `**/*.json` pattern, over `src/content/trips/`, `generateId` from `data.slug`), with `.refine()` uniqueness on `chapters[].id`/`packingList[].id` -- the data contract stories 2, 3, and 10 build against; the pre-Astro-5 `src/content/config.ts` path silently no-ops under Astro 7, and deriving id from `slug` prevents filename/field disagreement.
+- [x] `src/lib/db.ts` -- Neon HTTP client behind a memoized `getSql()`, lazily reading `DATABASE_URL` on first call (never at module scope) -- the single DB entry point stories 3, 5, 8, 9 reuse; makes the "boots with no `DATABASE_URL`" AC actually hold.
+- [x] `migrations/README.md` -- Document the migration convention: numbered SQL files, applied via a future `Pool`/`pg`-based runner (never the HTTP driver, which can't run transactional DDL), each file + its `_migrations` ledger insert in one transaction, plus the manual `DATABASE_URL=<prod> pnpm migrate` prod-apply step -- stories 3, 5, 8, 9 each add a table/column and need one shared convention to follow; the runner implementation itself is deferred (`deferred-work.md`).
+- [x] `.env.example` -- List every env var with purpose, consuming story, and the exact command to generate it -- prevents later stories from inventing their own var names or generation method.
+- [x] `typecheck` script wired to `astro check` (+ `@astrojs/check`/`typescript` devDeps) -- Verifies the typed data contract this story exists to establish actually typechecks.
+- [x] Stub files for `src/pages/[trip]/*.astro`, `src/pages/api/**/*.ts`, `src/lib/push.ts`, `public/manifest.json` (minimal valid, unlinked) -- Files matching the Structural Seed, with endpoints under `src/pages/api/` (Astro only routes server endpoints from `src/pages/`), `prerender = true` on `index.astro` and `prerender = false` on `admin.astro` + every API route -- gives every later story a fixed, pre-agreed, actually-routable, build-clean location instead of deciding layout ad hoc. `public/sw.js` is explicitly excluded (see Never).
+- [x] `SETUP.md` -- Numbered manual guide: create the Vercel project, import the repo, add Neon via Vercel Marketplace (dev+prod branches), pin Vercel's Node version to `.nvmrc`, generate + populate real secret values -- cloud account/project creation needs interactive login and can't be automated.
 
 **Acceptance Criteria:**
 - Given a fresh clone with `DATABASE_URL` unset, when `pnpm dev` runs, then the dev server starts without throwing, because `src/lib/db.ts` never touches `process.env.DATABASE_URL` at module scope — only inside `getSql()`, called lazily on first use.
