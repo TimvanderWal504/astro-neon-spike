@@ -30,7 +30,7 @@ migrations/
 
 ## Applying migrations
 
-**Local (dev branch):** run the (future) migration script against the dev
+**Local (dev branch):** run the migration script against the dev
 `DATABASE_URL` from your local `.env`:
 
 ```
@@ -48,11 +48,11 @@ DATABASE_URL=<prod-connection-string> pnpm migrate
 
 ## Status
 
-The runner script (`scripts/migrate.mjs`) is **not implemented yet** — this
-story only documents the convention. See
-`_bmad-output/implementation-artifacts/deferred-work.md` for the deferred
-implementation entry. It must land before whichever story first needs a real
-table (stories 3, 5, 8, or 9 — whichever lands first).
+The runner script (`scripts/migrate.mjs`) is **implemented** (story 3): a
+`pg` `Pool`-based runner that bootstraps `_migrations`, applies un-applied
+files in numeric order with DDL + ledger insert in one transaction, and is
+safe to re-run (a clean second run applies zero migrations). `migrations/0001_init.sql`
+(`chapter_unlocks`) is the first migration applied.
 
 ## Adding a new migration
 
