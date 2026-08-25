@@ -2,7 +2,7 @@
 title: 'Project scaffold & stack setup'
 type: 'chore'
 created: '2026-08-24'
-status: 'in-review'
+status: 'done'
 review_loop_iteration: 0
 baseline_commit: 'NO_VCS'
 context: ['{project-root}/_bmad-output/planning-artifacts/architecture/architecture-MoapMoap-2026-08-24/ARCHITECTURE-SPINE.md']
@@ -113,3 +113,49 @@ pnpm's `packageManager` field is the mechanism Vercel actually honors for enforc
 
 ## Spec Change Log
 
+## Suggested Review Order
+
+**Data contract (AD-7)**
+
+- Entry point: the TripContent schema every later story builds against, with the id-derivation and three uniqueness refines added by review.
+  [`content.config.ts:43`](../../../../src/content.config.ts#L43)
+
+- Loader ties collection identity to the `slug` field, not the filename — the fix for a routing/data-integrity blocker found during spec review.
+  [`content.config.ts:73`](../../../../src/content.config.ts#L73)
+
+**Build/output mode (AD-1)**
+
+- `output: 'server'` is the mechanism that makes the dynamic API stubs buildable at all under Astro 5+'s static default.
+  [`astro.config.mjs:7`](../../../../astro.config.mjs#L7)
+
+- Static shell opts back into prerendering with `getStaticPaths()`, the other half of the build-fixing pair.
+  [`[trip]/index.astro:7`](../../../../src/pages/[trip]/index.astro#L7)
+
+- Dynamic admin route stays server-rendered by explicit, redundant declaration — defensive against a future output-mode change.
+  [`[trip]/admin.astro:4`](../../../../src/pages/[trip]/admin.astro#L4)
+
+**DB client**
+
+- Memoized, lazily-initialized client — the reason `pnpm dev` boots with `DATABASE_URL` unset; whitespace-only guard added by review.
+  [`db.ts:11`](../../../../src/lib/db.ts#L11)
+
+**Migration convention (documented, not implemented)**
+
+- Convention is written down now so stories 3/5/8/9 don't each invent one; the runner itself is deferred work.
+  [`migrations/README.md:1`](../../../../migrations/README.md#L1)
+
+**Stub routes**
+
+- Representative API stub: `prerender = false`, `501` in the project's `{ok, error}` envelope — same shape across all four.
+  [`api/trip/[slug].ts:5`](../../../../src/pages/api/trip/[slug].ts#L5)
+
+**Peripherals**
+
+- Toolchain pin: pnpm via `packageManager`, exact Node via `engines`, caret-ranged Astro relying on the lockfile for reproducibility.
+  [`package.json:1`](../../../../package.json#L1)
+
+- Manual cloud-provisioning guide — the human-only steps this story deliberately can't automate.
+  [`SETUP.md:1`](../../../../SETUP.md#L1)
+
+- Every future env var documented with purpose and generation command up front.
+  [`.env.example:1`](../../../../.env.example#L1)

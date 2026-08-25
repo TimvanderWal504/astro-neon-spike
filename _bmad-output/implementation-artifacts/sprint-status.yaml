@@ -55,7 +55,7 @@ story_location: "_bmad-output/specs/spec-ameland-weekend/stories"
 # leaving development_status stale.
 development_status:
   epic-1: in-progress
-  1-1-project-scaffold-stack-setup: in-progress
+  1-1-project-scaffold-stack-setup: review
   1-2-content-config-data-model-ameland-content: backlog
   1-3-public-trip-page-static-shell-gating-redaction: backlog
   1-4-admin-auth: backlog
