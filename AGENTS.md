@@ -3,7 +3,7 @@
 
 ## MoapMoap — Ameland Vriendenweekend PWA
 
-A secret, progressive-reveal trip site for 7 friends (2–4 Oct 2026), built as a reusable content-config template for future trips. Astro 7.x + Vercel Functions (Node runtime) + Neon Postgres: a static shell that fetches live, gating-redacted content. No code exists yet — `SPEC.md` and `ARCHITECTURE-SPINE.md` are the contract; `BUILD_BRIEF.md` and the `.dc.html` mockups are the locked visual/interaction source of truth.
+A secret, progressive-reveal trip site for 7 friends (2–4 Oct 2026), built as a reusable content-config template for future trips. Astro 7.x + Vercel Functions (Node runtime) + Neon Postgres: a static shell that fetches live, gating-redacted content. Story 1 (scaffold) is done — `SPEC.md` and `ARCHITECTURE-SPINE.md` are the contract; `BUILD_BRIEF.md` and the `.dc.html` mockups are the locked visual/interaction source of truth.
 
 ## Policy
 
@@ -21,6 +21,13 @@ A secret, progressive-reveal trip site for 7 friends (2–4 Oct 2026), built as 
 - `pnpm build` — production build via the `@astrojs/vercel` Node-runtime adapter.
 - `pnpm typecheck` — runs `astro check` against the TripContent schema (`src/content.config.ts`) and all stub files.
 - `DATABASE_URL` points at a Neon branch (see `.env.example` + `SETUP.md`); no migration runner exists yet (`migrations/README.md` documents the convention, implementation deferred — see `_bmad-output/implementation-artifacts/deferred-work.md`).
+
+## Vercel plugin
+
+The `vercel/vercel-plugin` Claude Code plugin is installed and has live, authenticated access to the real Vercel account (confirmed: `list_teams`/`list_projects` return the actual `astro-neon-spike` project under team `hobby-dd78`, `prj_6K6SK52Isov3qNkwyQgQjMWgq95y`). This changes a premise `SETUP.md` and story 1's spec were written under — that cloud provisioning is 100% human-only because agents can't do interactive browser logins:
+- Agents in a session with this plugin can now read deployments/logs/env vars directly (`get_deployment`, `get_runtime_logs`, `get_runtime_errors`, `list_deployments`) and there are skills for deploying (`vercel:deploy`), env var sync (`vercel:env`), and Marketplace integrations (`vercel:marketplace`, `vercel:bootstrap`) — i.e. some of `SETUP.md`'s remaining manual steps (Neon integration, secret population) may now be agent-assistable, not purely manual.
+- Not yet verified end-to-end: whether `vercel:marketplace`/Marketplace-integration tools can actually complete the Neon integration (step 3) autonomously, or still bottleneck on a one-time interactive consent. Confirm before assuming full automation.
+- This capability is tied to the plugin being installed in the active session — don't assume it's present without checking (e.g. `list_teams`) first, since a fresh/different session may not have it.
 
 ## Known pitfalls
 

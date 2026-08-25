@@ -5,6 +5,12 @@ login, cloud resource creation). Nothing in this file is automated by the
 codebase — see `_bmad-output/specs/spec-ameland-weekend/stories/1-project-scaffold-stack-setup.md`
 for why.
 
+> **Update:** the `vercel/vercel-plugin` Claude Code plugin is now installed
+> and has live, authenticated Vercel account access (see `AGENTS.md` §
+> "Vercel plugin"). Steps 3–5 below may be completable by an agent instead of
+> by hand in a session that has this plugin — not yet verified end-to-end,
+> so these manual instructions remain the source of truth until confirmed.
+
 ## 1. Confirm the local git history is pushed
 
 This scaffold already ran `git init` and made an initial commit locally (see
