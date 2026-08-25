@@ -1,0 +1,120 @@
+<!doctype html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap">
+  <style>
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      background: #0a0d0c;
+      color: #f4f1ea;
+      font-family: 'Space Grotesk', system-ui, -apple-system, sans-serif;
+      -webkit-font-smoothing: antialiased;
+    }
+    .mono { font-family: 'JetBrains Mono', ui-monospace, monospace; }
+  </style>
+</helmet>
+
+<div style="min-height:100dvh; background:#0a0d0c; padding:32px 24px 80px;">
+
+  <div style="max-width:640px; margin:0 auto;">
+
+    <div style="display:flex; align-items:center; gap:10px; margin-bottom:4px;">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="{{accent}}" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2l2.4 7.2H22l-6 4.4 2.4 7.2L12 16.4 5.6 20.8 8 13.6l-6-4.4h7.6L12 2z"/></svg>
+      <div class="mono" style="font-size:11px; letter-spacing:0.16em; text-transform:uppercase; color:#9a9a91;">Organizer</div>
+    </div>
+    <h1 style="font-size:28px; font-weight:600; margin:6px 0 4px;">Wat je gasten (nog niet) zien</h1>
+    <p style="color:#9a9a91; font-size:14px; margin:0 0 28px;">Zelfde data als de publieke pagina, alleen jij ziet ook wat nog op slot staat.</p>
+
+    <!-- REVIEW GATE BAR -->
+    <div style="display:flex; align-items:center; gap:12px; padding:16px 18px; border-radius:14px; background:rgba(227,166,74,0.08); border:1px solid rgba(227,166,74,0.25); margin-bottom:28px;">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="{{accent}}" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" style="flex:0 0 auto;"><circle cx="12" cy="12" r="9"/><path d="M12 8v4l3 2"/></svg>
+      <div style="font-size:13px; line-height:1.5;">
+        <strong>Compagnon-review gepland: 14 september.</strong> Pas na akkoord gaat de link naar de rest van de groep.
+      </div>
+    </div>
+
+    <!-- CONTENT ROWS -->
+    <sc-for list="{{contentItems}}" as="item" hint-placeholder-count="6">
+      <div style="border:1px solid rgba(244,241,234,0.09); border-radius:16px; padding:18px 20px; margin-bottom:12px; background:rgba(244,241,234,0.02);">
+        <div style="display:flex; align-items:flex-start; justify-content:space-between; gap:16px;">
+          <div>
+            <div style="display:flex; align-items:center; gap:8px; margin-bottom:4px;">
+              <span style="font-weight:600; font-size:15px;">{{item.title}}</span>
+              <span style="{{item.tagStyle}} font-size:10px; padding:2px 8px; border-radius:999px; text-transform:uppercase; letter-spacing:0.08em;">{{item.tag}}</span>
+            </div>
+            <div style="color:#9a9a91; font-size:13px;">{{item.meta}}</div>
+          </div>
+
+          <sc-if value="{{item.toggleable}}" hint-placeholder-val="{{true}}">
+            <button onClick="{{item.toggle}}" style="{{item.switchTrackStyle}} flex:0 0 auto; width:44px; height:26px; border-radius:999px; border:none; position:relative; cursor:pointer; padding:0;">
+              <span style="{{item.switchThumbStyle}} position:absolute; top:3px; width:20px; height:20px; border-radius:999px; background:#0a0d0c; transition:left 0.2s ease;"></span>
+            </button>
+          </sc-if>
+          <sc-if value="{{item.alwaysOn}}" hint-placeholder-val="{{false}}">
+            <div class="mono" style="font-size:10px; color:#9a9a91; padding:6px 10px; border:1px solid rgba(244,241,234,0.12); border-radius:999px;">altijd aan</div>
+          </sc-if>
+        </div>
+      </div>
+    </sc-for>
+
+  </div>
+</div>
+</x-dc>
+<script data-dc-script data-props='{"accent":{"editor":"color","default":"#E3A64A"}}'>
+class Component extends DCLogic {
+  state = {
+    unlocked: {
+      bestemming: true,
+      vrijdag: true,
+      blokarten: true,
+      brouwerij: true,
+      zondag: false,
+    },
+  };
+
+  toggleItem(id) {
+    this.setState({ unlocked: { ...this.state.unlocked, [id]: !this.state.unlocked[id] } });
+  }
+
+  renderVals() {
+    const accent = this.props.accent ?? '#E3A64A';
+
+    const rows = [
+      { id: 'bestemming', title: 'Bestemming', meta: 'Cinematisch &middot; Ameland', toggleable: true },
+      { id: 'vrijdag', title: 'Vrijdag &middot; onderweg', meta: 'Knap &middot; 11:30 verzamelen, boot 14:45', toggleable: true },
+      { id: 'blokarten', title: 'Blokarten', meta: 'Cinematisch &middot; zaterdag 09:15, Nes', toggleable: true },
+      { id: 'brouwerij', title: 'Brouwerij', meta: 'Cinematisch &middot; zaterdag 12:30, Ballum', toggleable: true },
+      { id: 'zondag', title: 'Zondag &middot; ?', meta: 'Knap &middot; wadlopen onbevestigd, invullen voor 14 sep', toggleable: true },
+      { id: 'paklijst', title: 'Paklijst', meta: 'Utility &middot; zichtbaar vanaf dag &eacute;&eacute;n', toggleable: false, alwaysOnRow: true },
+    ];
+
+    const contentItems = rows.map((row) => {
+      const unlocked = row.toggleable ? !!this.state.unlocked[row.id] : true;
+      return {
+        ...row,
+        alwaysOn: !row.toggleable,
+        tag: row.toggleable ? (unlocked ? 'Onthuld' : 'Op slot') : 'Altijd zichtbaar',
+        tagStyle: !row.toggleable
+          ? `background:rgba(244,241,234,0.08); color:#9a9a91;`
+          : unlocked
+            ? `background:${accent}22; color:${accent};`
+            : `background:rgba(244,241,234,0.06); color:#9a9a91;`,
+        toggle: () => this.toggleItem(row.id),
+        switchTrackStyle: unlocked ? `background:${accent};` : `background:rgba(244,241,234,0.15);`,
+        switchThumbStyle: unlocked ? `left:21px;` : `left:3px;`,
+      };
+    });
+
+    return { accent, contentItems };
+  }
+}
+</script>
+</body>
+</html>

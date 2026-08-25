@@ -1,0 +1,28 @@
+---
+import { getCollection } from 'astro:content';
+
+// Static shell per AD-1: the page structure is prerendered; a chapter's real
+// content is fetched live and merged client-side (AD-2). Story 3 implements
+// the actual shell/fetch/gating logic.
+export const prerender = true;
+
+// Required because this dynamic route is prerendered (AD-1): Astro needs to
+// know which [trip] paths exist at build time. Empty until story 2 adds a
+// real content entry under src/content/trips/.
+export async function getStaticPaths() {
+  const trips = await getCollection('trips');
+  return trips.map((trip) => ({
+    params: { trip: trip.id },
+  }));
+}
+---
+<html lang="nl">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Ameland Vriendenweekend</title>
+  </head>
+  <body>
+    <!-- TODO(story 3): public trip page shell. -->
+  </body>
+</html>

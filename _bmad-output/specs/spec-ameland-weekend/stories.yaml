@@ -1,0 +1,151 @@
+- id: "1"
+  title: Project scaffold & stack setup
+  description: >-
+    Initialize Astro 7.x, set up the Vercel project with Neon Postgres
+    (Marketplace integration, dev/prod branches per AD-9), and define
+    src/content/config.ts. Establishes the DB migration convention and
+    documents every env var the project will need in .env.example.
+  spec_checkpoint: true
+  done_checkpoint: true
+  invoke_dev_with: >-
+    Pick and document one migration convention now (plain SQL files applied
+    via a small script, or a minimal migration tool) — stories 3, 5, 8, and 9
+    each add their own table/column and must follow it rather than
+    improvising one each. Document the local dev workflow for running Vercel
+    Functions against the Neon dev branch, and list every env var the whole
+    project will need in .env.example (admin passcode, VAPID keys,
+    cookie-signing secret, DB URL) even though most aren't consumed yet.
+
+- id: "2"
+  title: Content-config data model + Ameland content
+  description: >-
+    Author the real Ameland trip as a TripContent entry per AD-7's schema:
+    all 5 chapters (bestemming, vrijdag, blokarten, brouwerij, zondag),
+    packing list, accent color, and svgVariant per chapter.
+  spec_checkpoint: true
+  done_checkpoint: true
+  invoke_dev_with: >-
+    This is the reference example CAP-7's reusability claim gets checked
+    against in story 10 — keep everything specific to this trip (copy,
+    dates, slug) cleanly separated from anything that should read as
+    reusable schema/code.
+
+- id: "3"
+  title: "Public trip page: static shell + gating/redaction"
+  description: >-
+    Build GET /api/trip/[slug] with server-side redaction of locked chapters
+    (AD-2), the static shell rendering placeholders for locked chapters, the
+    ambient viewfinder base layer, and the daysLeft countdown.
+  spec_checkpoint: true
+  done_checkpoint: true
+  invoke_dev_with: >-
+    Unlocked chapters render at full opacity with no motion in this story —
+    that's correct, not broken; the reveal choreography is deliberately
+    deferred to story 6. Only build the ambient scan-loop mode of the
+    viewfinder layer here; the Bestemming-triggered sequence belongs to
+    story 6. Redaction must happen server-side in the API response, never
+    via CSS/client-side hiding.
+
+- id: "4"
+  title: Admin auth
+  description: >-
+    Build a discoverable /admin route (guests/organizer have no other way to
+    find it) with passcode entry, a signed 90-day cookie, and per-IP rate
+    limiting (max 5 attempts/15 min, AD-5).
+  spec_checkpoint: true
+  done_checkpoint: true
+  invoke_dev_with: >-
+    No mockup exists for this screen — keep it minimal and on-brand using
+    BUILD_BRIEF's existing design tokens (colors/fonts/spacing), don't
+    invent new visual language. Fully testable standalone: log in, get the
+    cookie, get 429'd after 5 failed attempts — no dependency on chapters
+    or push.
+
+- id: "5"
+  title: Admin unlock toggles
+  description: >-
+    Build the admin view's chapter rows and per-chapter unlock toggle
+    (admin/toggle.ts), writing only the unlocked flag (no push fanout yet) —
+    matches Admin.dc.html's row layout and always-on packing-list row.
+  spec_checkpoint: true
+  done_checkpoint: true
+  invoke_dev_with: >-
+    Do not include the "Compagnon-review gepland" banner from Admin.dc.html
+    — that was mockup-only planning scaffolding for Tim, drop it entirely
+    from the real build. admin/toggle.ts is the route story 8 extends with
+    push fanout in the same transaction — keep the write logic isolated
+    enough that adding a fanout call later doesn't require restructuring it.
+
+- id: "6"
+  title: Tiered animation system port
+  description: >-
+    Port the reveal/cinematic-reveal CSS system, staggered delays, the
+    Bestemming-triggered viewfinder sequence, the replay ("Bekijk opnieuw")
+    mechanism, and the prefers-reduced-motion fallback from Main.dc.html,
+    unchanged.
+  spec_checkpoint: true
+  done_checkpoint: true
+  invoke_dev_with: >-
+    Test by using story 5's admin toggle to actually unlock a cinematic
+    chapter (Bestemming/Blokarten/Brouwerij) and watch it animate for real —
+    don't fake it by hand-editing the DB or eyeballing CSS in isolation.
+    Reproduce the animation system unchanged; this is not a redesign
+    opportunity.
+
+- id: "7"
+  title: PWA installability
+  description: >-
+    Hand-written web app manifest and service worker; per-platform install
+    instructions reproducing Main.dc.html's manual Android/iOS toggle UI.
+  spec_checkpoint: true
+  done_checkpoint: true
+  invoke_dev_with: >-
+    Reproduce the manual pickAndroid/pickIOS toggle exactly as in the
+    mockup — do not add UA-sniffing or beforeinstallprompt-based
+    auto-detection; beforeinstallprompt doesn't exist on iOS anyway, so
+    auto-detect would silently become Android-only logic in disguise.
+
+- id: "8"
+  title: Push notifications
+  description: >-
+    Build push/subscribe, PushForge-based fanout wired into story 5's
+    admin/toggle.ts (same transaction per AD-4), the service worker's
+    push/notificationclick handling plus postMessage broadcast to open tabs
+    for re-fetch, and subscription cleanup on 404/410.
+  spec_checkpoint: true
+  done_checkpoint: true
+  invoke_dev_with: >-
+    Wire fanout into the existing admin/toggle.ts from story 5 rather than
+    creating a separate route — AD-4 requires the unlock-write and the
+    push-fanout to happen in one server transaction. Also handle
+    push-permission-denied and already-installed states in the UI
+    explicitly, don't leave them silent.
+
+- id: "9"
+  title: Shared packing list
+  description: >-
+    Build packing/check as an explicit set-state ({id, checked}), never a
+    bare toggle (AD-6), with shared rendering always visible independent of
+    any chapter's lock state.
+  spec_checkpoint: true
+  done_checkpoint: true
+  invoke_dev_with: >-
+    packing/check takes a desired end-state, never a bare toggle — the
+    server performs a plain write, not a read-modify-write, so concurrent
+    edits from different friends resolve last-write-wins with no
+    lost-update race.
+
+- id: "10"
+  title: Reusable-template validation
+  description: >-
+    Author a second dummy trip content entry and confirm zero code is
+    touched outside content (CAP-7). Closes with a final end-to-end smoke
+    test: real device install, admin toggle, real push received, packing
+    list sync.
+  spec_checkpoint: true
+  done_checkpoint: true
+  invoke_dev_with: >-
+    The smoke test is the acceptance gate for the whole build, not just this
+    story — run it on a real installed device, not a desktop browser
+    simulation, before calling anything done ahead of the 2026-09-14
+    checkpoint.

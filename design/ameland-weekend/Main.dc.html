@@ -1,0 +1,709 @@
+<!doctype html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600&family=Bodoni+Moda:ital,opsz,wght@0,6..96,400;0,6..96,500;0,6..96,600;0,6..96,700;1,6..96,400;1,6..96,500&display=swap">
+  <style>
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      background: #0a0d0c;
+      color: #f4f1ea;
+      font-family: 'Space Grotesk', system-ui, -apple-system, sans-serif;
+      -webkit-font-smoothing: antialiased;
+    }
+    a { color: inherit; text-decoration: none; }
+    a:hover { opacity: 0.8; }
+    .mono { font-family: 'JetBrains Mono', ui-monospace, monospace; }
+    .display {
+      font-family: 'Bodoni Moda', Georgia, serif;
+      font-optical-sizing: auto;
+      font-weight: 500;
+    }
+    .display em, .display i { font-style: italic; font-weight: 500; }
+    @keyframes riseIn {
+      from { opacity: 0; transform: translateY(28px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+    .rise { animation: riseIn 900ms cubic-bezier(0.16,1,0.3,1) both; }
+    .rise-1 { animation-delay: 60ms; }
+    .rise-2 { animation-delay: 160ms; }
+    .rise-3 { animation-delay: 260ms; }
+    .reveal {
+      opacity: 0;
+      transform: translateY(32px);
+      transition: opacity 700ms cubic-bezier(0.16,1,0.3,1), transform 700ms cubic-bezier(0.16,1,0.3,1);
+    }
+    .reveal.is-visible { opacity: 1; transform: translateY(0); }
+    .reveal-fade {
+      opacity: 0;
+      transition: opacity 900ms cubic-bezier(0.16,1,0.3,1);
+    }
+    .reveal-fade.is-visible { opacity: 1; }
+    .cinematic-reveal {
+      opacity: 0;
+      transform: scale(1.06);
+      filter: blur(14px);
+      transition: opacity 1100ms cubic-bezier(0.16,1,0.3,1), transform 1300ms cubic-bezier(0.16,1,0.3,1), filter 1100ms cubic-bezier(0.16,1,0.3,1);
+    }
+    .cinematic-reveal.is-visible { opacity: 1; transform: scale(1); filter: blur(0); }
+    @keyframes revealRouteDraw { to { stroke-dashoffset: 0; } }
+    @keyframes revealBoatTravel {
+      from { transform: translate(120px,650px); }
+      to { transform: translate(505px,270px); }
+    }
+    @keyframes revealIslandIn {
+      from { opacity: 0; transform: scale(0.92); }
+      to { opacity: 1; transform: scale(1); }
+    }
+    #bestemming .reveal-route { stroke-dasharray: 620; stroke-dashoffset: 620; }
+    #bestemming.is-visible .reveal-route { animation: revealRouteDraw 1800ms cubic-bezier(0.16,1,0.3,1) 4100ms forwards; }
+    #bestemming .reveal-boat { transform: translate(120px,650px); }
+    #bestemming.is-visible .reveal-boat { animation: revealBoatTravel 1800ms cubic-bezier(0.45,0,0.55,1) 4100ms forwards; }
+    #bestemming .reveal-island { opacity: 0; }
+    #bestemming.is-visible .reveal-island { animation: revealIslandIn 1000ms cubic-bezier(0.16,1,0.3,1) 5500ms forwards; }
+
+    /* bestemming's title/copy/cta arrive after the fixed viewfinder layer (see below) has filled the screen, hopped between countries, locked and dived through */
+    #bestemming.is-visible .ct-eyebrow { transition-delay: 3700ms; }
+    #bestemming.is-visible .ct-title { transition-delay: 3900ms; }
+    #bestemming.is-visible .ct-copy { transition-delay: 4200ms; }
+    #bestemming.is-visible .ct-cta { transition-delay: 4400ms; }
+
+    /* staggered delay modifiers for individually-cascading elements (chips, timeline rows) */
+    .reveal-d1 { transition-delay: 90ms; }
+    .reveal-d2 { transition-delay: 180ms; }
+    .reveal-d3 { transition-delay: 270ms; }
+    .reveal-d4 { transition-delay: 360ms; }
+    .reveal-d5 { transition-delay: 450ms; }
+
+    /* cinematic text choreography - each piece moves on its own beat instead of one blob fade */
+    .ct-eyebrow {
+      opacity: 0;
+      transform: translateX(-18px);
+      transition: opacity 700ms cubic-bezier(0.16,1,0.3,1) 100ms, transform 700ms cubic-bezier(0.16,1,0.3,1) 100ms;
+    }
+    .cinematic-reveal.is-visible .ct-eyebrow { opacity: 1; transform: translateX(0); }
+    .ct-title {
+      opacity: 0;
+      transform: translateY(34px) scale(0.98);
+      transition: opacity 900ms cubic-bezier(0.16,1,0.3,1) 260ms, transform 900ms cubic-bezier(0.16,1,0.3,1) 260ms;
+    }
+    .cinematic-reveal.is-visible .ct-title { opacity: 1; transform: translateY(0) scale(1); }
+    .ct-copy {
+      opacity: 0;
+      transform: translateY(20px);
+      transition: opacity 800ms cubic-bezier(0.16,1,0.3,1) 520ms, transform 800ms cubic-bezier(0.16,1,0.3,1) 520ms;
+    }
+    .cinematic-reveal.is-visible .ct-copy { opacity: 1; transform: translateY(0); }
+    .ct-cta {
+      opacity: 0;
+      transform: translateY(16px);
+      transition: opacity 700ms cubic-bezier(0.16,1,0.3,1) 680ms, transform 700ms cubic-bezier(0.16,1,0.3,1) 680ms;
+    }
+    .cinematic-reveal.is-visible .ct-cta { opacity: 1; transform: translateY(0); }
+
+    /* blokarten - rig drives in, mast/sail draw, wheels drop in */
+    @keyframes revealRigIn { to { opacity: 0.7; transform: translateX(0); } }
+    #blokarten .reveal-rig { opacity: 0; transform: translateX(-140px); }
+    #blokarten.is-visible .reveal-rig { animation: revealRigIn 1300ms cubic-bezier(0.16,1,0.3,1) 200ms forwards; }
+    #blokarten .reveal-mast, #blokarten .reveal-sail { stroke-dasharray: 280; stroke-dashoffset: 280; }
+    #blokarten.is-visible .reveal-mast, #blokarten.is-visible .reveal-sail { animation: revealRouteDraw 800ms cubic-bezier(0.16,1,0.3,1) 700ms forwards; }
+    @keyframes revealWheelIn { to { opacity: 1; transform: scale(1); } }
+    #blokarten .reveal-wheel { opacity: 0; transform: scale(0); transform-box: fill-box; transform-origin: center; }
+    #blokarten.is-visible .reveal-wheel-1 { animation: revealWheelIn 480ms cubic-bezier(0.34,1.56,0.64,1) 1020ms forwards; }
+    #blokarten.is-visible .reveal-wheel-2 { animation: revealWheelIn 480ms cubic-bezier(0.34,1.56,0.64,1) 1090ms forwards; }
+    #blokarten.is-visible .reveal-wheel-3 { animation: revealWheelIn 480ms cubic-bezier(0.34,1.56,0.64,1) 1160ms forwards; }
+    #blokarten .reveal-track { stroke-dasharray: 1000; stroke-dashoffset: 1000; }
+    #blokarten.is-visible .reveal-track { animation: revealRouteDraw 1500ms cubic-bezier(0.16,1,0.3,1) 100ms forwards; }
+
+    /* brouwerij - kettle settles, steam draws upward, hop turns in, bubbles rise */
+    @keyframes revealKettleIn { to { opacity: 0.6; transform: scale(1); } }
+    #brouwerij .reveal-kettle { opacity: 0; transform: scale(0.9); transform-box: fill-box; transform-origin: center; }
+    #brouwerij.is-visible .reveal-kettle { animation: revealKettleIn 900ms cubic-bezier(0.16,1,0.3,1) 200ms forwards; }
+    #brouwerij .reveal-steam { stroke-dasharray: 150; stroke-dashoffset: 150; }
+    #brouwerij.is-visible .reveal-steam-1 { animation: revealRouteDraw 1100ms cubic-bezier(0.16,1,0.3,1) 900ms forwards; }
+    #brouwerij.is-visible .reveal-steam-2 { animation: revealRouteDraw 1100ms cubic-bezier(0.16,1,0.3,1) 1050ms forwards; }
+    #brouwerij.is-visible .reveal-steam-3 { animation: revealRouteDraw 1100ms cubic-bezier(0.16,1,0.3,1) 1200ms forwards; }
+    @keyframes revealHopIn { to { opacity: 0.32; transform: rotate(0) scale(1); } }
+    #brouwerij .reveal-hop { opacity: 0; transform: rotate(-10deg) scale(0.92); transform-box: fill-box; transform-origin: center; }
+    #brouwerij.is-visible .reveal-hop { animation: revealHopIn 900ms cubic-bezier(0.16,1,0.3,1) 500ms forwards; }
+    @keyframes revealBubble1In { to { opacity: 0.28; transform: translateY(0); } }
+    @keyframes revealBubble2In { to { opacity: 0.22; transform: translateY(0); } }
+    @keyframes revealBubble3In { to { opacity: 0.18; transform: translateY(0); } }
+    #brouwerij .reveal-bubble { opacity: 0; transform: translateY(18px); transform-box: fill-box; }
+    #brouwerij.is-visible .reveal-bubble-1 { animation: revealBubble1In 700ms cubic-bezier(0.16,1,0.3,1) 1500ms forwards; }
+    #brouwerij.is-visible .reveal-bubble-2 { animation: revealBubble2In 700ms cubic-bezier(0.16,1,0.3,1) 1620ms forwards; }
+    #brouwerij.is-visible .reveal-bubble-3 { animation: revealBubble3In 700ms cubic-bezier(0.16,1,0.3,1) 1740ms forwards; }
+
+    /* subtle continuous parallax on background linework - product-shot depth as you scroll through */
+    @supports (animation-timeline: view()) {
+      .parallax-drift {
+        animation: parallaxDrift linear both;
+        animation-timeline: view();
+        animation-range: cover 0% cover 100%;
+      }
+      @keyframes parallaxDrift { from { transform: translateX(-16px); } to { transform: translateX(16px); } }
+    }
+
+    /* hero recedes as you scroll into the story - the product-launch "hero shrinks away" beat */
+    @keyframes heroExit { to { transform: translateY(-36px) scale(0.95); opacity: 0.18; filter: blur(5px); } }
+    @supports (animation-timeline: scroll()) {
+      .hero-scrub { animation: heroExit linear both; animation-timeline: scroll(); animation-range: 0px 480px; }
+    }
+
+    /* tactile press feedback on primary controls */
+    .btn-press { transition: transform 240ms cubic-bezier(0.32,0.72,0,1); }
+    .btn-press:active { transform: scale(0.96); }
+
+    /* fixed scan layer - one persistent viewfinder that wanders a faint Europe map behind every early section, then locks onto
+       NL and zooms through the instant the bestemming reveal comes into view. One continuous element bridges the two moments. */
+    @keyframes heroScanMove {
+      0%   { transform: translate(180px,580px); }
+      20%  { transform: translate(250px,430px); }
+      38%  { transform: translate(380px,480px); }
+      54%  { transform: translate(470px,380px); }
+      70%  { transform: translate(305px,335px); }
+      84%  { transform: translate(305px,335px); }
+      100% { transform: translate(180px,580px); }
+    }
+    @keyframes heroScanScale {
+      0%   { transform: scale(1); }
+      20%  { transform: scale(1.1); }
+      38%  { transform: scale(0.95); }
+      54%  { transform: scale(1.08); }
+      70%  { transform: scale(1.2); }
+      84%  { transform: scale(1.2); }
+      100% { transform: scale(1); }
+    }
+    @keyframes heroViewfinderPulse { 0%, 100% { opacity: 0.5; transform: scale(1); } 50% { opacity: 1; transform: scale(1.25); } }
+    .fixed-scan-motion { animation: heroScanMove 16s cubic-bezier(0.45,0,0.55,1) infinite; }
+    .fixed-scan-scale { transform-box: fill-box; transform-origin: center; animation: heroScanScale 16s cubic-bezier(0.45,0,0.55,1) infinite; }
+    .fixed-scan-dot { transform-box: fill-box; transform-origin: center; animation: heroViewfinderPulse 2600ms ease-in-out infinite; }
+    .fixed-scan-flash { opacity: 0; transform-box: fill-box; transform-origin: center; }
+    .fixed-scan-caption { opacity: 0; }
+    .fixed-scan-zoom { transform-origin: 38.125% 41.875%; }
+
+    /* a dramatic hop between a few other countries before finally arriving on NL */
+    @keyframes fixedScanLockMove {
+      0%   { transform: translate(210px,300px); }
+      30%  { transform: translate(410px,290px); }
+      60%  { transform: translate(250px,420px); }
+      85%  { transform: translate(305px,335px); }
+      100% { transform: translate(305px,335px); }
+    }
+    @keyframes fixedScanLockScale {
+      0%   { transform: scale(1); }
+      30%  { transform: scale(1.15); }
+      60%  { transform: scale(1.05); }
+      85%  { transform: scale(1.25); }
+      100% { transform: scale(1); }
+    }
+    @keyframes fixedScanLockFlash {
+      0%   { opacity: 0; transform: scale(0.8); }
+      50%  { opacity: 0.7; transform: scale(1.6); }
+      100% { opacity: 0; transform: scale(2.2); }
+    }
+    /* Europe grows to fill the whole screen (0-20%), holds huge while the viewfinder hops between countries (20-78%), then dives through into the boat scene (78-100%) */
+    @keyframes fixedScanZoomSequence {
+      0%   { transform: scale(1); opacity: 1; }
+      20%  { transform: scale(7); opacity: 1; }
+      78%  { transform: scale(7); opacity: 1; }
+      90%  { opacity: 0.45; }
+      100% { transform: scale(28); opacity: 0; }
+    }
+    @keyframes fixedScanCaptionFade { 0% { opacity:0; } 10% { opacity:1; } 85% { opacity:1; } 100% { opacity:0; } }
+
+    .fixed-scan-svg { opacity: 0.13; transition: opacity 500ms ease; }
+    body:has(#bestemming.is-visible) .fixed-scan-svg { opacity: 0.5; }
+
+    /* the instant #bestemming becomes visible, the same persistent layer switches from ambient loop to: Europe fills the screen, the viewfinder hops between countries, then locks onto NL and dives through */
+    body:has(#bestemming.is-visible) .fixed-scan-zoom { animation: fixedScanZoomSequence 3700ms cubic-bezier(0.65,0,0.35,1) forwards; }
+    body:has(#bestemming.is-visible) .fixed-scan-motion { animation: fixedScanLockMove 2150ms cubic-bezier(0.45,0,0.55,1) 750ms forwards; }
+    body:has(#bestemming.is-visible) .fixed-scan-scale { animation: fixedScanLockScale 2150ms cubic-bezier(0.45,0,0.55,1) 750ms forwards; }
+    body:has(#bestemming.is-visible) .fixed-scan-flash { animation: fixedScanLockFlash 550ms cubic-bezier(0.16,1,0.3,1) 2500ms forwards; }
+    body:has(#bestemming.is-visible) .fixed-scan-caption { animation: fixedScanCaptionFade 2900ms ease 0ms forwards; }
+
+    @media (prefers-reduced-motion: reduce) {
+      .rise { animation: none; }
+      .reveal, .reveal-fade, .cinematic-reveal { transition: none; opacity: 1; transform: none; filter: none; }
+      #bestemming.is-visible .reveal-route, #bestemming .reveal-route { animation: none; stroke-dashoffset: 0; }
+      #bestemming.is-visible .reveal-boat, #bestemming .reveal-boat { animation: none; transform: translate(505px,270px); }
+      #bestemming.is-visible .reveal-island, #bestemming .reveal-island { animation: none; opacity: 1; transform: none; }
+      .ct-eyebrow, .ct-title, .ct-copy, .ct-cta { transition: none; opacity: 1; transform: none; }
+      #blokarten.is-visible .reveal-rig, #blokarten .reveal-rig { animation: none; opacity: 0.7; transform: none; }
+      #blokarten.is-visible .reveal-mast, #blokarten .reveal-mast,
+      #blokarten.is-visible .reveal-sail, #blokarten .reveal-sail { animation: none; stroke-dashoffset: 0; }
+      #blokarten.is-visible .reveal-wheel, #blokarten .reveal-wheel { animation: none; opacity: 1; transform: none; }
+      #blokarten.is-visible .reveal-track, #blokarten .reveal-track { animation: none; stroke-dashoffset: 0; }
+      #brouwerij.is-visible .reveal-kettle, #brouwerij .reveal-kettle { animation: none; opacity: 0.6; transform: none; }
+      #brouwerij.is-visible .reveal-steam, #brouwerij .reveal-steam { animation: none; stroke-dashoffset: 0; }
+      #brouwerij.is-visible .reveal-hop, #brouwerij .reveal-hop { animation: none; opacity: 0.32; transform: none; }
+      #brouwerij.is-visible .reveal-bubble-1, #brouwerij .reveal-bubble-1 { animation: none; opacity: 0.28; transform: none; }
+      #brouwerij.is-visible .reveal-bubble-2, #brouwerij .reveal-bubble-2 { animation: none; opacity: 0.22; transform: none; }
+      #brouwerij.is-visible .reveal-bubble-3, #brouwerij .reveal-bubble-3 { animation: none; opacity: 0.18; transform: none; }
+      .parallax-drift, .hero-scrub { animation: none !important; transform: none; }
+      .btn-press, .btn-press:active { transition: none; transform: none; }
+      .fixed-scan-layer { display: none; }
+    }
+    ::-webkit-scrollbar { width: 8px; }
+    ::-webkit-scrollbar-thumb { background: rgba(244,241,234,0.15); border-radius: 8px; }
+    body::after {
+      content: "";
+      position: fixed;
+      inset: 0;
+      z-index: 5;
+      pointer-events: none;
+      opacity: 0.035;
+      mix-blend-mode: overlay;
+      background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='120' height='120'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+    }
+  </style>
+</helmet>
+
+<div style="min-height:100dvh; background:#0a0d0c; position:relative; overflow-x:hidden;">
+
+  <!-- AMBIENT GLOW - one continuous light source for the whole scroll, so every panel begins and ends in the same color -->
+  <div style="position:fixed; inset:0; z-index:2; pointer-events:none; mix-blend-mode:screen; background:
+    radial-gradient(ellipse 70% 55% at 50% 10%, {{accent}}24, transparent 62%),
+    radial-gradient(ellipse 65% 55% at 88% 45%, {{accent}}1a, transparent 60%),
+    radial-gradient(ellipse 65% 55% at 8% 80%, {{accent}}1a, transparent 60%);"></div>
+
+  <!-- FIXED SCAN LAYER - one persistent viewfinder wandering a faint Europe map, visible behind hero/chips/installeren, that locks onto NL and zooms through the moment the bestemming reveal scrolls into view (see body:has(#bestemming.is-visible) rules) -->
+  <div class="fixed-scan-layer" style="position:fixed; inset:0; z-index:1; pointer-events:none; display:flex; align-items:center; justify-content:center;">
+    <svg class="fixed-scan-svg" viewBox="0 0 800 800" aria-hidden="true" style="width:min(82vw,640px); height:min(82vw,640px); overflow:visible;">
+      <g class="fixed-scan-zoom">
+        <g class="fixed-scan-grid">
+          <line x1="0" y1="100" x2="800" y2="100" stroke="{{accent}}" stroke-width="0.6" opacity="0.16"/>
+          <line x1="0" y1="200" x2="800" y2="200" stroke="{{accent}}" stroke-width="0.6" opacity="0.16"/>
+          <line x1="0" y1="300" x2="800" y2="300" stroke="{{accent}}" stroke-width="0.6" opacity="0.16"/>
+          <line x1="0" y1="400" x2="800" y2="400" stroke="{{accent}}" stroke-width="0.6" opacity="0.16"/>
+          <line x1="0" y1="500" x2="800" y2="500" stroke="{{accent}}" stroke-width="0.6" opacity="0.16"/>
+          <line x1="0" y1="600" x2="800" y2="600" stroke="{{accent}}" stroke-width="0.6" opacity="0.16"/>
+          <line x1="0" y1="700" x2="800" y2="700" stroke="{{accent}}" stroke-width="0.6" opacity="0.16"/>
+          <line x1="100" y1="0" x2="100" y2="800" stroke="{{accent}}" stroke-width="0.6" opacity="0.16"/>
+          <line x1="200" y1="0" x2="200" y2="800" stroke="{{accent}}" stroke-width="0.6" opacity="0.16"/>
+          <line x1="300" y1="0" x2="300" y2="800" stroke="{{accent}}" stroke-width="0.6" opacity="0.16"/>
+          <line x1="400" y1="0" x2="400" y2="800" stroke="{{accent}}" stroke-width="0.6" opacity="0.16"/>
+          <line x1="500" y1="0" x2="500" y2="800" stroke="{{accent}}" stroke-width="0.6" opacity="0.16"/>
+          <line x1="600" y1="0" x2="600" y2="800" stroke="{{accent}}" stroke-width="0.6" opacity="0.16"/>
+          <line x1="700" y1="0" x2="700" y2="800" stroke="{{accent}}" stroke-width="0.6" opacity="0.16"/>
+          <circle cx="400" cy="400" r="360" fill="none" stroke="{{accent}}" stroke-width="0.7" opacity="0.14"/>
+          <circle cx="400" cy="400" r="260" fill="none" stroke="{{accent}}" stroke-width="0.7" opacity="0.14"/>
+          <circle cx="400" cy="400" r="160" fill="none" stroke="{{accent}}" stroke-width="0.7" opacity="0.14"/>
+        </g>
+        <path d="M260,275 C330,245 410,250 470,268 C530,282 570,315 585,360 C598,405 580,455 545,495 C510,535 445,555 395,540 C345,528 305,500 275,465 C240,425 215,380 220,335 C222,310 235,290 260,275 Z" fill="none" stroke="{{accent}}" stroke-width="1.4" opacity="0.55"/>
+        <path d="M170,505 C215,480 275,488 295,520 C315,552 305,595 285,632 C265,668 225,690 185,675 C145,660 118,615 120,570 C122,545 140,520 170,505 Z" fill="none" stroke="{{accent}}" stroke-width="1.4" opacity="0.55"/>
+        <path d="M195,225 C228,232 250,265 246,305 C242,345 255,375 232,400 C210,420 182,405 172,368 C160,325 152,282 165,250 C172,235 182,227 195,225 Z" fill="none" stroke="{{accent}}" stroke-width="1.4" opacity="0.55"/>
+        <path d="M130,318 C150,322 158,348 148,368 C138,384 112,380 105,358 C100,340 112,320 130,318 Z" fill="none" stroke="{{accent}}" stroke-width="1.4" opacity="0.5"/>
+        <path d="M440,72 C480,58 520,80 535,125 C550,170 540,215 555,255 C562,275 540,282 518,268 C482,245 448,225 428,192 C408,158 402,110 418,88 C424,80 432,75 440,72 Z" fill="none" stroke="{{accent}}" stroke-width="1.4" opacity="0.5"/>
+        <path d="M410,272 C425,268 438,285 432,303 C427,318 410,320 402,305 C398,290 400,278 410,272 Z" fill="none" stroke="{{accent}}" stroke-width="1.4" opacity="0.45"/>
+        <path d="M470,478 C492,470 515,483 520,502 C526,528 545,548 538,575 C531,600 516,620 522,648 C526,668 514,688 495,690 C478,692 468,672 465,650 C460,618 456,585 452,552 C448,522 452,494 470,478 Z" fill="none" stroke="{{accent}}" stroke-width="1.4" opacity="0.45"/>
+
+        <g class="fixed-scan-motion">
+          <g class="fixed-scan-scale">
+            <circle class="fixed-scan-flash" r="70" fill="none" stroke="{{accent}}" stroke-width="1"/>
+            <line x1="-90" y1="0" x2="90" y2="0" stroke="{{accent}}" stroke-width="1"/>
+            <line x1="0" y1="-90" x2="0" y2="90" stroke="{{accent}}" stroke-width="1"/>
+            <circle r="46" fill="none" stroke="{{accent}}" stroke-width="1.3"/>
+            <circle r="20" fill="none" stroke="{{accent}}" stroke-width="1.3"/>
+            <circle class="fixed-scan-dot" r="2.6" fill="{{accent}}"/>
+            <path d="M-90,-70 L-90,-90 L-70,-90" fill="none" stroke="{{accent}}" stroke-width="2" stroke-linecap="round"/>
+            <path d="M70,-90 L90,-90 L90,-70" fill="none" stroke="{{accent}}" stroke-width="2" stroke-linecap="round"/>
+            <path d="M90,70 L90,90 L70,90" fill="none" stroke="{{accent}}" stroke-width="2" stroke-linecap="round"/>
+            <path d="M-70,90 L-90,90 L-90,70" fill="none" stroke="{{accent}}" stroke-width="2" stroke-linecap="round"/>
+          </g>
+        </g>
+      </g>
+    </svg>
+    <div class="fixed-scan-caption mono" style="position:absolute; left:50%; top:50%; transform:translate(-50%,86px); font-size:12px; letter-spacing:0.22em; text-transform:uppercase; color:{{accent}}; white-space:nowrap;">Locatie zoeken&hellip;</div>
+  </div>
+
+  <!-- NAV -->
+  <div style="position:sticky; top:0; z-index:40; display:flex; align-items:center; justify-content:space-between; padding:18px 24px; background:rgba(10,13,12,0.72); backdrop-filter:blur(16px); -webkit-backdrop-filter:blur(16px); border-bottom:1px solid rgba(244,241,234,0.07);">
+    <div style="font-family:'JetBrains Mono', monospace; font-size:12px; letter-spacing:0.14em; text-transform:uppercase; color:#9a9a91;">Ameland &middot; 2-4 okt</div>
+    <div style="display:flex; align-items:center; gap:8px; font-size:12px; color:#9a9a91;">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg>
+      <span class="mono">{{daysLeft}} dagen</span>
+    </div>
+  </div>
+
+  <!-- HERO -->
+  <div style="min-height:calc(100dvh - 60px); display:flex; flex-direction:column; align-items:center; justify-content:center; text-align:center; padding:48px 24px 64px; position:relative;">
+
+  <div class="hero-scrub" style="display:flex; flex-direction:column; align-items:center; width:100%;">
+
+    <div class="rise rise-1" style="position:relative; font-family:'JetBrains Mono', monospace; font-weight:600; line-height:0.9; font-size:clamp(96px,22vw,220px); color:{{accent}}; letter-spacing:-0.02em;">
+      {{daysLeft}}
+    </div>
+    <div class="rise rise-1" style="position:relative; font-family:'JetBrains Mono', monospace; font-size:13px; letter-spacing:0.2em; text-transform:uppercase; color:#9a9a91; margin-top:4px;">
+      dagen tot vertrek
+    </div>
+
+    <h1 class="display rise rise-2" style="position:relative; font-size:clamp(30px,5.5vw,48px); font-weight:500; line-height:1.18; letter-spacing:-0.005em; margin:38px 0 14px; max-width:15ch; padding-bottom:0.08em;">
+      Nog niet alles is <em>verklapt</em>.
+    </h1>
+    <p class="rise rise-2" style="position:relative; font-size:16px; line-height:1.6; color:#c9c6bc; max-width:38ch; margin:0 0 32px;">
+      Vrijdag vertrekken we samen. De rest volgt hier, stuk voor stuk, zodra het zover is.
+    </p>
+
+    <a href="#installeren" class="rise rise-3 btn-press" style="position:relative; display:inline-flex; align-items:center; gap:10px; padding:15px 28px; border-radius:999px; background:{{accent}}; color:#0a0d0c; font-weight:600; font-size:15px;">
+      Zet 'm op je scherm
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M13 6l6 6-6 6"/></svg>
+    </a>
+  </div>
+  </div>
+
+  <!-- REISOVERZICHT STRIP -->
+  <div style="display:flex; gap:10px; overflow-x:auto; padding:16px 24px 44px;">
+    <a href="#bestemming" class="reveal reveal-d1" style="flex:0 0 auto; display:flex; align-items:center; gap:8px; padding:9px 16px; border-radius:999px; background:rgba(227,166,74,0.12); border:1px solid rgba(227,166,74,0.35); font-size:13px; white-space:nowrap;">
+      <span style="width:6px; height:6px; border-radius:999px; background:{{accent}};"></span>Bestemming
+    </a>
+    <a href="#vrijdag" class="reveal reveal-d2" style="flex:0 0 auto; display:flex; align-items:center; gap:8px; padding:9px 16px; border-radius:999px; background:rgba(227,166,74,0.12); border:1px solid rgba(227,166,74,0.35); font-size:13px; white-space:nowrap;">
+      <span style="width:6px; height:6px; border-radius:999px; background:{{accent}};"></span>Vrijdag
+    </a>
+    <a href="#blokarten" class="reveal reveal-d3" style="flex:0 0 auto; display:flex; align-items:center; gap:8px; padding:9px 16px; border-radius:999px; background:rgba(227,166,74,0.12); border:1px solid rgba(227,166,74,0.35); font-size:13px; white-space:nowrap;">
+      <span style="width:6px; height:6px; border-radius:999px; background:{{accent}};"></span>Blokarten
+    </a>
+    <a href="#brouwerij" class="reveal reveal-d4" style="flex:0 0 auto; display:flex; align-items:center; gap:8px; padding:9px 16px; border-radius:999px; background:rgba(227,166,74,0.12); border:1px solid rgba(227,166,74,0.35); font-size:13px; white-space:nowrap;">
+      <span style="width:6px; height:6px; border-radius:999px; background:{{accent}};"></span>Brouwerij
+    </a>
+    <a href="#zondag" class="reveal reveal-d5" style="flex:0 0 auto; display:flex; align-items:center; gap:8px; padding:9px 16px; border-radius:999px; background:rgba(244,241,234,0.05); border:1px solid rgba(244,241,234,0.14); font-size:13px; white-space:nowrap; color:#9a9a91;">
+      <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="5" y="11" width="14" height="9" rx="2"/><path d="M8 11V8a4 4 0 0 1 8 0v3"/></svg>
+      Zondag
+    </a>
+  </div>
+
+  <!-- INSTALLEREN -->
+  <div id="installeren" class="reveal" style="padding:56px 24px 96px; max-width:640px; margin:0 auto;">
+    <h2 class="display" style="font-size:clamp(26px,4vw,34px); font-weight:600; margin:0 0 10px;">Zet 'm op je scherm</h2>
+    <p style="color:#c9c6bc; font-size:15px; line-height:1.6; margin:0 0 28px; max-width:44ch;">
+      Dan werken meldingen straks meteen, zodra er weer een hoofdstuk opengaat. Kies je toestel.
+    </p>
+
+    <div style="display:flex; gap:8px; margin-bottom:20px;">
+      <button onClick="{{pickAndroid}}" class="btn-press" style="flex:1; padding:11px; border-radius:10px; border:1px solid {{accent}}; background:{{accent}}; color:#0a0d0c; font-weight:600; font-size:14px; font-family:inherit; cursor:pointer;">
+        Android
+      </button>
+      <button onClick="{{pickIOS}}" class="btn-press" style="flex:1; padding:11px; border-radius:10px; border:1px solid rgba(244,241,234,0.18); background:transparent; color:#f4f1ea; font-weight:600; font-size:14px; font-family:inherit; cursor:pointer;">
+        iPhone
+      </button>
+    </div>
+
+    <sc-if value="{{isAndroid}}" hint-placeholder-val="{{true}}">
+      <div style="border:1px solid rgba(244,241,234,0.1); border-radius:16px; padding:22px; display:flex; flex-direction:column; gap:16px;">
+        <div style="display:flex; gap:12px; align-items:flex-start;">
+          <div style="flex:0 0 auto; width:28px; height:28px; border-radius:999px; background:rgba(227,166,74,0.15); color:{{accent}}; display:flex; align-items:center; justify-content:center; font-size:12px; font-weight:700;" class="mono">1</div>
+          <p style="margin:0; font-size:14px; line-height:1.55; color:#e5e2d9;">Chrome laat vanzelf een balkje zien: <strong>"App installeren"</strong>. Tik daarop.</p>
+        </div>
+        <div style="display:flex; gap:12px; align-items:flex-start;">
+          <div style="flex:0 0 auto; width:28px; height:28px; border-radius:999px; background:rgba(227,166,74,0.15); color:{{accent}}; display:flex; align-items:center; justify-content:center; font-size:12px; font-weight:700;" class="mono">2</div>
+          <p style="margin:0; font-size:14px; line-height:1.55; color:#e5e2d9;">Klaar. Het icoon staat op je startscherm en meldingen werken direct.</p>
+        </div>
+      </div>
+    </sc-if>
+    <sc-if value="{{isIOS}}" hint-placeholder-val="{{false}}">
+      <div style="border:1px solid rgba(244,241,234,0.1); border-radius:16px; padding:22px; display:flex; flex-direction:column; gap:16px;">
+        <div style="display:flex; gap:12px; align-items:flex-start;">
+          <div style="flex:0 0 auto; width:28px; height:28px; border-radius:999px; background:rgba(227,166,74,0.15); color:{{accent}}; display:flex; align-items:center; justify-content:center;">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 16V4M8 8l4-4 4 4"/><path d="M4 14v5a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-5"/></svg>
+          </div>
+          <p style="margin:0; font-size:14px; line-height:1.55; color:#e5e2d9;">Tik onderin Safari op het deel-icoon (het vierkantje met het pijltje omhoog).</p>
+        </div>
+        <div style="display:flex; gap:12px; align-items:flex-start;">
+          <div style="flex:0 0 auto; width:28px; height:28px; border-radius:999px; background:rgba(227,166,74,0.15); color:{{accent}}; display:flex; align-items:center; justify-content:center; font-size:12px; font-weight:700;" class="mono">2</div>
+          <p style="margin:0; font-size:14px; line-height:1.55; color:#e5e2d9;">Kies <strong>"Zet op beginscherm"</strong>. Zonder deze stap werken meldingen op iPhone niet.</p>
+        </div>
+      </div>
+    </sc-if>
+  </div>
+
+  <!-- BESTEMMING - cinematic -->
+  <div id="bestemming" class="cinematic-reveal" style="{{bestemmingStyle}} position:relative; width:100%; min-height:100dvh; overflow:hidden; display:flex; flex-direction:column; align-items:flex-start; justify-content:flex-end; padding:72px 28px 88px; text-align:left; background:#0a0d0c;">
+    <svg style="position:absolute; inset:0; width:100%; height:100%;" viewBox="0 0 800 800" preserveAspectRatio="xMidYMid slice">
+      <path class="parallax-drift" d="M0,620 C160,600 260,640 420,615 C560,595 660,625 800,605" stroke="{{accent}}" stroke-width="1" opacity="0.16" fill="none"/>
+      <path class="parallax-drift" d="M0,670 C160,650 260,690 420,665 C560,645 660,675 800,655" stroke="{{accent}}" stroke-width="1" opacity="0.1" fill="none"/>
+      <path class="reveal-route" d="M120,650 C220,560 300,460 400,380 C440,348 480,310 505,270" stroke="{{accent}}" stroke-width="1.6" stroke-linecap="round" fill="none" opacity="0.6"/>
+      <circle cx="120" cy="650" r="5" fill="{{accent}}" opacity="0.6"/>
+      <g class="reveal-island" transform="translate(430,190)">
+        <path d="M0,0 C70,-15 170,-10 230,15 C280,36 300,65 275,88 C240,118 160,110 90,100 C30,92 -30,80 -50,50 C-62,28 -42,10 0,0 Z" fill="{{accent}}" opacity="0.14"/>
+        <path d="M0,0 C70,-15 170,-10 230,15 C280,36 300,65 275,88 C240,118 160,110 90,100 C30,92 -30,80 -50,50 C-62,28 -42,10 0,0 Z" stroke="{{accent}}" stroke-width="1.3" fill="none" opacity="0.5"/>
+      </g>
+      <g class="reveal-boat">
+        <g transform="rotate(-52)">
+          <path d="M-16,4 L16,4 L10,14 L-10,14 Z" fill="{{accent}}"/>
+          <line x1="0" y1="4" x2="0" y2="-14" stroke="{{accent}}" stroke-width="1.3"/>
+          <path d="M0,-14 L11,2 L0,2 Z" fill="{{accent}}" opacity="0.85"/>
+        </g>
+      </g>
+    </svg>
+    <div class="ct-eyebrow" style="position:relative; font-family:'JetBrains Mono', monospace; font-size:13px; letter-spacing:0.24em; text-transform:uppercase; color:{{accent}};">De bestemming</div>
+    <h2 class="display ct-title" style="position:relative; font-size:clamp(56px,15vw,152px); font-weight:600; letter-spacing:-0.01em; margin:18px 0; line-height:0.95;">Ameland</h2>
+    <p class="ct-copy" style="position:relative; color:#c9c6bc; font-size:16px; max-width:34ch; margin:0 0 32px; line-height:1.6;">
+      Drie dagen, zeven man, een boot over het wad. We verzamelen vrijdag rond 11:30 en fietsen na aankomst naar het appartement.
+    </p>
+    <button onClick="{{replayBestemming}}" class="ct-cta btn-press" style="position:relative; display:inline-flex; align-items:center; gap:8px; padding:11px 20px; border-radius:999px; border:1px solid rgba(244,241,234,0.22); background:rgba(244,241,234,0.06); color:#f4f1ea; font-size:13px; font-family:inherit; cursor:pointer;">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12a9 9 0 1 0 3-6.7"/><path d="M3 4v5h5"/></svg>
+      Bekijk opnieuw
+    </button>
+  </div>
+
+  <!-- VRIJDAG - knap -->
+  <div id="vrijdag" class="reveal" style="padding:120px 24px; max-width:640px; margin:0 auto;">
+    <div style="font-family:'JetBrains Mono', monospace; font-size:12px; letter-spacing:0.2em; text-transform:uppercase; color:#9a9a91; margin-bottom:10px;">Vrijdag 2 oktober</div>
+    <h2 class="display" style="font-size:clamp(26px,4vw,34px); font-weight:600; margin:0 0 24px;">Onderweg naar het eiland</h2>
+
+    <div style="display:flex; flex-direction:column; gap:0;">
+      <div class="reveal reveal-d1" style="display:flex; gap:16px; padding:16px 0; border-bottom:1px solid rgba(244,241,234,0.08);">
+        <div class="mono" style="flex:0 0 56px; color:{{accent}}; font-size:14px; padding-top:2px;">11:30</div>
+        <div><div style="font-weight:600; font-size:15px;">Verzamelen</div><div style="color:#9a9a91; font-size:13px; margin-top:2px;">Vanuit verschillende steden, richting de boot</div></div>
+      </div>
+      <div class="reveal reveal-d2" style="display:flex; gap:16px; padding:16px 0; border-bottom:1px solid rgba(244,241,234,0.08);">
+        <div class="mono" style="flex:0 0 56px; color:{{accent}}; font-size:14px; padding-top:2px;">14:45</div>
+        <div><div style="font-weight:600; font-size:15px;">De boot, stipt</div><div style="color:#9a9a91; font-size:13px; margin-top:2px;">Overtocht duurt tot 16:00</div></div>
+      </div>
+      <div class="reveal reveal-d3" style="display:flex; gap:16px; padding:16px 0; border-bottom:1px solid rgba(244,241,234,0.08);">
+        <div class="mono" style="flex:0 0 56px; color:{{accent}}; font-size:14px; padding-top:2px;">16:00</div>
+        <div><div style="font-weight:600; font-size:15px;">Fietsen naar het appartement</div><div style="color:#9a9a91; font-size:13px; margin-top:2px;">Bliekeduun 8, Hollum</div></div>
+      </div>
+      <div class="reveal reveal-d4" style="display:flex; gap:16px; padding:16px 0;">
+        <div class="mono" style="flex:0 0 56px; color:{{accent}}; font-size:14px; padding-top:2px;">'s Avonds</div>
+        <div><div style="font-weight:600; font-size:15px;">Geen programma, wel spelletjes</div><div style="color:#9a9a91; font-size:13px; margin-top:2px;">Neem er eentje mee. Er staat er in elk geval &eacute;&eacute;n vast op het bord: Risk.</div></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- BLOKARTEN - cinematic -->
+  <div id="blokarten" class="cinematic-reveal" style="{{blokartenStyle}} position:relative; width:100%; min-height:100dvh; overflow:hidden; display:flex; flex-direction:column; align-items:flex-start; justify-content:flex-start; padding:96px 28px 72px; text-align:left; background:#0a0d0c;">
+    <svg style="position:absolute; inset:0; width:100%; height:100%;" viewBox="0 0 800 800" preserveAspectRatio="xMidYMid slice">
+      <path class="reveal-track" d="M-40,180 C160,150 300,210 800,170" stroke="{{accent}}" stroke-width="1" opacity="0.16" fill="none"/>
+      <path class="reveal-track" d="M-40,230 C160,200 320,255 800,220" stroke="{{accent}}" stroke-width="1" opacity="0.12" fill="none"/>
+      <path class="reveal-track" d="M-40,650 C160,630 320,668 500,645 C620,630 720,650 800,640" stroke="{{accent}}" stroke-width="1" opacity="0.16" fill="none"/>
+      <path class="reveal-track" d="M-40,690 C160,670 320,708 500,685 C620,670 720,690 800,680" stroke="{{accent}}" stroke-width="1" opacity="0.1" fill="none"/>
+      <g class="reveal-rig">
+        <g transform="translate(560,440)">
+          <line class="reveal-mast" x1="0" y1="-190" x2="0" y2="10" stroke="{{accent}}" stroke-width="1.6"/>
+          <path d="M0,-185 C55,-150 70,-70 40,0 L0,-10 Z" fill="{{accent}}" opacity="0.2"/>
+          <path class="reveal-sail" d="M0,-185 C55,-150 70,-70 40,0 L0,-10 Z" stroke="{{accent}}" stroke-width="1.3" fill="none"/>
+          <path d="M-95,40 L95,40 L55,10 L-55,10 Z" fill="none" stroke="{{accent}}" stroke-width="1.6"/>
+          <circle class="reveal-wheel reveal-wheel-1" cx="-95" cy="55" r="14" fill="none" stroke="{{accent}}" stroke-width="1.6"/>
+          <circle class="reveal-wheel reveal-wheel-2" cx="95" cy="55" r="14" fill="none" stroke="{{accent}}" stroke-width="1.6"/>
+          <circle class="reveal-wheel reveal-wheel-3" cx="0" cy="65" r="12" fill="none" stroke="{{accent}}" stroke-width="1.6"/>
+        </g>
+      </g>
+    </svg>
+    <div class="ct-eyebrow" style="position:relative; font-family:'JetBrains Mono', monospace; font-size:13px; letter-spacing:0.24em; text-transform:uppercase; color:{{accent}};">Zaterdag &middot; 09:15</div>
+    <h2 class="display ct-title" style="position:relative; font-size:clamp(56px,15vw,152px); font-weight:600; letter-spacing:-0.01em; margin:18px 0; line-height:0.95;">Blokarten</h2>
+    <p class="ct-copy" style="position:relative; color:#c9c6bc; font-size:16px; max-width:32ch; margin:0 0 32px; line-height:1.6;">
+      Vol over het strand. Het Westerpad 1a, Nes. Dichte schoenen aan.
+    </p>
+    <button onClick="{{replayBlokarten}}" class="ct-cta btn-press" style="position:relative; display:inline-flex; align-items:center; gap:8px; padding:11px 20px; border-radius:999px; border:1px solid rgba(244,241,234,0.22); background:rgba(244,241,234,0.06); color:#f4f1ea; font-size:13px; font-family:inherit; cursor:pointer;">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12a9 9 0 1 0 3-6.7"/><path d="M3 4v5h5"/></svg>
+      Bekijk opnieuw
+    </button>
+  </div>
+
+  <!-- BROUWERIJ - cinematic -->
+  <div id="brouwerij" class="cinematic-reveal" style="{{brouwerijStyle}} position:relative; width:100%; min-height:100dvh; overflow:hidden; display:flex; flex-direction:column; align-items:flex-start; justify-content:center; padding:72px 28px; text-align:left; background:#0a0d0c;">
+    <svg style="position:absolute; inset:0; width:100%; height:100%;" viewBox="0 0 800 800" preserveAspectRatio="xMidYMid slice">
+      <g class="reveal-kettle">
+        <g transform="translate(560,470)">
+          <path d="M-90,60 C-90,110 90,110 90,60 L80,-40 C80,-80 -80,-80 -80,-40 Z" fill="{{accent}}" opacity="0.12"/>
+          <path d="M-90,60 C-90,110 90,110 90,60 L80,-40 C80,-80 -80,-80 -80,-40 Z" stroke="{{accent}}" stroke-width="1.5" fill="none"/>
+          <ellipse cx="0" cy="-40" rx="80" ry="14" fill="none" stroke="{{accent}}" stroke-width="1.5"/>
+          <path class="reveal-steam reveal-steam-1" d="M30,-78 C30,-110 55,-120 55,-150" stroke="{{accent}}" stroke-width="1.5" fill="none"/>
+          <path class="reveal-steam reveal-steam-2" d="M-10,-95 C-25,-125 5,-140 -10,-170" stroke="{{accent}}" stroke-width="1.3" fill="none" opacity="0.55"/>
+          <path class="reveal-steam reveal-steam-3" d="M25,-105 C10,-135 40,-150 25,-180" stroke="{{accent}}" stroke-width="1.3" fill="none" opacity="0.4"/>
+        </g>
+      </g>
+      <g class="reveal-hop">
+        <g transform="translate(150,190)">
+          <path d="M0,-40 C22,-30 26,0 0,40 C-26,0 -22,-30 0,-40 Z" fill="none" stroke="{{accent}}" stroke-width="1.4"/>
+          <path d="M0,-30 L0,30 M-12,-14 L12,-14 M-14,4 L14,4 M-10,18 L10,18" stroke="{{accent}}" stroke-width="0.9" opacity="0.6"/>
+        </g>
+      </g>
+      <circle class="reveal-bubble reveal-bubble-1" cx="470" cy="560" r="4" fill="{{accent}}"/>
+      <circle class="reveal-bubble reveal-bubble-2" cx="500" cy="520" r="3" fill="{{accent}}"/>
+      <circle class="reveal-bubble reveal-bubble-3" cx="450" cy="480" r="2.5" fill="{{accent}}"/>
+    </svg>
+    <div class="ct-eyebrow" style="position:relative; font-family:'JetBrains Mono', monospace; font-size:13px; letter-spacing:0.24em; text-transform:uppercase; color:{{accent}};">Zaterdag &middot; 12:30</div>
+    <h2 class="display ct-title" style="position:relative; font-size:clamp(52px,14vw,136px); font-weight:600; letter-spacing:-0.01em; margin:18px 0; line-height:0.98;">De brouwerij</h2>
+    <p class="ct-copy" style="position:relative; color:#c9c6bc; font-size:16px; max-width:32ch; margin:0 0 32px; line-height:1.6;">
+      Rondleiding, en waarschijnlijk blijven we de hele middag hangen. Smitteweg 6, Ballum.
+    </p>
+    <button onClick="{{replayBrouwerij}}" class="ct-cta btn-press" style="position:relative; display:inline-flex; align-items:center; gap:8px; padding:11px 20px; border-radius:999px; border:1px solid rgba(244,241,234,0.22); background:rgba(244,241,234,0.06); color:#f4f1ea; font-size:13px; font-family:inherit; cursor:pointer;">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12a9 9 0 1 0 3-6.7"/><path d="M3 4v5h5"/></svg>
+      Bekijk opnieuw
+    </button>
+  </div>
+
+  <!-- ZONDAG - locked/knap -->
+  <div id="zondag" class="reveal" style="padding:100px 24px 140px; max-width:640px; margin:0 auto;">
+    <div style="font-family:'JetBrains Mono', monospace; font-size:12px; letter-spacing:0.2em; text-transform:uppercase; color:#9a9a91; margin-bottom:10px;">Zondag 4 oktober</div>
+    <h2 class="display" style="font-size:clamp(26px,4vw,34px); font-weight:600; margin:0 0 24px;">De laatste dag</h2>
+
+    <div class="reveal reveal-d1" style="display:flex; gap:16px; padding:16px 0; border-bottom:1px solid rgba(244,241,234,0.08);">
+      <div class="mono" style="flex:0 0 56px; color:{{accent}}; font-size:14px; padding-top:2px;">11:00</div>
+      <div><div style="font-weight:600; font-size:15px;">Uitchecken</div></div>
+    </div>
+
+    <div class="reveal reveal-d2" style="margin:20px 0; padding:28px; border-radius:18px; border:1px dashed rgba(244,241,234,0.18); background:rgba(244,241,234,0.03); text-align:center;">
+      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#9a9a91" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" style="margin-bottom:10px;"><rect x="5" y="11" width="14" height="9" rx="2"/><path d="M8 11V8a4 4 0 0 1 8 0v3"/></svg>
+      <div style="font-weight:600; font-size:15px; color:#e5e2d9;">Nog een verrassing onderweg</div>
+      <div style="color:#9a9a91; font-size:13px; margin-top:6px;">Dit hoofdstuk gaat open zodra het rond is</div>
+    </div>
+
+    <div class="reveal reveal-d3" style="display:flex; gap:16px; padding:16px 0;">
+      <div class="mono" style="flex:0 0 56px; color:{{accent}}; font-size:14px; padding-top:2px;">16:00</div>
+      <div><div style="font-weight:600; font-size:15px;">Boot terug naar het vasteland</div></div>
+    </div>
+  </div>
+
+  <div style="padding:48px 24px 120px; text-align:center; color:#9a9a91; font-size:12px;">
+    Ameland &middot; 2-4 oktober
+  </div>
+
+  <!-- FLOATING PAKLIJST BUTTON -->
+  <button onClick="{{togglePaklijst}}" class="btn-press" style="position:fixed; right:20px; bottom:20px; z-index:50; display:flex; align-items:center; gap:10px; padding:14px 20px; border-radius:999px; border:none; background:#f4f1ea; color:#0a0d0c; font-weight:600; font-size:14px; font-family:inherit; cursor:pointer; box-shadow:0 12px 30px -8px rgba(0,0,0,0.6);">
+    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg>
+    Paklijst
+  </button>
+
+  <!-- PAKLIJST OVERLAY -->
+  <sc-if value="{{paklijstOpen}}" hint-placeholder-val="{{false}}">
+    <div onClick="{{closePaklijst}}" style="position:fixed; inset:0; z-index:60; background:rgba(5,6,6,0.65); backdrop-filter:blur(4px); display:flex; align-items:flex-end; justify-content:center;">
+      <div onClick="{{stop}}" style="width:100%; max-width:480px; max-height:76dvh; overflow-y:auto; background:#12160f; border-radius:24px 24px 0 0; border:1px solid rgba(244,241,234,0.1); padding:28px 24px 32px;">
+        <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:6px;">
+          <h3 style="margin:0; font-size:19px; font-weight:600;">Paklijst</h3>
+          <button onClick="{{closePaklijst}}" style="background:none; border:none; color:#9a9a91; cursor:pointer; padding:4px;">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6L6 18M6 6l12 12"/></svg>
+          </button>
+        </div>
+        <p style="color:#9a9a91; font-size:13px; margin:0 0 20px;">Voorbeeldlijst, staat vast vanaf dag &eacute;&eacute;n, ook al zijn niet alle hoofdstukken al open.</p>
+
+        <sc-for list="{{checklistItems}}" as="item" hint-placeholder-count="5">
+          <div style="display:flex; align-items:center; gap:12px; padding:13px 2px; border-bottom:1px solid rgba(244,241,234,0.08);">
+            <button onClick="{{item.toggle}}" style="{{item.boxStyle}} flex:0 0 auto; width:22px; height:22px; border-radius:6px; display:flex; align-items:center; justify-content:center; cursor:pointer; padding:0;">
+              <sc-if value="{{item.checked}}" hint-placeholder-val="{{true}}">
+                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#0a0d0c" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6L9 17l-5-5"/></svg>
+              </sc-if>
+            </button>
+            <span style="{{item.textStyle}} font-size:14px;">{{item.label}}</span>
+          </div>
+        </sc-for>
+      </div>
+    </div>
+  </sc-if>
+
+</div>
+</x-dc>
+<script data-dc-script data-props='{"accent":{"editor":"color","default":"#E3A64A","options":["#E3A64A","#C97B3D","#7FA98A","#5B8A99"]}}'>
+class Component extends DCLogic {
+  state = {
+    paklijstOpen: false,
+    checked: {},
+    platform: 'android',
+    pulse: {},
+  };
+
+  componentDidMount() {
+    const prefersReduced = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+    if (typeof IntersectionObserver === 'undefined' || prefersReduced) {
+      document.querySelectorAll('.reveal, .reveal-fade, .cinematic-reveal').forEach((el) => el.classList.add('is-visible'));
+      return;
+    }
+    this._observer = new IntersectionObserver((entries) => {
+      entries.forEach((entry) => {
+        if (entry.isIntersecting) {
+          entry.target.classList.add('is-visible');
+          this._observer.unobserve(entry.target);
+        }
+      });
+    }, { threshold: 0.2, rootMargin: '0px 0px -10% 0px' });
+    document.querySelectorAll('.reveal, .reveal-fade, .cinematic-reveal').forEach((el) => this._observer.observe(el));
+  }
+
+  componentWillUnmount() {
+    if (this._observer) this._observer.disconnect();
+  }
+
+  toggleChecked(id) {
+    this.setState({ checked: { ...this.state.checked, [id]: !this.state.checked[id] } });
+  }
+
+  triggerPulse(section) {
+    const el = document.getElementById(section);
+    if (el) {
+      el.classList.remove('is-visible');
+      void el.offsetWidth;
+      requestAnimationFrame(() => el.classList.add('is-visible'));
+    }
+    this.setState({ pulse: { ...this.state.pulse, [section]: true } });
+    setTimeout(() => {
+      this.setState({ pulse: { ...this.state.pulse, [section]: false } });
+    }, 650);
+  }
+
+  renderVals() {
+    const accent = this.props.accent ?? '#E3A64A';
+    const target = new Date('2026-10-02T11:30:00');
+    const now = new Date();
+    const daysLeft = Math.max(0, Math.ceil((target.getTime() - now.getTime()) / 86400000));
+
+    const rawChecklist = [
+      { id: 'schoenen', label: 'Dichte schoenen (voor het blokarten)' },
+      { id: 'regenjas', label: 'Regenjas, voor de zekerheid' },
+      { id: 'zwemkleding', label: 'Zwemkleding, optioneel' },
+      { id: 'spelletjes', label: 'Een spelletje voor vrijdagavond' },
+      { id: 'oplader', label: 'Telefoonoplader of powerbank' },
+    ];
+
+    const checklistItems = rawChecklist.map((item) => {
+      const checked = !!this.state.checked[item.id];
+      return {
+        ...item,
+        checked,
+        toggle: () => this.toggleChecked(item.id),
+        boxStyle: checked
+          ? `background:${accent}; border:1px solid ${accent};`
+          : `background:transparent; border:1px solid rgba(244,241,234,0.3);`,
+        textStyle: checked
+          ? 'color:#7d7c74; text-decoration:line-through;'
+          : 'color:#e5e2d9;',
+      };
+    });
+
+    const pulseStyle = (section) =>
+      this.state.pulse[section]
+        ? `transform:scale(1.015); transition:transform 0.5s cubic-bezier(0.16,1,0.3,1); box-shadow:0 0 0 1px ${accent}55, 0 30px 80px -20px ${accent}44;`
+        : `transform:scale(1); transition:transform 0.5s cubic-bezier(0.16,1,0.3,1); box-shadow:0 30px 80px -30px rgba(0,0,0,0.6);`;
+
+    return {
+      accent,
+      daysLeft,
+      checklistItems,
+      paklijstOpen: this.state.paklijstOpen,
+      togglePaklijst: () => this.setState({ paklijstOpen: !this.state.paklijstOpen }),
+      closePaklijst: () => this.setState({ paklijstOpen: false }),
+      stop: (e) => e && e.stopPropagation && e.stopPropagation(),
+      isAndroid: this.state.platform === 'android',
+      isIOS: this.state.platform === 'ios',
+      pickAndroid: () => this.setState({ platform: 'android' }),
+      pickIOS: () => this.setState({ platform: 'ios' }),
+      bestemmingStyle: pulseStyle('bestemming'),
+      blokartenStyle: pulseStyle('blokarten'),
+      brouwerijStyle: pulseStyle('brouwerij'),
+      replayBestemming: () => this.triggerPulse('bestemming'),
+      replayBlokarten: () => this.triggerPulse('blokarten'),
+      replayBrouwerij: () => this.triggerPulse('brouwerij'),
+    };
+  }
+}
+</script>
+</body>
+</html>
