@@ -5,11 +5,12 @@ login, cloud resource creation). Nothing in this file is automated by the
 codebase — see `_bmad-output/specs/spec-ameland-weekend/stories/1-project-scaffold-stack-setup.md`
 for why.
 
-> **Update:** the `vercel/vercel-plugin` Claude Code plugin is now installed
-> and has live, authenticated Vercel account access (see `AGENTS.md` §
-> "Vercel plugin"). Steps 3–5 below may be completable by an agent instead of
-> by hand in a session that has this plugin — not yet verified end-to-end,
-> so these manual instructions remain the source of truth until confirmed.
+> **Update (verified 2026-08-25):** steps 2-6 below were completed end-to-end
+> by an agent using the `vercel` CLI (see `AGENTS.md` § "Vercel plugin" for
+> the auth path — one human-approved `vercel login` device-code flow, then
+> everything else was scriptable: `vercel link`, `vercel env ls`, `vercel
+> deploy --prod --yes`). Manual dashboard steps below remain valid if you'd
+> rather do it by hand, or don't have CLI access in your agent's session.
 
 ## 1. Confirm the local git history is pushed
 
@@ -90,10 +91,14 @@ up as available in the deployed function's environment.
 
 ## Verification checklist
 
-- [ ] Vercel project exists, connected to this repo, first deploy succeeded.
-- [ ] Neon integration added, with `dev` and `prod` branches.
-- [ ] Node version pinned in Vercel settings to match `.nvmrc`.
-- [ ] All four secrets (`DATABASE_URL`, `ADMIN_PASSCODE`,
+- [x] Vercel project exists, connected to this repo, first deploy succeeded.
+- [x] Neon integration added (via Marketplace — `STORAGE_*` env vars present).
+- [x] Node version set in Vercel (`24.x`, matches `.nvmrc`'s major).
+- [x] All four secrets (`DATABASE_URL`, `ADMIN_PASSCODE`,
       `COOKIE_SIGNING_SECRET`, `VAPID_PUBLIC_KEY`/`VAPID_PRIVATE_KEY`) are set
-      in Vercel's dashboard **and** in a local `.env`.
-- [ ] Redeployed after setting the secrets, and it succeeded.
+      in Vercel's dashboard. Local `.env.development` has `DATABASE_URL` only
+      — the other three aren't consumed by any code yet (stories 4/8), so
+      they weren't pulled locally.
+- [x] Redeployed after the secrets were set — confirmed live at
+      https://astro-neon-spike.vercel.app (`/manifest.json` → 200,
+      `/api/trip/test` → 501 as designed, 2026-08-25).

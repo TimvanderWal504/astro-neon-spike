@@ -24,10 +24,13 @@ A secret, progressive-reveal trip site for 7 friends (2–4 Oct 2026), built as 
 
 ## Vercel plugin
 
-The `vercel/vercel-plugin` Claude Code plugin is installed and has live, authenticated access to the real Vercel account (confirmed: `list_teams`/`list_projects` return the actual `astro-neon-spike` project under team `hobby-dd78`, `prj_6K6SK52Isov3qNkwyQgQjMWgq95y`). This changes a premise `SETUP.md` and story 1's spec were written under — that cloud provisioning is 100% human-only because agents can't do interactive browser logins:
-- Agents in a session with this plugin can now read deployments/logs/env vars directly (`get_deployment`, `get_runtime_logs`, `get_runtime_errors`, `list_deployments`) and there are skills for deploying (`vercel:deploy`), env var sync (`vercel:env`), and Marketplace integrations (`vercel:marketplace`, `vercel:bootstrap`) — i.e. some of `SETUP.md`'s remaining manual steps (Neon integration, secret population) may now be agent-assistable, not purely manual.
-- Not yet verified end-to-end: whether `vercel:marketplace`/Marketplace-integration tools can actually complete the Neon integration (step 3) autonomously, or still bottleneck on a one-time interactive consent. Confirm before assuming full automation.
-- This capability is tied to the plugin being installed in the active session — don't assume it's present without checking (e.g. `list_teams`) first, since a fresh/different session may not have it.
+The `vercel/vercel-plugin` Claude Code plugin is installed. Two separate auth paths exist, verified 2026-08-25:
+- **Official Vercel MCP** (`mcp.vercel.com`, OAuth, pre-authorized) — **read-only**: `list_teams`/`list_projects`/`get_project`/`list_deployments` work; this is documented as read-only in its initial release, don't expect write tools (`deploy_to_vercel` etc.) to actually mutate anything even though they appear in the tool list.
+- **Local `vercel` CLI** — not installed/authenticated by default. `pnpm add -g vercel`, then `vercel login` (device-code flow: prints a URL + code, needs a human to approve in-browser — background the command and wait, don't block on it). Once approved, the CLI session stays authenticated for the rest of that machine/user profile. `vercel link --yes --project astro-neon-spike --scope hobby-dd78` links this repo. After that, **all of it is scriptable**: `vercel env ls/add/rm`, `vercel deploy --prod --yes` all worked non-interactively.
+
+**Verified end-to-end** (2026-08-25): Neon integration was already installed (`STORAGE_*` env vars, Production+Development scope) and all 5 app secrets (`DATABASE_URL`, `ADMIN_PASSCODE`, `COOKIE_SIGNING_SECRET`, `VAPID_PUBLIC_KEY`, `VAPID_PRIVATE_KEY`, Production+Preview scope) were already set — likely done manually via the dashboard before the CLI path was tried. Triggered a real `vercel deploy --prod --yes`, confirmed live: `https://astro-neon-spike.vercel.app/manifest.json` → 200, `/api/trip/test` → 501 `{"ok":false,"error":"not implemented"}` as designed. So `SETUP.md` steps 3-6 are genuinely agent-completable in a session with CLI access — the earlier "not yet verified" caveat is resolved.
+
+**Found via this**: Vercel only supports *major* Node version selection, not exact patch — `package.json`'s `engines.node` was `"24.19.0"` and triggered a build warning every deploy ("only major Node.js Version can be selected"). Fixed to `"24.x"`; `.nvmrc` stays exact (`24.19.0`) since that's for local nvm/fnm, which does support patch pins.
 
 ## Known pitfalls
 
