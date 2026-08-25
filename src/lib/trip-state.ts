@@ -38,6 +38,11 @@ export type RedactedTripState = {
   chapters: RedactedChapterState[];
 };
 
+/** Shared chapter-ordering rule — kept in one place so the API and the static shell can never disagree on order. */
+export function sortByOrder<T extends { order: number }>(items: readonly T[]): T[] {
+  return [...items].sort((a, b) => a.order - b.order);
+}
+
 /**
  * Resolves `slug` against the `trips` content collection first and returns
  * `null` immediately when it doesn't exist — no DB query for an unknown
@@ -57,8 +62,7 @@ export async function getTripState(slug: string): Promise<TripState | null> {
   `) as { chapter_id: string; unlocked: boolean }[];
   const unlockedMap = new Map(rows.map((row) => [row.chapter_id, row.unlocked]));
 
-  const chapters: TripChapterState[] = [...trip.data.chapters]
-    .sort((a, b) => a.order - b.order)
+  const chapters: TripChapterState[] = sortByOrder(trip.data.chapters)
     .map((chapter) => ({
       id: chapter.id,
       order: chapter.order,

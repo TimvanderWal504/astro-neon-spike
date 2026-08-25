@@ -1,5 +1,6 @@
 ---
 import { getCollection } from 'astro:content';
+import { sortByOrder } from '../../lib/trip-state';
 
 // Static shell per AD-1: only structure (nav, hero, chapter slot order,
 // ambient viewfinder) is prerendered. A chapter's real content never enters
@@ -25,9 +26,11 @@ const { trip } = Astro.props;
 const accentColor = trip.data.accentColor;
 const startDate = trip.data.startDate;
 const slug = trip.data.slug;
-const chapterSlots = [...trip.data.chapters]
-  .sort((a, b) => a.order - b.order)
-  .map((chapter) => ({ id: chapter.id, order: chapter.order, kind: chapter.kind }));
+const chapterSlots = sortByOrder(trip.data.chapters).map((chapter) => ({
+  id: chapter.id,
+  order: chapter.order,
+  kind: chapter.kind,
+}));
 
 // 8-digit hex-with-alpha strings (e.g. "#E3A64A24") for the ambient glow —
 // computed here since CSS custom properties can't have hex digits appended
@@ -420,6 +423,10 @@ const ambientGlowBackground = `radial-gradient(ellipse 70% 55% at 50% 10%, ${acc
             if (timeEl) timeEl.textContent = chapter.time ?? '';
             const locationEl = slot.querySelector('[data-field="location"]');
             if (locationEl) locationEl.textContent = chapter.location ?? '';
+            const metaEl = slot.querySelector('.chapter-meta');
+            if (metaEl instanceof HTMLElement) {
+              metaEl.hidden = !chapter.time && !chapter.location;
+            }
             const descEl = slot.querySelector('[data-field="description"]');
             if (descEl) descEl.textContent = chapter.description ?? '';
           }
