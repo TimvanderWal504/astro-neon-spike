@@ -1,0 +1,64 @@
+{
+  "slug": "ameland-weekend",
+  "startDate": "2026-10-02T11:30:00",
+  "accentColor": "#E3A64A",
+  "chapters": [
+    {
+      "id": "bestemming",
+      "order": 1,
+      "kind": "cinematic",
+      "title": "Ameland",
+      "time": null,
+      "location": null,
+      "description": "Drie dagen, zeven man, een boot over het wad. We verzamelen vrijdag rond 11:30 en fietsen na aankomst naar het appartement.",
+      "svgVariant": "vizier-europa"
+    },
+    {
+      "id": "vrijdag",
+      "order": 2,
+      "kind": "knap",
+      "title": "Onderweg naar het eiland",
+      "time": "Vrijdag 2 oktober, 11:30",
+      "location": "Bliekeduun 8, Hollum",
+      "description": "11:30 — Verzamelen, vanuit verschillende steden, richting de boot.\n14:45 — De boot, stipt, overtocht duurt tot 16:00.\n16:00 — Fietsen naar het appartement.\n's Avonds — Geen programma, wel spelletjes. Neem er eentje mee. Er staat er in elk geval één vast op het bord: Risk.",
+      "svgVariant": "knap-vrijdag"
+    },
+    {
+      "id": "blokarten",
+      "order": 3,
+      "kind": "cinematic",
+      "title": "Blokarten",
+      "time": "Zaterdag 3 oktober, 09:15",
+      "location": "Het Westerpad 1a, Nes",
+      "description": "Vol over het strand. Dichte schoenen aan.",
+      "svgVariant": "blokarten-rig"
+    },
+    {
+      "id": "brouwerij",
+      "order": 4,
+      "kind": "cinematic",
+      "title": "De brouwerij",
+      "time": "Zaterdag 3 oktober, 12:30",
+      "location": "Smitteweg 6, Ballum",
+      "description": "Rondleiding, en waarschijnlijk blijven we de hele middag hangen.",
+      "svgVariant": "brouwerij-kettle"
+    },
+    {
+      "id": "zondag",
+      "order": 5,
+      "kind": "knap",
+      "title": "De laatste dag",
+      "time": "Zondag 4 oktober, 11:00",
+      "location": null,
+      "description": "11:00 — Uitchecken.\n? — Nog een verrassing onderweg. Dit hoofdstuk gaat open zodra het rond is.\n16:00 — Boot terug naar het vasteland.",
+      "svgVariant": "knap-zondag"
+    }
+  ],
+  "packingList": [
+    { "id": "schoenen", "label": "Dichte schoenen (voor het blokarten)" },
+    { "id": "regenjas", "label": "Regenjas, voor de zekerheid" },
+    { "id": "zwemkleding", "label": "Zwemkleding, optioneel" },
+    { "id": "spelletjes", "label": "Een spelletje voor vrijdagavond" },
+    { "id": "oplader", "label": "Telefoonoplader of powerbank" }
+  ]
+}
