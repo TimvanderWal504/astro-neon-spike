@@ -1,16 +1,225 @@
 ---
 // Organizer/admin view: passcode-gated (AD-5), unredacted trip state (AD-2).
 // Dynamic, on-demand rendered — no getStaticPaths needed under output:
-// 'server' when prerender is false. Stories 4-5 implement.
+// 'server' when prerender is false. This story (4) only implements the
+// passcode gate and an authenticated placeholder; story 5 fills the real
+// chapter-toggle UI into that placeholder — no trip-data fetch here.
 export const prerender = false;
+
+import { SESSION_COOKIE_NAME, verifySession } from '../../lib/admin-auth';
+
+const { trip } = Astro.params;
+
+// Config read lazily, request-time — never module scope. If unset, the
+// session can never verify, so the page fails closed to the passcode form
+// (which itself 500s on submit via the login route's own config gate).
+const cookieSigningSecret = process.env.COOKIE_SIGNING_SECRET;
+const sessionCookie = Astro.cookies.get(SESSION_COOKIE_NAME)?.value;
+const isAuthenticated = Boolean(
+  cookieSigningSecret && verifySession(sessionCookie, cookieSigningSecret),
+);
+
+// Defense-in-depth: this response is cookie-personalized (authenticated or
+// not) and must never be cached by any intermediary, even though nothing
+// currently opts it into caching.
+Astro.response.headers.set('Cache-Control', 'private, no-store');
 ---
+
 <html lang="nl">
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <title>Admin — Ameland Vriendenweekend</title>
+    <meta name="robots" content="noindex, nofollow" />
+    <title>Admin — {trip} — Ameland Vriendenweekend</title>
+    <style>
+      * {
+        box-sizing: border-box;
+      }
+      body {
+        margin: 0;
+        min-height: 100dvh;
+        background: #0a0d0c;
+        color: #f4f1ea;
+        font-family: 'Space Grotesk', system-ui, -apple-system, sans-serif;
+        -webkit-font-smoothing: antialiased;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        padding: 24px;
+      }
+      .mono {
+        font-family: 'JetBrains Mono', ui-monospace, monospace;
+      }
+      .admin-card {
+        width: 100%;
+        max-width: 400px;
+        border: 1px solid rgba(244, 241, 234, 0.1);
+        border-radius: 16px;
+        padding: 28px;
+      }
+      .admin-label {
+        font-family: 'JetBrains Mono', monospace;
+        font-size: 12px;
+        letter-spacing: 0.14em;
+        text-transform: uppercase;
+        color: #9a9a91;
+        margin: 0 0 8px;
+      }
+      .admin-title {
+        font-family: 'Bodoni Moda', Georgia, serif;
+        font-weight: 500;
+        font-size: 24px;
+        margin: 0 0 20px;
+      }
+      .admin-field-label {
+        display: block;
+        font-size: 13px;
+        color: #c9c6bc;
+        margin: 0 0 8px;
+      }
+      .admin-input {
+        width: 100%;
+        background: rgba(244, 241, 234, 0.06);
+        border: 1px solid rgba(244, 241, 234, 0.16);
+        border-radius: 10px;
+        padding: 12px 14px;
+        font-size: 15px;
+        color: #f4f1ea;
+        font-family: inherit;
+      }
+      .admin-input:focus {
+        outline: none;
+        border-color: #f4f1ea;
+      }
+      .admin-submit {
+        width: 100%;
+        margin-top: 16px;
+        padding: 12px 14px;
+        border-radius: 10px;
+        border: none;
+        background: #f4f1ea;
+        color: #0a0d0c;
+        font-family: inherit;
+        font-size: 15px;
+        font-weight: 600;
+        cursor: pointer;
+      }
+      .admin-submit:disabled {
+        opacity: 0.6;
+        cursor: default;
+      }
+      .admin-error {
+        margin: 12px 0 0;
+        font-size: 13px;
+        color: #e07a5f;
+      }
+      .admin-error[hidden] {
+        display: none;
+      }
+      .admin-placeholder-copy {
+        font-size: 15px;
+        line-height: 1.6;
+        color: #e5e2d9;
+        margin: 0;
+      }
+    </style>
   </head>
   <body>
-    <!-- TODO(stories 4-5): passcode gate + unredacted admin view. -->
+    <main>
+      {
+        isAuthenticated ? (
+          <div class="admin-card" data-authenticated>
+            <p class="admin-label mono">Admin — {trip}</p>
+            <h1 class="admin-title">Ingelogd.</h1>
+            <p class="admin-placeholder-copy">
+              De hoofdstuk-toggles komen hier binnenkort.
+            </p>
+          </div>
+        ) : (
+          <div class="admin-card">
+            <p class="admin-label mono">Admin — {trip}</p>
+            <h1 class="admin-title">Toegangscode</h1>
+            <form data-passcode-form>
+              <label class="admin-field-label" for="passcode">
+                Voer de toegangscode in
+              </label>
+              <input
+                class="admin-input"
+                type="password"
+                id="passcode"
+                name="passcode"
+                autocomplete="current-password"
+                required
+                data-passcode-input
+              />
+              <button class="admin-submit" type="submit" data-passcode-submit>
+                Ontgrendelen
+              </button>
+              <p
+                class="admin-error mono"
+                hidden
+                role="alert"
+                aria-live="polite"
+                data-passcode-error
+              />
+            </form>
+          </div>
+        )
+      }
+    </main>
+
+    <script>
+      const form = document.querySelector('[data-passcode-form]');
+      const errorEl = document.querySelector('[data-passcode-error]');
+      const input = document.querySelector('[data-passcode-input]');
+      const submitBtn = document.querySelector('[data-passcode-submit]');
+
+      function showError(message: string): void {
+        if (!(errorEl instanceof HTMLElement)) return;
+        errorEl.textContent = message;
+        errorEl.hidden = false;
+      }
+
+      function hideError(): void {
+        if (!(errorEl instanceof HTMLElement)) return;
+        errorEl.hidden = true;
+        errorEl.textContent = '';
+      }
+
+      form?.addEventListener('submit', async (event) => {
+        event.preventDefault();
+        hideError();
+        if (submitBtn instanceof HTMLButtonElement) submitBtn.disabled = true;
+
+        try {
+          const passcode = input instanceof HTMLInputElement ? input.value : '';
+          const res = await fetch('/api/admin/login', {
+            method: 'POST',
+            headers: { 'content-type': 'application/json' },
+            body: JSON.stringify({ passcode }),
+          });
+
+          if (res.status === 200) {
+            window.location.reload();
+            return;
+          }
+
+          if (res.status === 429) {
+            showError('Te veel pogingen. Probeer het over een tijdje opnieuw.');
+            return;
+          }
+
+          const payload = await res.json().catch(() => null);
+          showError(
+            (payload && typeof payload.error === 'string' && payload.error) ||
+              'Onjuiste toegangscode.',
+          );
+        } catch (err) {
+          showError('Er ging iets mis. Probeer het opnieuw.');
+        } finally {
+          if (submitBtn instanceof HTMLButtonElement) submitBtn.disabled = false;
+        }
+      });
+    </script>
   </body>
 </html>
