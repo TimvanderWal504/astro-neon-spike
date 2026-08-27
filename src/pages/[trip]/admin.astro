@@ -1,12 +1,13 @@
 ---
 // Organizer/admin view: passcode-gated (AD-5), unredacted trip state (AD-2).
 // Dynamic, on-demand rendered — no getStaticPaths needed under output:
-// 'server' when prerender is false. This story (4) only implements the
-// passcode gate and an authenticated placeholder; story 5 fills the real
-// chapter-toggle UI into that placeholder — no trip-data fetch here.
+// 'server' when prerender is false. Story 4 implemented the passcode gate;
+// story 5 fills the real chapter-toggle UI into the authenticated view,
+// fetched unredacted via getTripState (never redactTripState).
 export const prerender = false;
 
 import { SESSION_COOKIE_NAME, verifySession } from '../../lib/admin-auth';
+import { getTripState, type TripState } from '../../lib/trip-state';
 
 const { trip } = Astro.params;
 
@@ -18,6 +19,22 @@ const sessionCookie = Astro.cookies.get(SESSION_COOKIE_NAME)?.value;
 const isAuthenticated = Boolean(
   cookieSigningSecret && verifySession(sessionCookie, cookieSigningSecret),
 );
+
+// Unredacted per AD-2 ("organizer always sees everything") — only fetched
+// once authenticated, and only when the route actually has a trip param. A
+// thrown DB/content error is logged and treated the same as tripState being
+// null for rendering purposes (falls back to the "Trip not found" path)
+// rather than throwing an unhandled exception during page render, matching
+// the fail-gracefully convention used by toggle.ts/login.ts.
+let tripState: TripState | null = null;
+if (isAuthenticated && trip) {
+  try {
+    tripState = await getTripState(trip);
+  } catch (err) {
+    console.error(`admin.astro: getTripState(${trip}) failed:`, err);
+    tripState = null;
+  }
+}
 
 // Defense-in-depth: this response is cookie-personalized (authenticated or
 // not) and must never be cached by any intermediary, even though nothing
@@ -122,18 +139,181 @@ Astro.response.headers.set('Cache-Control', 'private, no-store');
         color: #e5e2d9;
         margin: 0;
       }
+      .admin-card-wide {
+        max-width: 640px;
+      }
+      .chapter-list {
+        list-style: none;
+        margin: 20px 0 0;
+        padding: 0;
+        display: flex;
+        flex-direction: column;
+        gap: 12px;
+      }
+      .chapter-row {
+        border: 1px solid rgba(244, 241, 234, 0.09);
+        border-radius: 16px;
+        padding: 18px 20px;
+        background: rgba(244, 241, 234, 0.02);
+      }
+      .chapter-row-main {
+        display: flex;
+        align-items: flex-start;
+        justify-content: space-between;
+        gap: 16px;
+      }
+      .chapter-row-heading {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        margin: 0 0 4px;
+      }
+      .chapter-row-title {
+        font-weight: 600;
+        font-size: 15px;
+      }
+      .chapter-tag {
+        font-size: 10px;
+        padding: 2px 8px;
+        border-radius: 999px;
+        text-transform: uppercase;
+        letter-spacing: 0.08em;
+        background: rgba(244, 241, 234, 0.06);
+        color: #9a9a91;
+      }
+      .chapter-tag[data-unlocked='true'] {
+        background: rgba(227, 166, 74, 0.13);
+        color: var(--accent, #e3a64a);
+      }
+      .chapter-meta {
+        color: #9a9a91;
+        font-size: 13px;
+        margin: 0;
+      }
+      .chapter-toggle {
+        flex: 0 0 auto;
+        width: 44px;
+        height: 26px;
+        border-radius: 999px;
+        border: none;
+        position: relative;
+        cursor: pointer;
+        padding: 0;
+        background: rgba(244, 241, 234, 0.15);
+      }
+      .chapter-toggle[data-unlocked='true'] {
+        background: var(--accent, #e3a64a);
+      }
+      .chapter-toggle:disabled {
+        opacity: 0.6;
+        cursor: default;
+      }
+      .chapter-toggle-thumb {
+        position: absolute;
+        top: 3px;
+        left: 3px;
+        width: 20px;
+        height: 20px;
+        border-radius: 999px;
+        background: #0a0d0c;
+        transition: left 0.2s ease;
+      }
+      .chapter-toggle[data-unlocked='true'] .chapter-toggle-thumb {
+        left: 21px;
+      }
+      .always-on-badge {
+        flex: 0 0 auto;
+        font-family: 'JetBrains Mono', monospace;
+        font-size: 10px;
+        color: #9a9a91;
+        padding: 6px 10px;
+        border: 1px solid rgba(244, 241, 234, 0.12);
+        border-radius: 999px;
+      }
+      .chapter-row-error {
+        margin: 10px 0 0;
+        font-size: 12px;
+        color: #e07a5f;
+      }
+      .chapter-row-error[hidden] {
+        display: none;
+      }
     </style>
   </head>
   <body>
     <main>
       {
         isAuthenticated ? (
-          <div class="admin-card" data-authenticated>
+          <div
+            class="admin-card admin-card-wide"
+            data-authenticated
+            style={tripState ? `--accent: ${tripState.accentColor}` : undefined}
+          >
             <p class="admin-label mono">Admin — {trip}</p>
             <h1 class="admin-title">Ingelogd.</h1>
-            <p class="admin-placeholder-copy">
-              De hoofdstuk-toggles komen hier binnenkort.
-            </p>
+            {tripState ? (
+              <ul class="chapter-list">
+                {tripState.chapters.map((chapter) => (
+                  <li class="chapter-row" data-chapter-row>
+                    <div class="chapter-row-main">
+                      <div class="chapter-row-info">
+                        <div class="chapter-row-heading">
+                          <span class="chapter-row-title" data-chapter-title>{chapter.title}</span>
+                          <span
+                            class="chapter-tag mono"
+                            data-chapter-tag
+                            data-unlocked={chapter.unlocked ? 'true' : 'false'}
+                          >
+                            {chapter.unlocked ? 'Onthuld' : 'Op slot'}
+                          </span>
+                        </div>
+                        <p class="chapter-meta">
+                          {[
+                            chapter.kind === 'cinematic' ? 'Cinematisch' : 'Knap',
+                            chapter.time,
+                            chapter.location,
+                          ]
+                            .filter(Boolean)
+                            .join(' · ')}
+                        </p>
+                      </div>
+                      <button
+                        type="button"
+                        class="chapter-toggle"
+                        data-chapter-toggle
+                        data-chapter-id={chapter.id}
+                        data-trip-slug={tripState.slug}
+                        data-unlocked={chapter.unlocked ? 'true' : 'false'}
+                        aria-pressed={chapter.unlocked ? 'true' : 'false'}
+                        aria-label={`${chapter.title} ${chapter.unlocked ? 'vergrendelen' : 'ontgrendelen'}`}
+                      >
+                        <span class="chapter-toggle-thumb" aria-hidden="true" />
+                      </button>
+                    </div>
+                    <p
+                      class="chapter-row-error mono"
+                      hidden
+                      role="alert"
+                      aria-live="polite"
+                      data-chapter-error
+                    />
+                  </li>
+                ))}
+                <li class="chapter-row" data-chapter-row>
+                  <div class="chapter-row-main">
+                    <div class="chapter-row-info">
+                      <div class="chapter-row-heading">
+                        <span class="chapter-row-title">Paklijst</span>
+                      </div>
+                      <p class="chapter-meta">Altijd zichtbaar, vanaf dag één.</p>
+                    </div>
+                    <div class="always-on-badge">altijd aan</div>
+                  </div>
+                </li>
+              </ul>
+            ) : (
+              <p class="admin-placeholder-copy">Trip "{trip}" niet gevonden.</p>
+            )}
           </div>
         ) : (
           <div class="admin-card">
@@ -215,10 +395,105 @@ Astro.response.headers.set('Cache-Control', 'private, no-store');
               'Onjuiste toegangscode.',
           );
         } catch (err) {
+          console.error(err);
           showError('Er ging iets mis. Probeer het opnieuw.');
         } finally {
           if (submitBtn instanceof HTMLButtonElement) submitBtn.disabled = false;
         }
+      });
+    </script>
+
+    <script>
+      const toggles = document.querySelectorAll('[data-chapter-toggle]');
+
+      function setRowUnlocked(button: HTMLButtonElement, unlocked: boolean): void {
+        const state = unlocked ? 'true' : 'false';
+        button.setAttribute('aria-pressed', state);
+        button.dataset.unlocked = state;
+
+        const row = button.closest('[data-chapter-row]');
+
+        // Keep the accessible name in sync with the *next* action the button
+        // will perform — otherwise a screen reader keeps announcing "unlock"
+        // after the chapter is already unlocked (and vice versa).
+        const titleEl = row?.querySelector('[data-chapter-title]');
+        const title = titleEl instanceof HTMLElement ? titleEl.textContent : '';
+        button.setAttribute(
+          'aria-label',
+          `${title ?? ''} ${unlocked ? 'vergrendelen' : 'ontgrendelen'}`.trim(),
+        );
+
+        const tag = row?.querySelector('[data-chapter-tag]');
+        if (tag instanceof HTMLElement) {
+          tag.dataset.unlocked = state;
+          tag.textContent = unlocked ? 'Onthuld' : 'Op slot';
+        }
+      }
+
+      function showRowError(button: HTMLButtonElement, message: string): void {
+        const row = button.closest('[data-chapter-row]');
+        const errorEl = row?.querySelector('[data-chapter-error]');
+        if (errorEl instanceof HTMLElement) {
+          errorEl.textContent = message;
+          errorEl.hidden = false;
+        }
+      }
+
+      function hideRowError(button: HTMLButtonElement): void {
+        const row = button.closest('[data-chapter-row]');
+        const errorEl = row?.querySelector('[data-chapter-error]');
+        if (errorEl instanceof HTMLElement) {
+          errorEl.hidden = true;
+          errorEl.textContent = '';
+        }
+      }
+
+      toggles.forEach((el) => {
+        if (!(el instanceof HTMLButtonElement)) return;
+
+        el.addEventListener('click', async () => {
+          const chapterId = el.dataset.chapterId;
+          const tripSlug = el.dataset.tripSlug;
+          if (!chapterId || !tripSlug) return;
+
+          const previousUnlocked = el.getAttribute('aria-pressed') === 'true';
+          const nextUnlocked = !previousUnlocked;
+
+          hideRowError(el);
+          el.disabled = true;
+
+          try {
+            const res = await fetch('/api/admin/toggle', {
+              method: 'POST',
+              headers: { 'content-type': 'application/json' },
+              body: JSON.stringify({ tripSlug, chapterId, unlocked: nextUnlocked }),
+            });
+
+            const payload = await res.json().catch(() => null);
+
+            if (
+              res.status === 200 &&
+              payload &&
+              payload.ok === true &&
+              typeof payload.data?.unlocked === 'boolean'
+            ) {
+              setRowUnlocked(el, payload.data.unlocked);
+            } else {
+              setRowUnlocked(el, previousUnlocked);
+              showRowError(
+                el,
+                (payload && typeof payload.error === 'string' && payload.error) ||
+                  'Er ging iets mis. Probeer het opnieuw.',
+              );
+            }
+          } catch (err) {
+            console.error(err);
+            setRowUnlocked(el, previousUnlocked);
+            showRowError(el, 'Er ging iets mis. Probeer het opnieuw.');
+          } finally {
+            el.disabled = false;
+          }
+        });
       });
     </script>
   </body>

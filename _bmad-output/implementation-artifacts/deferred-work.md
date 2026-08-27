@@ -57,3 +57,19 @@
 - source_spec: `_bmad-output/specs/spec-ameland-weekend/stories/3-public-trip-page-static-shell-gating-redaction.md`
   summary: `getTripState` casts the raw Neon query result (`chapter_id`/`unlocked` columns) with `as {...}` and no runtime shape validation — a future `chapter_unlocks` schema drift (renamed/retyped column) would type-check but silently return wrong data at runtime.
   evidence: Raised by story 3's blind-hunter review. Not currently triggered by anything in this diff — the table and the query were authored together and match today — but worth hardening if the table's schema is ever changed independently of this read path (e.g. by a future migration from story 5/8/9 that doesn't also touch `trip-state.ts`).
+
+- source_spec: `_bmad-output/specs/spec-ameland-weekend/stories/5-admin-unlock-toggles.md`
+  summary: If a chapter toggle POST fails (401/expired session, network error), the admin page shows an inline row error but never redirects/prompts back to the passcode form — the organizer has no clear signal that the fix is to log in again.
+  evidence: Raised by blind-hunter review of story 5's diff. Technically satisfies the spec's stated AC ("a failed request... shows an inline error... leaves the switch in its prior state") but a stale/expired session mid-editing session is a real scenario (90-day cookie can still expire or be cleared) worth a clearer recovery path later.
+
+- source_spec: `_bmad-output/specs/spec-ameland-weekend/stories/5-admin-unlock-toggles.md`
+  summary: The admin page's always-on Paklijst row renders only the right-side "altijd aan" pill; `Admin.dc.html`'s reference mockup also gives that row a heading-level "Altijd zichtbaar" tag matching the chapter rows' `.chapter-tag` styling, which story 5's spec didn't carry into its Boundaries.
+  evidence: Raised by blind-hunter review of story 5's diff. Purely cosmetic parity gap with the mockup, not a functional defect — the row is still clearly non-toggleable and correctly never writes.
+
+- source_spec: `_bmad-output/specs/spec-ameland-weekend/stories/5-admin-unlock-toggles.md`
+  summary: Neither the admin chapter-toggle fetch (story 5) nor the passcode-login fetch (story 4) has a request timeout/`AbortController` — a hung network request leaves the button disabled indefinitely with no error shown.
+  evidence: Raised by edge-case-hunter review of story 5's diff. Mirrors an existing pattern from story 4's login fetch rather than a new risk introduced here; worth a systemic fix across both call sites together rather than singling one out.
+
+- source_spec: `_bmad-output/specs/spec-ameland-weekend/stories/5-admin-unlock-toggles.md`
+  summary: The admin page has no cross-tab/cross-admin sync for chapter-unlock state — if a chapter is toggled from another tab or by a second organizer, an already-open admin page silently goes stale until manually reloaded.
+  evidence: Raised by blind-hunter review of story 5's diff. Distinct from story 8's guest-facing push+postMessage broadcast (epic-context requirement, public page only) — no equivalent requirement exists for the admin view. Low likelihood given a single shared admin passcode and a small friend group, but a real gap if two people ever co-administer simultaneously.

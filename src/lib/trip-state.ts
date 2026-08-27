@@ -84,6 +84,32 @@ export async function getTripState(slug: string): Promise<TripState | null> {
 }
 
 /**
+ * Atomic upsert into `chapter_unlocks` (story 5): a single
+ * `INSERT ... ON CONFLICT DO UPDATE ... RETURNING`, never a separate
+ * SELECT-then-write, so two concurrent toggles of the same chapter can never
+ * lose an update — the row simply ends up matching whichever request's
+ * write landed last. Kept as its own exported function (not inlined in the
+ * route) so story 8 can later wrap it plus a push fan-out in one
+ * `sql.transaction([...])` without restructuring the route's
+ * auth/parsing/response logic.
+ */
+export async function setChapterUnlocked(
+  tripSlug: string,
+  chapterId: string,
+  unlocked: boolean,
+): Promise<boolean> {
+  const sql = getSql();
+  const rows = (await sql`
+    INSERT INTO chapter_unlocks (trip_slug, chapter_id, unlocked)
+    VALUES (${tripSlug}, ${chapterId}, ${unlocked})
+    ON CONFLICT (trip_slug, chapter_id) DO UPDATE SET unlocked = EXCLUDED.unlocked
+    RETURNING unlocked
+  `) as { unlocked: boolean }[];
+
+  return rows[0]?.unlocked ?? unlocked;
+}
+
+/**
  * Pure redaction step (AD-2): a locked chapter's entry is stripped to
  * exactly `{id, order, kind, unlocked:false}` — never its real fields. An
  * unlocked chapter passes through with its full real fields.
