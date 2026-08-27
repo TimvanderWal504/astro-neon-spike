@@ -1,5 +1,5 @@
 {
-  "slug": "ameland-weekend",
+  "slug": "moapmoap",
   "startDate": "2026-10-02T11:30:00",
   "accentColor": "#E3A64A",
   "chapters": [
@@ -57,7 +57,7 @@
   "packingList": [
     { "id": "schoenen", "label": "Dichte schoenen (voor het blokarten)" },
     { "id": "regenjas", "label": "Regenjas, voor de zekerheid" },
-    { "id": "zwemkleding", "label": "Zwemkleding, optioneel" },
+    { "id": "zwemkleding", "label": "Zwemkleding, super handig!" },
     { "id": "spelletjes", "label": "Een spelletje voor vrijdagavond" },
     { "id": "oplader", "label": "Telefoonoplader of powerbank" }
   ]
