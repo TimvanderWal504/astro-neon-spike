@@ -22,18 +22,22 @@ const isAuthenticated = Boolean(
 
 // Unredacted per AD-2 ("organizer always sees everything") — only fetched
 // once authenticated, and only when the route actually has a trip param. A
-// thrown DB/content error is logged and treated the same as tripState being
-// null for rendering purposes (falls back to the "Trip not found" path)
-// rather than throwing an unhandled exception during page render, matching
-// the fail-gracefully convention used by toggle.ts/login.ts.
+// thrown DB/content error is logged and kept distinct from "no such trip"
+// (tripLoadFailed) so the two never render the same misleading message —
+// matching the fail-gracefully convention used by toggle.ts/login.ts without
+// conflating "unknown trip" with "transient server error".
 let tripState: TripState | null = null;
+let tripLoadFailed = false;
 if (isAuthenticated && trip) {
   try {
     tripState = await getTripState(trip);
   } catch (err) {
     console.error(`admin.astro: getTripState(${trip}) failed:`, err);
-    tripState = null;
+    tripLoadFailed = true;
   }
+}
+if (isAuthenticated && trip && !tripState && !tripLoadFailed) {
+  Astro.response.status = 404;
 }
 
 // Defense-in-depth: this response is cookie-personalized (authenticated or
@@ -201,6 +205,10 @@ Astro.response.headers.set('Cache-Control', 'private, no-store');
         padding: 0;
         background: rgba(244, 241, 234, 0.15);
       }
+      .chapter-toggle:focus-visible {
+        outline: 2px solid #f4f1ea;
+        outline-offset: 2px;
+      }
       .chapter-toggle[data-unlocked='true'] {
         background: var(--accent, #e3a64a);
       }
@@ -252,7 +260,7 @@ Astro.response.headers.set('Cache-Control', 'private, no-store');
             <p class="admin-label mono">Admin — {trip}</p>
             <h1 class="admin-title">Ingelogd.</h1>
             {tripState ? (
-              <ul class="chapter-list">
+              <ul class="chapter-list" aria-label="Hoofdstukken">
                 {tripState.chapters.map((chapter) => (
                   <li class="chapter-row" data-chapter-row>
                     <div class="chapter-row-main">
@@ -311,6 +319,10 @@ Astro.response.headers.set('Cache-Control', 'private, no-store');
                   </div>
                 </li>
               </ul>
+            ) : tripLoadFailed ? (
+              <p class="admin-placeholder-copy">
+                Er ging iets mis bij het laden. Probeer de pagina te vernieuwen.
+              </p>
             ) : (
               <p class="admin-placeholder-copy">Trip "{trip}" niet gevonden.</p>
             )}

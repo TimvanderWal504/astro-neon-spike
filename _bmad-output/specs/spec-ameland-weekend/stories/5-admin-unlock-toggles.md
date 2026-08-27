@@ -64,6 +64,13 @@ context:
 - Given the admin page renders, when the chapter list loads, then it shows exactly 5 chapter rows in content order plus exactly one static Paklijst row, and no review-gate banner appears anywhere.
 - Given a toggle request fails (network/500), when the response returns, then the row's switch visibly reverts and an inline error shows, rather than silently desyncing from server state.
 
+### Review Findings
+
+- [x] [Review][Patch] Admin page shows the same "Trip not found" message for a genuinely unknown trip and for a DB/content load failure, with no distinguishing state or HTTP status [admin.astro:29]
+- [x] [Review][Patch] Spec's Verification section documents only 3 of the 8 I/O-matrix manual checks, leaving no written procedure for the other 5 (unknown tripSlug/chapterId, malformed body, concurrent toggle, failed-toggle UI revert) [stories/5-admin-unlock-toggles.md:71]
+- [x] [Review][Patch] `.chapter-toggle` has no `:focus`/`:focus-visible` style, unlike `.admin-input:focus` elsewhere in the same stylesheet [admin.astro:193]
+- [x] [Review][Patch] Chapter-row list has no heading/landmark before it (e.g. "Hoofdstukken") for screen-reader users navigating by heading [admin.astro:254]
+
 ## Design Notes
 
 `setChapterUnlocked` lives next to `getTripState` in `trip-state.ts` since both already share the `chapter_unlocks` table and `getSql()` access — keeping the upsert as a standalone exported function (not inlined in the route) is what lets story 8 later compose it into a `sql.transaction([...])` alongside a push fan-out call without touching `toggle.ts`'s request/auth/response shape.
@@ -78,6 +85,11 @@ context:
 - `curl -X POST /api/admin/toggle -d '{"tripSlug":"ameland-weekend","chapterId":"bestemming","unlocked":true}' -H 'content-type: application/json'` with no cookie -- `401`.
 - Log in at `/ameland-weekend/admin`, toggle "Bestemming" on, then `curl /api/trip/ameland-weekend` -- chapter no longer redacted.
 - Reload `/ameland-weekend/admin` -- toggle state persists across reload.
+- With a valid session cookie, `curl -X POST /api/admin/toggle -d '{"tripSlug":"not-a-real-trip","chapterId":"bestemming","unlocked":true}' ...` -- `400`.
+- With a valid session cookie, `curl -X POST /api/admin/toggle -d '{"tripSlug":"ameland-weekend","chapterId":"not-a-chapter","unlocked":true}' ...` -- `400`.
+- With a valid session cookie, `curl -X POST /api/admin/toggle -d '{"tripSlug":"ameland-weekend","chapterId":"bestemming","unlocked":"yes"}' ...` -- `400`.
+- Fire two concurrent toggle requests for the same chapter (one `true`, one `false`) -- both `200`, final DB state matches whichever request the server processed last, no error.
+- In the admin UI, trigger a failed toggle (e.g. stop the dev server mid-click, or point `tripSlug` at an invalid value via devtools) -- the switch visibly reverts and an inline row error appears.
 
 ## Suggested Review Order
 
