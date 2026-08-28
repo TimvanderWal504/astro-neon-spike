@@ -72,42 +72,44 @@ const ambientGlowBackground = `radial-gradient(ellipse 70% 55% at 50% 10%, ${acc
         mix-blend-mode: screen;
       }
 
-      /* FIXED SCAN LAYER — ambient-only viewfinder wandering a faint Europe
-         map (ported from design/ameland-weekend/Main.dc.html:276-324,184-189).
+      /* HERO MAP — Europe scan-loop viewfinder (ported from
+         design/ameland-weekend/Main.dc.html:276-324,184-189), now scoped to
+         the hero's right-hand pane instead of a page-wide fixed watermark,
+         so it reads as a real visual rather than ambient background texture.
          Only the ambient loop is built here; the Bestemming-triggered
          zoom/dive sequence is story 6 and is intentionally not ported. */
-      .fixed-scan-layer {
-        position: fixed;
-        inset: 0;
-        z-index: 1;
-        pointer-events: none;
+      .hero-map {
+        position: relative;
+        width: 100%;
         display: flex;
         align-items: center;
         justify-content: center;
+        pointer-events: none;
+        z-index: 3;
       }
-      .fixed-scan-svg {
-        width: min(82vw, 640px);
-        height: min(82vw, 640px);
+      .hero-map-svg {
+        width: min(88vw, 560px);
+        height: min(88vw, 560px);
         overflow: visible;
-        opacity: 0.13;
+        opacity: 0.3;
       }
-      .fixed-scan-zoom {
+      .hero-map-zoom {
         transform-origin: 38.125% 41.875%;
       }
-      .fixed-scan-motion {
+      .hero-map-motion {
         animation: heroScanMove 16s cubic-bezier(0.45, 0, 0.55, 1) infinite;
       }
-      .fixed-scan-scale {
+      .hero-map-scale {
         transform-box: fill-box;
         transform-origin: center;
         animation: heroScanScale 16s cubic-bezier(0.45, 0, 0.55, 1) infinite;
       }
-      .fixed-scan-dot {
+      .hero-map-dot {
         transform-box: fill-box;
         transform-origin: center;
         animation: heroViewfinderPulse 2600ms ease-in-out infinite;
       }
-      .fixed-scan-flash {
+      .hero-map-flash {
         opacity: 0;
         transform-box: fill-box;
         transform-origin: center;
@@ -146,6 +148,34 @@ const ambientGlowBackground = `radial-gradient(ellipse 70% 55% at 50% 10%, ${acc
         padding: 48px 24px 64px;
         position: relative;
         z-index: 3;
+        gap: 40px;
+      }
+      .hero-text {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+      }
+      @media (min-width: 900px) {
+        .hero {
+          flex-direction: row;
+          align-items: center;
+          justify-content: space-between;
+          text-align: left;
+          padding: 0 4vw;
+          gap: 0;
+        }
+        .hero-text {
+          align-items: flex-start;
+          flex: 0 1 480px;
+        }
+        .hero-map {
+          flex: 1 1 auto;
+        }
+        .hero-map-svg {
+          width: min(50vw, 920px);
+          height: min(50vw, 920px);
+          opacity: 0.4;
+        }
       }
       .hero-days {
         font-family: 'JetBrains Mono', monospace;
@@ -192,6 +222,7 @@ const ambientGlowBackground = `radial-gradient(ellipse 70% 55% at 50% 10%, ${acc
         margin: 0 auto;
       }
       .chapter-slot {
+        display: none;
         border: 1px solid rgba(244, 241, 234, 0.1);
         border-radius: 16px;
         padding: 28px;
@@ -200,26 +231,14 @@ const ambientGlowBackground = `radial-gradient(ellipse 70% 55% at 50% 10%, ${acc
       .chapter-slot[data-kind='knap'] {
         border-style: dashed;
       }
+      .chapter-slot.is-unlocked {
+        display: block;
+      }
       .chapter-index {
         font-family: 'JetBrains Mono', monospace;
         font-size: 12px;
         letter-spacing: 0.14em;
         color: var(--accent);
-      }
-      .chapter-placeholder {
-        margin: 10px 0 0;
-        font-size: 15px;
-        line-height: 1.55;
-        color: #7d7c74;
-      }
-      .chapter-content {
-        display: none;
-      }
-      .chapter-slot.is-unlocked .chapter-placeholder {
-        display: none;
-      }
-      .chapter-slot.is-unlocked .chapter-content {
-        display: block;
       }
       .chapter-title {
         font-family: 'Bodoni Moda', Georgia, serif;
@@ -240,13 +259,10 @@ const ambientGlowBackground = `radial-gradient(ellipse 70% 55% at 50% 10%, ${acc
       }
 
       @media (prefers-reduced-motion: reduce) {
-        .fixed-scan-motion,
-        .fixed-scan-scale,
-        .fixed-scan-dot {
+        .hero-map-motion,
+        .hero-map-scale,
+        .hero-map-dot {
           animation: none;
-        }
-        .fixed-scan-layer {
-          display: none;
         }
       }
     </style>
@@ -254,11 +270,20 @@ const ambientGlowBackground = `radial-gradient(ellipse 70% 55% at 50% 10%, ${acc
   <body data-start={startDate} data-trip-slug={slug}>
     <div class="ambient-glow" style={`background:${ambientGlowBackground}`} aria-hidden="true"></div>
 
-    <!-- Ambient-only viewfinder layer (ported, scan-loop mode only). -->
-    <div class="fixed-scan-layer" aria-hidden="true">
-      <svg class="fixed-scan-svg" viewBox="0 0 800 800">
-        <g class="fixed-scan-zoom">
-          <g class="fixed-scan-grid">
+    <!-- HERO -->
+    <div class="hero">
+      <div class="hero-text">
+        <div class="hero-days" data-days-left>&hellip;</div>
+        <div class="hero-days-label">dagen tot vertrek</div>
+        <h1 class="hero-title">Nog niet alles is <em>verklapt</em>.</h1>
+        <p class="hero-copy">De rest volgt hier, stuk voor stuk, zodra het zover is.</p>
+      </div>
+
+      <!-- Europe scan-loop viewfinder (ported, scan-loop mode only). -->
+      <div class="hero-map" aria-hidden="true">
+      <svg class="hero-map-svg" viewBox="0 0 800 800">
+        <g class="hero-map-zoom">
+          <g class="hero-map-grid">
             <line x1="0" y1="100" x2="800" y2="100" stroke={accentColor} stroke-width="0.6" opacity="0.16"/>
             <line x1="0" y1="200" x2="800" y2="200" stroke={accentColor} stroke-width="0.6" opacity="0.16"/>
             <line x1="0" y1="300" x2="800" y2="300" stroke={accentColor} stroke-width="0.6" opacity="0.16"/>
@@ -308,14 +333,14 @@ const ambientGlowBackground = `radial-gradient(ellipse 70% 55% at 50% 10%, ${acc
           <path d="M453,279 L454,280 L458,279 L455,277 L450,278 L453,279 Z" fill="none" stroke={accentColor} stroke-width="1" opacity="0.4" stroke-linejoin="round"/>
           <path d="M488,448 L487,446 L483,448 L486,448 L485,449 L487,450 L488,448 Z" fill="none" stroke={accentColor} stroke-width="1" opacity="0.4" stroke-linejoin="round"/>
 
-          <g class="fixed-scan-motion">
-            <g class="fixed-scan-scale">
-              <circle class="fixed-scan-flash" r="70" fill="none" stroke={accentColor} stroke-width="1"/>
+          <g class="hero-map-motion">
+            <g class="hero-map-scale">
+              <circle class="hero-map-flash" r="70" fill="none" stroke={accentColor} stroke-width="1"/>
               <line x1="-90" y1="0" x2="90" y2="0" stroke={accentColor} stroke-width="1"/>
               <line x1="0" y1="-90" x2="0" y2="90" stroke={accentColor} stroke-width="1"/>
               <circle r="46" fill="none" stroke={accentColor} stroke-width="1.3"/>
               <circle r="20" fill="none" stroke={accentColor} stroke-width="1.3"/>
-              <circle class="fixed-scan-dot" r="2.6" fill={accentColor}/>
+              <circle class="hero-map-dot" r="2.6" fill={accentColor}/>
               <path d="M-90,-70 L-90,-90 L-70,-90" fill="none" stroke={accentColor} stroke-width="2" stroke-linecap="round"/>
               <path d="M70,-90 L90,-90 L90,-70" fill="none" stroke={accentColor} stroke-width="2" stroke-linecap="round"/>
               <path d="M90,70 L90,90 L70,90" fill="none" stroke={accentColor} stroke-width="2" stroke-linecap="round"/>
@@ -324,28 +349,20 @@ const ambientGlowBackground = `radial-gradient(ellipse 70% 55% at 50% 10%, ${acc
           </g>
         </g>
       </svg>
+      </div>
     </div>
 
-    <!-- HERO -->
-    <div class="hero">
-      <div class="hero-days" data-days-left>&hellip;</div>
-      <div class="hero-days-label">dagen tot vertrek</div>
-      <h1 class="hero-title">Nog niet alles is <em>verklapt</em>.</h1>
-      <p class="hero-copy">De rest volgt hier, stuk voor stuk, zodra het zover is.</p>
-    </div>
-
-    <!-- CHAPTER SLOTS — only id/order/kind drive this markup. Real content
-         (title/time/location/description) is filled in client-side, per
-         chapter, only once the fetch of /api/trip/[slug] reports it
-         unlocked. Never embedded here. -->
+    <!-- CHAPTER SLOTS — only id/order/kind drive this markup. Each slot
+         stays display:none (see .chapter-slot) until client-side JS adds
+         .is-unlocked, so a locked chapter has no visible trace at all —
+         real content (title/time/location/description) is filled in only
+         once the fetch of /api/trip/[slug] reports it unlocked, never
+         embedded here. -->
     <div class="chapters">
       {
         chapterSlots.map((chapter) => (
           <section class="chapter-slot" id={chapter.id} data-order={chapter.order} data-kind={chapter.kind}>
             <div class="chapter-index mono">{String(chapter.order).padStart(2, '0')}</div>
-            <p class="chapter-placeholder" data-field="placeholder">
-              Nog een verrassing onderweg.
-            </p>
             <div class="chapter-content">
               <h2 class="chapter-title" data-field="title" />
               <p class="chapter-meta">
@@ -383,7 +400,7 @@ const ambientGlowBackground = `radial-gradient(ellipse 70% 55% at 50% 10%, ${acc
 
       // Merge real content into unlocked chapter slots via the redacted
       // trip-state API (AD-2). Locked chapters are never touched — they
-      // keep their placeholder, exactly as the API left them.
+      // stay display:none (see .chapter-slot), invisible until unlocked.
       async function loadTripState(): Promise<void> {
         if (!tripSlug) return;
         try {
