@@ -112,9 +112,6 @@ const ambientGlowBackground = `radial-gradient(ellipse 70% 55% at 50% 10%, ${acc
         transform-box: fill-box;
         transform-origin: center;
       }
-      .fixed-scan-caption {
-        opacity: 0;
-      }
       @keyframes heroScanMove {
         0% { transform: translate(180px, 580px); }
         20% { transform: translate(250px, 430px); }
@@ -138,38 +135,9 @@ const ambientGlowBackground = `radial-gradient(ellipse 70% 55% at 50% 10%, ${acc
         50% { opacity: 1; transform: scale(1.25); }
       }
 
-      /* NAV */
-      .nav {
-        position: sticky;
-        top: 0;
-        z-index: 40;
-        display: flex;
-        align-items: center;
-        justify-content: space-between;
-        padding: 18px 24px;
-        background: rgba(10, 13, 12, 0.72);
-        backdrop-filter: blur(16px);
-        -webkit-backdrop-filter: blur(16px);
-        border-bottom: 1px solid rgba(244, 241, 234, 0.07);
-      }
-      .nav-label {
-        font-family: 'JetBrains Mono', monospace;
-        font-size: 12px;
-        letter-spacing: 0.14em;
-        text-transform: uppercase;
-        color: #9a9a91;
-      }
-      .nav-countdown {
-        display: flex;
-        align-items: center;
-        gap: 8px;
-        font-size: 12px;
-        color: #9a9a91;
-      }
-
       /* HERO */
       .hero {
-        min-height: calc(100dvh - 60px);
+        min-height: 100dvh;
         display: flex;
         flex-direction: column;
         align-items: center;
@@ -356,16 +324,6 @@ const ambientGlowBackground = `radial-gradient(ellipse 70% 55% at 50% 10%, ${acc
           </g>
         </g>
       </svg>
-      <div class="fixed-scan-caption mono">Locatie zoeken&hellip;</div>
-    </div>
-
-    <!-- NAV -->
-    <div class="nav">
-      <div class="nav-label">Ameland</div>
-      <div class="nav-countdown">
-        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg>
-        <span class="mono"><span data-days-left>&hellip;</span> dagen</span>
-      </div>
     </div>
 
     <!-- HERO -->
