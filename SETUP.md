@@ -6,8 +6,8 @@ codebase — see `_bmad-output/specs/spec-ameland-weekend/stories/1-project-scaf
 for why.
 
 > **Update (verified 2026-08-25):** steps 2-6 below were completed end-to-end
-> by an agent using the `vercel` CLI (see `AGENTS.md` § "Vercel plugin" for
-> the auth path — one human-approved `vercel login` device-code flow, then
+> by an agent using the `vercel` CLI (see `AGENTS.md` § "Running and
+> verifying" for the auth path — one human-approved `vercel login` device-code flow, then
 > everything else was scriptable: `vercel link`, `vercel env ls`, `vercel
 > deploy --prod --yes`). Manual dashboard steps below remain valid if you'd
 > rather do it by hand, or don't have CLI access in your agent's session.

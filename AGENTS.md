@@ -1,13 +1,14 @@
 <!-- bmad:context -->
-<!-- Verified 2026-08-25 — git initialized, initial commit made (story 1-1-project-scaffold-stack-setup). Managed by bmad-project-context; edits inside this block are replaced on refresh. Keep anything you want preserved outside the markers. -->
+<!-- Verified 2026-08-28 against 314be7db0a902d389b49486ea21efd8efdf5f9f4. Managed by bmad-project-context; edits inside this block are replaced on refresh. Keep anything you want preserved outside the markers. -->
 
 ## MoapMoap — Ameland Vriendenweekend PWA
 
-A secret, progressive-reveal trip site for 7 friends (2–4 Oct 2026), built as a reusable content-config template for future trips. Astro 7.x + Vercel Functions (Node runtime) + Neon Postgres: a static shell that fetches live, gating-redacted content. Story 1 (scaffold) is done — `SPEC.md` and `ARCHITECTURE-SPINE.md` are the contract; `BUILD_BRIEF.md` and the `.dc.html` mockups are the locked visual/interaction source of truth.
+A secret, progressive-reveal trip site for 7 friends (2–4 Oct 2026), built as a reusable content-config template for future trips. Astro 7.x + Vercel Functions (Node runtime) + Neon Postgres: a static shell that fetches live, gating-redacted content. `SPEC.md` and `ARCHITECTURE-SPINE.md` are the contract; `BUILD_BRIEF.md` and the `.dc.html` mockups are the locked visual/interaction source of truth.
 
 ## Policy
 
-- Never edit `design/ameland-weekend/Main.dc.html`, `Admin.dc.html`, or `BUILD_BRIEF.md` — frozen visual/interaction source of truth; port from them, don't redesign.
+- If you are editing `design/ameland-weekend/Main.dc.html`, `Admin.dc.html`, or `BUILD_BRIEF.md`, please notify the user. TThese files represent the established visual and interaction standard and must remain unchanged unless explicit authorization is provided. Proceed only once the user approves the proposed edits.
+- Trip slugs must never reveal the destination — the slug drives the public URL guests click to reach a locked surprise reveal (the Bestemming chapter); a giveaway slug defeats the reveal before it happens.
 
 ## Where things are
 
@@ -17,23 +18,19 @@ A secret, progressive-reveal trip site for 7 friends (2–4 Oct 2026), built as 
 ## Running and verifying
 
 - Package manager is pnpm only — no npm/yarn. `pnpm install` to set up.
-- `pnpm dev` — starts the Astro dev server; boots cleanly even with `DATABASE_URL` unset (`src/lib/db.ts` reads it lazily, never at module scope).
+- `pnpm dev` — starts the Astro dev server; boots cleanly even with `DATABASE_URL` unset (`src/lib/db.ts` reads it lazily, never at module scope). On this machine it does **not** reliably pick up `DATABASE_URL` from `.env.development` — export it in the shell before launching `astro dev`, or any route calling `getSql()` throws "DATABASE_URL is not set". (`pnpm migrate` has its own env loader and is unaffected.)
 - `pnpm build` — production build via the `@astrojs/vercel` Node-runtime adapter.
 - `pnpm typecheck` — runs `astro check` against the TripContent schema (`src/content.config.ts`) and all stub files.
-- `DATABASE_URL` points at a Neon branch (see `.env.example` + `SETUP.md`); no migration runner exists yet (`migrations/README.md` documents the convention, implementation deferred — see `_bmad-output/implementation-artifacts/deferred-work.md`).
+- `pnpm migrate` — applies `migrations/*.sql` in numeric order via `scripts/migrate.mjs` (transactional DDL + `_migrations` ledger, safe to re-run). Prod has no automated path: apply manually with `DATABASE_URL=<prod-connection-string> pnpm migrate`.
+- Vercel CLI isn't installed/authenticated by default. The official Vercel MCP (`mcp.vercel.com`) is read-only. To deploy or manage env vars: `pnpm add -g vercel`, `vercel login` (device-code flow, needs a human to approve in-browser), then `vercel link --yes --project astro-neon-spike --scope hobby-dd78` — after that `vercel env` / `vercel deploy --prod --yes` work non-interactively.
 
-## Vercel plugin
+## Conventions that differ from defaults
 
-The `vercel/vercel-plugin` Claude Code plugin is installed. Two separate auth paths exist, verified 2026-08-25:
-- **Official Vercel MCP** (`mcp.vercel.com`, OAuth, pre-authorized) — **read-only**: `list_teams`/`list_projects`/`get_project`/`list_deployments` work; this is documented as read-only in its initial release, don't expect write tools (`deploy_to_vercel` etc.) to actually mutate anything even though they appear in the tool list.
-- **Local `vercel` CLI** — not installed/authenticated by default. `pnpm add -g vercel`, then `vercel login` (device-code flow: prints a URL + code, needs a human to approve in-browser — background the command and wait, don't block on it). Once approved, the CLI session stays authenticated for the rest of that machine/user profile. `vercel link --yes --project astro-neon-spike --scope hobby-dd78` links this repo. After that, **all of it is scriptable**: `vercel env ls/add/rm`, `vercel deploy --prod --yes` all worked non-interactively.
-
-**Verified end-to-end** (2026-08-25): Neon integration was already installed (`STORAGE_*` env vars, Production+Development scope) and all 5 app secrets (`DATABASE_URL`, `ADMIN_PASSCODE`, `COOKIE_SIGNING_SECRET`, `VAPID_PUBLIC_KEY`, `VAPID_PRIVATE_KEY`, Production+Preview scope) were already set — likely done manually via the dashboard before the CLI path was tried. Triggered a real `vercel deploy --prod --yes`, confirmed live: `https://astro-neon-spike.vercel.app/manifest.json` → 200, `/api/trip/test` → 501 `{"ok":false,"error":"not implemented"}` as designed. So `SETUP.md` steps 3-6 are genuinely agent-completable in a session with CLI access — the earlier "not yet verified" caveat is resolved.
-
-**Found via this**: Vercel only supports *major* Node version selection, not exact patch — `package.json`'s `engines.node` was `"24.19.0"` and triggered a build warning every deploy ("only major Node.js Version can be selected"). Fixed to `"24.x"`; `.nvmrc` stays exact (`24.19.0`) since that's for local nvm/fnm, which does support patch pins.
+- Client IP from `x-forwarded-for` must use the **last** entry, never the first — the first entry is client-spoofable and lets an attacker rotate it per request to bypass rate limiting (`src/lib/admin-auth.ts`; caught by story 4's code review, AD-5).
 
 ## Known pitfalls
 
 - `<svg>` elements clip to their own box by default (UA `overflow: hidden`) — scaling content inside one with a CSS transform won't visually grow past it. Set `overflow: visible` explicitly on any `<svg>` that needs to scale past its box (hit in the viewfinder/Europa-scan layer) — already fixed once in the mockup, don't reintroduce it.
+- Vercel only supports selecting a *major* Node version in the dashboard, not an exact patch — keep `package.json`'s `engines.node` at `"24.x"` (not the exact `.nvmrc` patch), or every deploy warns.
 
 <!-- /bmad:context -->
