@@ -61,7 +61,7 @@ development_status:
   1-4-admin-auth: done
   1-5-admin-unlock-toggles: done
   1-6-tiered-animation-system-port: review
-  1-7-pwa-installability: backlog
+  1-7-pwa-installability: review
   1-8-push-notifications: backlog
   1-9-shared-packing-list: backlog
   1-10-reusable-template-validation: backlog

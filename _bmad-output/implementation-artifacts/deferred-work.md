@@ -73,3 +73,15 @@
 - source_spec: `_bmad-output/specs/spec-ameland-weekend/stories/5-admin-unlock-toggles.md`
   summary: The admin page has no cross-tab/cross-admin sync for chapter-unlock state — if a chapter is toggled from another tab or by a second organizer, an already-open admin page silently goes stale until manually reloaded.
   evidence: Raised by blind-hunter review of story 5's diff. Distinct from story 8's guest-facing push+postMessage broadcast (epic-context requirement, public page only) — no equivalent requirement exists for the admin view. Low likelihood given a single shared admin passcode and a small friend group, but a real gap if two people ever co-administer simultaneously.
+
+- source_spec: `_bmad-output/specs/spec-ameland-weekend/stories/7-pwa-installability.md`
+  summary: `public/manifest.json`'s `name`/`short_name` and the page `<title>`/app icon are all hardcoded to "Ameland Vriendenweekend", with no per-trip mechanism — a second trip added under CAP-7 (story 10) would render with correct per-trip accent colors everywhere but the wrong PWA name/icon in the manifest, tab title, and install prompt.
+  evidence: Raised by blind-hunter review of story 7's diff. Pre-existing in shape (manifest.json predates this story; `<title>` was already static) and consistent with the epic's explicit non-goal of multi-tenant support for v1 — but worth flagging before story 10 actually validates CAP-7's "zero code changes for a second trip" claim, since PWA metadata is a real exception to that claim as currently built.
+
+- source_spec: `_bmad-output/specs/spec-ameland-weekend/stories/7-pwa-installability.md`
+  summary: No favicon (`<link rel="icon">`/`favicon.ico`) exists anywhere in the page, even though this story added real app-icon assets for installability — desktop browser tabs/bookmarks remain iconless.
+  evidence: Raised by blind-hunter review of story 7's diff. Pre-existing gap (no earlier story addressed a favicon either), unrelated to this story's PWA-installability scope, but the newly-created icon assets make it cheap to close whenever someone next touches the page's `<head>`.
+
+- source_spec: `_bmad-output/specs/spec-ameland-weekend/stories/7-pwa-installability.md`
+  summary: `public/sw.js`'s `fetch` handler unconditionally calls `event.respondWith(fetch(event.request))` with no offline fallback — if the network request rejects (e.g. offline), the browser shows its default network-error page rather than any app-controlled offline state.
+  evidence: Raised independently by both the blind-hunter and edge-case-hunter review layers on story 7's diff. Explicitly out of this story's scope ("Never: ... no caching strategy" per the approved spec) and no worse than the pre-SW baseline (no service worker also meant no offline handling), but worth a real fallback response once story 8 extends this same file with push logic and offline behavior becomes more visible to users.

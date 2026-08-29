@@ -36,6 +36,12 @@ const chapterSlots = sortByOrder(trip.data.chapters).map((chapter) => ({
 // computed here since CSS custom properties can't have hex digits appended
 // to them in a stylesheet the way a template-string concatenation can.
 const ambientGlowBackground = `radial-gradient(ellipse 70% 55% at 50% 10%, ${accentColor}24, transparent 62%), radial-gradient(ellipse 65% 55% at 88% 45%, ${accentColor}1a, transparent 60%), radial-gradient(ellipse 65% 55% at 8% 80%, ${accentColor}1a, transparent 60%)`;
+
+// Same hex-with-alpha technique as ambientGlowBackground above, used for the
+// #installeren step-number circle backgrounds (ported from Main.dc.html's
+// rgba(227,166,74,0.15), rebuilt from the trip's own accentColor so a
+// different trip's accent isn't stuck showing Main.dc.html's default).
+const installStepIconBg = `${accentColor}26`;
 ---
 
 <html lang="nl">
@@ -43,6 +49,13 @@ const ambientGlowBackground = `radial-gradient(ellipse 70% 55% at 50% 10%, ${acc
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <title>Ameland Vriendenweekend</title>
+    <link rel="manifest" href="/manifest.json" />
+    <meta name="theme-color" content="#0a0d0c" />
+    <link rel="apple-touch-icon" href="/icons/icon-192.png" />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-title" content="Ameland Vriendenweekend" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
     <style define:vars={{ accent: accentColor }}>
       * {
         box-sizing: border-box;
@@ -299,6 +312,26 @@ const ambientGlowBackground = `radial-gradient(ellipse 70% 55% at 50% 10%, ${acc
         max-width: 38ch;
         margin: 0 0 32px;
       }
+      /* HERO CTA — ported from Main.dc.html:374, links down to #installeren. */
+      .hero-cta {
+        display: inline-flex;
+        align-items: center;
+        gap: 10px;
+        padding: 15px 28px;
+        border-radius: 999px;
+        background: var(--accent);
+        color: #0a0d0c;
+        text-decoration: none;
+        font-weight: 600;
+        font-size: 15px;
+      }
+      .hero-cta:hover {
+        opacity: 0.8;
+      }
+      .hero-cta:focus-visible {
+        outline: 1px solid var(--accent);
+        outline-offset: 3px;
+      }
 
       /* REVEAL / CINEMATIC CHOREOGRAPHY — ported unchanged from
          Main.dc.html:37-108. `data-kind` on each .chapter-slot decides
@@ -361,6 +394,100 @@ const ambientGlowBackground = `radial-gradient(ellipse 70% 55% at 50% 10%, ${acc
         transition: opacity 700ms cubic-bezier(0.16,1,0.3,1) 680ms, transform 700ms cubic-bezier(0.16,1,0.3,1) 680ms;
       }
       .cinematic-reveal.is-visible .ct-cta { opacity: 1; transform: translateY(0); }
+
+      /* INSTALLEREN — ported from Main.dc.html:402-442. The toggle's
+         sc-if/setState mechanism doesn't exist in this plain-script page:
+         a `data-platform` attribute on #installeren (set by the click
+         handlers in the script block) drives which button/steps block is
+         shown via the attribute-selector pairs below, instead of adding or
+         removing classes on each element individually. Renders statically
+         at full opacity, deliberately with no .reveal/.cinematic-reveal
+         class (story 1.6 scoped that system to chapter slots only). */
+      .installeren {
+        position: relative;
+        z-index: 3;
+        padding: 56px 24px 96px;
+        max-width: 640px;
+        margin: 0 auto;
+      }
+      .installeren-title {
+        font-family: 'Bodoni Moda', Georgia, serif;
+        font-size: clamp(26px, 4vw, 34px);
+        font-weight: 600;
+        margin: 0 0 10px;
+      }
+      .installeren-copy {
+        color: #c9c6bc;
+        font-size: 15px;
+        line-height: 1.6;
+        margin: 0 0 28px;
+        max-width: 44ch;
+      }
+      .installeren-buttons {
+        display: flex;
+        gap: 8px;
+        margin-bottom: 20px;
+      }
+      .installeren-btn {
+        flex: 1;
+        padding: 11px;
+        border-radius: 10px;
+        border: 1px solid rgba(244, 241, 234, 0.18);
+        background: transparent;
+        color: #f4f1ea;
+        font-weight: 600;
+        font-size: 14px;
+        font-family: inherit;
+        cursor: pointer;
+      }
+      #installeren[data-platform='android'] .installeren-btn[data-platform-btn='android'],
+      #installeren[data-platform='ios'] .installeren-btn[data-platform-btn='ios'] {
+        border-color: var(--accent);
+        background: var(--accent);
+        color: #0a0d0c;
+      }
+      .installeren-btn:hover {
+        opacity: 0.8;
+      }
+      .installeren-btn:focus-visible {
+        outline: 1px solid var(--accent);
+        outline-offset: 3px;
+      }
+      .installeren-steps {
+        display: none;
+        flex-direction: column;
+        gap: 16px;
+        border: 1px solid rgba(244, 241, 234, 0.1);
+        border-radius: 16px;
+        padding: 22px;
+      }
+      #installeren[data-platform='android'] .installeren-steps[data-platform-steps='android'],
+      #installeren[data-platform='ios'] .installeren-steps[data-platform-steps='ios'] {
+        display: flex;
+      }
+      .installeren-step {
+        display: flex;
+        gap: 12px;
+        align-items: flex-start;
+      }
+      .installeren-step-num {
+        flex: 0 0 auto;
+        width: 28px;
+        height: 28px;
+        border-radius: 999px;
+        color: var(--accent);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 12px;
+        font-weight: 700;
+      }
+      .installeren-step p {
+        margin: 0;
+        font-size: 14px;
+        line-height: 1.55;
+        color: #e5e2d9;
+      }
 
       /* CHAPTER SLOTS */
       .chapters {
@@ -469,6 +596,10 @@ const ambientGlowBackground = `radial-gradient(ellipse 70% 55% at 50% 10%, ${acc
         <div class="hero-days" data-days-left>&hellip;</div>
         <div class="hero-days-label">dagen tot vertrek</div>
         <p class="hero-copy">De rest volgt hier, stuk voor stuk, zodra het zover is.</p>
+        <a href="#installeren" class="hero-cta">
+          Zet 'm op je scherm
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6"/></svg>
+        </a>
       </div>
 
       <!-- Europe scan-loop viewfinder (ported, scan-loop mode only). -->
@@ -1535,6 +1666,45 @@ c-22 -1 -33 -6 -33 -16 0 -8 -9 -15 -20 -15 -22 0 -26 -20 -8 -38 7 -7 9 -12
       </div>
     </div>
 
+    <!-- INSTALLEREN — ported from Main.dc.html:402-442. No .reveal class:
+         renders statically at full opacity (story 1.6 scoped the reveal
+         system to chapter slots only). data-platform defaults to
+         'android', matching Main.dc.html's initial state.platform. -->
+    <section id="installeren" class="installeren" data-platform="android">
+      <h2 class="installeren-title">Zet 'm op je scherm</h2>
+      <p class="installeren-copy">
+        Dan werken meldingen straks meteen, zodra er weer een hoofdstuk opengaat. Kies je toestel.
+      </p>
+
+      <div class="installeren-buttons">
+        <button type="button" class="installeren-btn" data-platform-btn="android" aria-pressed="true">Android</button>
+        <button type="button" class="installeren-btn" data-platform-btn="ios" aria-pressed="false">iPhone</button>
+      </div>
+
+      <div class="installeren-steps" data-platform-steps="android">
+        <div class="installeren-step">
+          <div class="installeren-step-num mono" style={`background:${installStepIconBg}`}>1</div>
+          <p>Chrome laat vanzelf een balkje zien: <strong>"App installeren"</strong>. Tik daarop.</p>
+        </div>
+        <div class="installeren-step">
+          <div class="installeren-step-num mono" style={`background:${installStepIconBg}`}>2</div>
+          <p>Klaar. Het icoon staat op je startscherm en meldingen werken direct.</p>
+        </div>
+      </div>
+      <div class="installeren-steps" data-platform-steps="ios">
+        <div class="installeren-step">
+          <div class="installeren-step-num" style={`background:${installStepIconBg}`}>
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 16V4M8 8l4-4 4 4"/><path d="M4 14v5a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-5"/></svg>
+          </div>
+          <p>Tik onderin Safari op het deel-icoon (het vierkantje met het pijltje omhoog).</p>
+        </div>
+        <div class="installeren-step">
+          <div class="installeren-step-num mono" style={`background:${installStepIconBg}`}>2</div>
+          <p>Kies <strong>"Zet op beginscherm"</strong>. Zonder deze stap werken meldingen op iPhone niet.</p>
+        </div>
+      </div>
+    </section>
+
     <!-- CHAPTER SLOTS — only id/order/kind drive this markup. Each slot
          stays display:none (see .chapter-slot) until client-side JS adds
          .is-unlocked, so a locked chapter has no visible trace at all —
@@ -1749,6 +1919,38 @@ c-22 -1 -33 -6 -33 -16 0 -8 -9 -15 -20 -15 -22 0 -26 -20 -8 -38 7 -7 9 -12
       }
 
       loadTripState();
+
+      // Installeren toggle (ported from Main.dc.html's pickAndroid/pickIOS
+      // setState calls): plain DOM attribute toggling instead of component
+      // state, since this page has no client component runtime. Setting
+      // data-platform on the container alone drives both the button and
+      // instruction-block visual states via the CSS attribute-selector
+      // pairs in <style> above — no class list to keep in sync per element.
+      const installerenSection = document.getElementById('installeren');
+      if (installerenSection) {
+        const platformButtons =
+          installerenSection.querySelectorAll<HTMLButtonElement>('[data-platform-btn]');
+        platformButtons.forEach((button) => {
+          button.addEventListener('click', () => {
+            const platform = button.dataset.platformBtn;
+            if (!platform) return;
+            installerenSection.dataset.platform = platform;
+            platformButtons.forEach((btn) => {
+              btn.setAttribute('aria-pressed', String(btn.dataset.platformBtn === platform));
+            });
+          });
+        });
+      }
+
+      // Service worker registration (required for Chrome/Android
+      // installability). Guarded per the acceptance criteria: unsupported
+      // browsers skip registration silently, no console error, no
+      // user-facing failure — the toggle above still works regardless.
+      if ('serviceWorker' in navigator) {
+        navigator.serviceWorker.register('/sw.js').catch((err) => {
+          console.error('Service worker registration failed', err);
+        });
+      }
     </script>
   </body>
 </html>

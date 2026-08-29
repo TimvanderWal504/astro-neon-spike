@@ -1,7 +1,7 @@
 {
   "name": "Ameland Vriendenweekend",
   "short_name": "Ameland",
-  "start_url": "/",
+  "start_url": "/moapmoap",
   "display": "standalone",
   "background_color": "#0a0d0c",
   "theme_color": "#0a0d0c",
