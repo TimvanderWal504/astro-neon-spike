@@ -96,13 +96,16 @@ const ambientGlowBackground = `radial-gradient(ellipse 70% 55% at 50% 10%, ${acc
       .hero-map-zoom {
         transform-origin: 38.125% 41.875%;
       }
+      /* Movement/scale are driven client-side (random walk, see script)
+         rather than a fixed CSS keyframe loop, so the viewfinder wanders
+         to a new point each cycle instead of repeating one fixed path. */
       .hero-map-motion {
-        animation: heroScanMove 16s cubic-bezier(0.45, 0, 0.55, 1) infinite;
+        transition: transform 2.4s cubic-bezier(0.45, 0, 0.55, 1);
       }
       .hero-map-scale {
         transform-box: fill-box;
         transform-origin: center;
-        animation: heroScanScale 16s cubic-bezier(0.45, 0, 0.55, 1) infinite;
+        transition: transform 2.4s cubic-bezier(0.45, 0, 0.55, 1);
       }
       .hero-map-dot {
         transform-box: fill-box;
@@ -113,24 +116,6 @@ const ambientGlowBackground = `radial-gradient(ellipse 70% 55% at 50% 10%, ${acc
         opacity: 0;
         transform-box: fill-box;
         transform-origin: center;
-      }
-      @keyframes heroScanMove {
-        0% { transform: translate(180px, 580px); }
-        20% { transform: translate(250px, 430px); }
-        38% { transform: translate(380px, 480px); }
-        54% { transform: translate(470px, 380px); }
-        70% { transform: translate(305px, 335px); }
-        84% { transform: translate(305px, 335px); }
-        100% { transform: translate(180px, 580px); }
-      }
-      @keyframes heroScanScale {
-        0% { transform: scale(1); }
-        20% { transform: scale(1.1); }
-        38% { transform: scale(0.95); }
-        54% { transform: scale(1.08); }
-        70% { transform: scale(1.2); }
-        84% { transform: scale(1.2); }
-        100% { transform: scale(1); }
       }
       @keyframes heroViewfinderPulse {
         0%, 100% { opacity: 0.5; transform: scale(1); }
@@ -260,7 +245,9 @@ const ambientGlowBackground = `radial-gradient(ellipse 70% 55% at 50% 10%, ${acc
 
       @media (prefers-reduced-motion: reduce) {
         .hero-map-motion,
-        .hero-map-scale,
+        .hero-map-scale {
+          transition: none;
+        }
         .hero-map-dot {
           animation: none;
         }
@@ -397,6 +384,60 @@ const ambientGlowBackground = `radial-gradient(ellipse 70% 55% at 50% 10%, ${acc
       }
 
       renderDaysLeft();
+
+      // Viewfinder wander: a random walk over the landmass area of the
+      // 800x800 map (roughly Western/Central Europe, anchored near the
+      // Netherlands) instead of a fixed CSS keyframe loop, so the motion
+      // never repeats the same path twice. Skipped entirely under
+      // prefers-reduced-motion, settling on the NL anchor point instead.
+      function startViewfinderWander(): void {
+        const motionEl = document.querySelector<SVGGElement>('.hero-map-motion');
+        const scaleEl = document.querySelector<SVGGElement>('.hero-map-scale');
+        if (!motionEl || !scaleEl) return;
+
+        if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
+          motionEl.style.transform = 'translate(305px, 335px)';
+          scaleEl.style.transform = 'scale(1.08)';
+          return;
+        }
+
+        const X_MIN = 150;
+        const X_MAX = 520;
+        const Y_MIN = 300;
+        const Y_MAX = 580;
+        const SCALE_MIN = 0.9;
+        const SCALE_MAX = 1.25;
+        const MOVE_MS_MIN = 2200;
+        const MOVE_MS_MAX = 4200;
+        const PAUSE_MS_MIN = 300;
+        const PAUSE_MS_MAX = 900;
+
+        const randomBetween = (min: number, max: number) => min + Math.random() * (max - min);
+
+        function step(): void {
+          const x = randomBetween(X_MIN, X_MAX);
+          const y = randomBetween(Y_MIN, Y_MAX);
+          const scale = randomBetween(SCALE_MIN, SCALE_MAX);
+          const durationMs = randomBetween(MOVE_MS_MIN, MOVE_MS_MAX);
+
+          motionEl!.style.transitionDuration = `${durationMs}ms`;
+          scaleEl!.style.transitionDuration = `${durationMs}ms`;
+          motionEl!.style.transform = `translate(${x}px, ${y}px)`;
+          scaleEl!.style.transform = `scale(${scale})`;
+
+          setTimeout(step, durationMs + randomBetween(PAUSE_MS_MIN, PAUSE_MS_MAX));
+        }
+
+        // First placement jumps in instantly (no transition) so it doesn't
+        // glide in from the SVG origin on page load.
+        motionEl.style.transitionDuration = '0s';
+        scaleEl.style.transitionDuration = '0s';
+        motionEl.style.transform = 'translate(305px, 335px)';
+        scaleEl.style.transform = 'scale(1.08)';
+        requestAnimationFrame(step);
+      }
+
+      startViewfinderWander();
 
       // Merge real content into unlocked chapter slots via the redacted
       // trip-state API (AD-2). Locked chapters are never touched — they
