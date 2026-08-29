@@ -122,6 +122,101 @@ const ambientGlowBackground = `radial-gradient(ellipse 70% 55% at 50% 10%, ${acc
         50% { opacity: 1; transform: scale(1.25); }
       }
 
+      /* HERO MAP — DIVE INSTANCE (story 6). Always-present, always
+         position:fixed layer, invisible (opacity:0, pointer-events:none)
+         until #bestemming becomes visible — then it fades in and plays the
+         original fixedScanZoomSequence/fixedScanLockMove/fixedScanLockScale/
+         fixedScanLockFlash keyframes (ported unchanged from
+         Main.dc.html:165-229, targets renamed to this instance's classes).
+         Reuses the ambient instance's coastline geometry via
+         <use href="#europe-coastline">; never promotes .hero-map itself to
+         position:fixed (would reflow .hero's flex layout). */
+      .hero-map-dive {
+        position: fixed;
+        inset: 0;
+        z-index: 50;
+        opacity: 0;
+        pointer-events: none;
+        transition: opacity 500ms ease;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+      }
+      body:has(#bestemming.is-visible) .hero-map-dive {
+        opacity: 0.5;
+      }
+      .hero-map-dive-svg {
+        width: min(82vw, 640px);
+        height: min(82vw, 640px);
+        overflow: visible;
+      }
+      .hero-map-dive-zoom {
+        transform-origin: 38.125% 41.875%;
+      }
+      .hero-map-dive-scale {
+        transform-box: fill-box;
+        transform-origin: center;
+      }
+      .hero-map-dive-flash {
+        opacity: 0;
+        transform-box: fill-box;
+        transform-origin: center;
+      }
+      .hero-map-dive-dot {
+        transform-box: fill-box;
+        transform-origin: center;
+        animation: heroViewfinderPulse 2600ms ease-in-out infinite;
+      }
+      .fixed-scan-caption {
+        opacity: 0;
+        position: absolute;
+        left: 50%;
+        top: 50%;
+        transform: translate(-50%, 86px);
+        font-size: 12px;
+        letter-spacing: 0.22em;
+        text-transform: uppercase;
+        color: var(--accent);
+        white-space: nowrap;
+      }
+
+      /* a dramatic hop between a few other countries before finally arriving on NL */
+      @keyframes fixedScanLockMove {
+        0%   { transform: translate(210px,300px); }
+        30%  { transform: translate(410px,290px); }
+        60%  { transform: translate(250px,420px); }
+        85%  { transform: translate(305px,335px); }
+        100% { transform: translate(305px,335px); }
+      }
+      @keyframes fixedScanLockScale {
+        0%   { transform: scale(1); }
+        30%  { transform: scale(1.15); }
+        60%  { transform: scale(1.05); }
+        85%  { transform: scale(1.25); }
+        100% { transform: scale(1); }
+      }
+      @keyframes fixedScanLockFlash {
+        0%   { opacity: 0; transform: scale(0.8); }
+        50%  { opacity: 0.7; transform: scale(1.6); }
+        100% { opacity: 0; transform: scale(2.2); }
+      }
+      /* Europe grows to fill the whole screen (0-20%), holds huge while the viewfinder hops between countries (20-78%), then dives through into the boat scene (78-100%) */
+      @keyframes fixedScanZoomSequence {
+        0%   { transform: scale(1); opacity: 1; }
+        20%  { transform: scale(7); opacity: 1; }
+        78%  { transform: scale(7); opacity: 1; }
+        90%  { opacity: 0.45; }
+        100% { transform: scale(28); opacity: 0; }
+      }
+      @keyframes fixedScanCaptionFade { 0% { opacity:0; } 10% { opacity:1; } 85% { opacity:1; } 100% { opacity:0; } }
+
+      /* the instant #bestemming becomes visible, the dive layer plays: Europe fills the screen, the viewfinder hops between countries, then locks onto NL and dives through */
+      body:has(#bestemming.is-visible) .hero-map-dive-zoom { animation: fixedScanZoomSequence 3700ms cubic-bezier(0.65,0,0.35,1) forwards; }
+      body:has(#bestemming.is-visible) .hero-map-dive-motion { animation: fixedScanLockMove 2150ms cubic-bezier(0.45,0,0.55,1) 750ms forwards; }
+      body:has(#bestemming.is-visible) .hero-map-dive-scale { animation: fixedScanLockScale 2150ms cubic-bezier(0.45,0,0.55,1) 750ms forwards; }
+      body:has(#bestemming.is-visible) .hero-map-dive-flash { animation: fixedScanLockFlash 550ms cubic-bezier(0.16,1,0.3,1) 2500ms forwards; }
+      body:has(#bestemming.is-visible) .fixed-scan-caption { animation: fixedScanCaptionFade 2900ms ease 0ms forwards; }
+
       /* HERO */
       .hero {
         min-height: 100dvh;
@@ -195,6 +290,68 @@ const ambientGlowBackground = `radial-gradient(ellipse 70% 55% at 50% 10%, ${acc
         margin: 0 0 32px;
       }
 
+      /* REVEAL / CINEMATIC CHOREOGRAPHY — ported unchanged from
+         Main.dc.html:37-108. `data-kind` on each .chapter-slot decides
+         which reveal class server-side (cinematic -> cinematic-reveal,
+         knap -> reveal); the shared IntersectionObserver (see script)
+         adds .is-visible once per element. */
+      .reveal {
+        opacity: 0;
+        transform: translateY(32px);
+        transition: opacity 700ms cubic-bezier(0.16,1,0.3,1), transform 700ms cubic-bezier(0.16,1,0.3,1);
+      }
+      .reveal.is-visible { opacity: 1; transform: translateY(0); }
+      .reveal-fade {
+        opacity: 0;
+        transition: opacity 900ms cubic-bezier(0.16,1,0.3,1);
+      }
+      .reveal-fade.is-visible { opacity: 1; }
+      .cinematic-reveal {
+        opacity: 0;
+        transform: scale(1.06);
+        filter: blur(14px);
+        transition: opacity 1100ms cubic-bezier(0.16,1,0.3,1), transform 1300ms cubic-bezier(0.16,1,0.3,1), filter 1100ms cubic-bezier(0.16,1,0.3,1);
+      }
+      .cinematic-reveal.is-visible { opacity: 1; transform: scale(1); filter: blur(0); }
+      /* bestemming's title/copy/cta arrive after the fixed dive layer (see .hero-map-dive) has filled the screen, hopped between countries, locked and dived through */
+      #bestemming.is-visible .ct-eyebrow { transition-delay: 3700ms; }
+      #bestemming.is-visible .ct-title { transition-delay: 3900ms; }
+      #bestemming.is-visible .ct-copy { transition-delay: 4200ms; }
+      #bestemming.is-visible .ct-cta { transition-delay: 4400ms; }
+
+      /* staggered delay modifiers for individually-cascading elements (chips, timeline rows) */
+      .reveal-d1 { transition-delay: 90ms; }
+      .reveal-d2 { transition-delay: 180ms; }
+      .reveal-d3 { transition-delay: 270ms; }
+      .reveal-d4 { transition-delay: 360ms; }
+      .reveal-d5 { transition-delay: 450ms; }
+
+      /* cinematic text choreography - each piece moves on its own beat instead of one blob fade */
+      .ct-eyebrow {
+        opacity: 0;
+        transform: translateX(-18px);
+        transition: opacity 700ms cubic-bezier(0.16,1,0.3,1) 100ms, transform 700ms cubic-bezier(0.16,1,0.3,1) 100ms;
+      }
+      .cinematic-reveal.is-visible .ct-eyebrow { opacity: 1; transform: translateX(0); }
+      .ct-title {
+        opacity: 0;
+        transform: translateY(34px) scale(0.98);
+        transition: opacity 900ms cubic-bezier(0.16,1,0.3,1) 260ms, transform 900ms cubic-bezier(0.16,1,0.3,1) 260ms;
+      }
+      .cinematic-reveal.is-visible .ct-title { opacity: 1; transform: translateY(0) scale(1); }
+      .ct-copy {
+        opacity: 0;
+        transform: translateY(20px);
+        transition: opacity 800ms cubic-bezier(0.16,1,0.3,1) 520ms, transform 800ms cubic-bezier(0.16,1,0.3,1) 520ms;
+      }
+      .cinematic-reveal.is-visible .ct-copy { opacity: 1; transform: translateY(0); }
+      .ct-cta {
+        opacity: 0;
+        transform: translateY(16px);
+        transition: opacity 700ms cubic-bezier(0.16,1,0.3,1) 680ms, transform 700ms cubic-bezier(0.16,1,0.3,1) 680ms;
+      }
+      .cinematic-reveal.is-visible .ct-cta { opacity: 1; transform: translateY(0); }
+
       /* CHAPTER SLOTS */
       .chapters {
         position: relative;
@@ -211,7 +368,6 @@ const ambientGlowBackground = `radial-gradient(ellipse 70% 55% at 50% 10%, ${acc
         border: 1px solid rgba(244, 241, 234, 0.1);
         border-radius: 16px;
         padding: 28px;
-        opacity: 1;
       }
       .chapter-slot[data-kind='knap'] {
         border-style: dashed;
@@ -242,6 +398,27 @@ const ambientGlowBackground = `radial-gradient(ellipse 70% 55% at 50% 10%, ${acc
         color: #e5e2d9;
         white-space: pre-line;
       }
+      .chapter-replay {
+        display: inline-block;
+        margin-top: 14px;
+        padding: 0;
+        border: none;
+        background: none;
+        font-family: 'JetBrains Mono', monospace;
+        font-variant: small-caps;
+        font-size: 12px;
+        letter-spacing: 0.14em;
+        color: #9a9a91;
+        cursor: pointer;
+      }
+      .chapter-replay:hover {
+        color: var(--accent);
+      }
+      .chapter-replay:focus-visible {
+        color: var(--accent);
+        outline: 1px solid var(--accent);
+        outline-offset: 3px;
+      }
 
       @media (prefers-reduced-motion: reduce) {
         .hero-map-motion,
@@ -250,6 +427,25 @@ const ambientGlowBackground = `radial-gradient(ellipse 70% 55% at 50% 10%, ${acc
         }
         .hero-map-dot {
           animation: none;
+        }
+        .reveal, .reveal-fade, .cinematic-reveal {
+          transition: none;
+          opacity: 1;
+          transform: none;
+          filter: none;
+        }
+        .ct-eyebrow, .ct-title, .ct-copy, .ct-cta {
+          transition: none;
+          opacity: 1;
+          transform: none;
+        }
+        /* Suppresses the dive layer's body:has(#bestemming.is-visible)
+           triggers entirely (not just their animation): a display:none
+           ancestor removes its animated descendants from the render tree,
+           so the fixedScan* keyframes above never run and the layer never
+           becomes visible at any scroll position. */
+        .hero-map-dive {
+          display: none;
         }
       }
     </style>
@@ -289,6 +485,8 @@ const ambientGlowBackground = `radial-gradient(ellipse 70% 55% at 50% 10%, ${acc
             <circle cx="400" cy="400" r="260" fill="none" stroke={accentColor} stroke-width="0.7" opacity="0.14"/>
             <circle cx="400" cy="400" r="160" fill="none" stroke={accentColor} stroke-width="0.7" opacity="0.14"/>
           </g>
+          <defs>
+          <g id="europe-coastline">
           <path d="M647,195 L633,194 L640,198 L637,206 L642,209 L640,217 L632,214 L623,213 L603,221 L603,223 L608,228 L602,229 L577,224 L575,228 L580,231 L587,232 L588,234 L582,236 L562,231 L556,222 L559,218 L547,214 L550,213 L535,207 L566,214 L598,216 L609,213 L616,208 L613,202 L603,199 L564,189 L550,189 L545,191 L548,188 L539,187 L537,186 L544,185 L535,183 L532,185 L516,185 L515,183 L508,182 L521,182 L526,179 L508,175 L503,181 L503,177 L500,177 L504,174 L498,173 L495,175 L497,176 L492,178 L489,179 L490,175 L488,175 L477,182 L475,181 L482,175 L472,174 L461,181 L461,183 L455,180 L444,181 L449,184 L438,184 L439,187 L433,188 L435,183 L429,188 L430,184 L420,187 L422,189 L417,187 L416,190 L402,195 L411,196 L400,197 L401,201 L398,198 L388,202 L392,202 L391,203 L395,204 L394,206 L389,204 L384,206 L393,207 L382,208 L378,209 L380,210 L374,212 L373,215 L381,215 L370,216 L372,218 L365,223 L367,224 L371,223 L370,224 L359,226 L357,228 L359,228 L343,236 L347,239 L359,234 L353,239 L334,238 L332,239 L335,240 L330,242 L334,244 L325,242 L318,245 L330,245 L315,246 L313,248 L317,248 L305,250 L306,252 L318,253 L303,253 L306,256 L303,256 L304,259 L322,259 L324,256 L326,258 L321,261 L319,259 L303,260 L304,263 L309,263 L304,265 L309,268 L305,268 L305,272 L313,266 L320,264 L316,267 L316,265 L313,267 L310,270 L314,270 L305,273 L305,276 L315,273 L311,277 L315,277 L309,277 L308,281 L318,285 L331,285 L343,278 L342,276 L348,277 L351,271 L353,276 L358,277 L356,277 L357,283 L371,298 L369,299 L370,301 L368,301 L372,305 L371,308 L382,308 L384,303 L396,302 L401,297 L403,290 L403,282 L406,282 L400,281 L418,276 L420,274 L415,274 L423,271 L415,264 L409,263 L408,255 L410,254 L412,250 L410,247 L415,246 L414,244 L419,244 L418,243 L420,241 L439,236 L445,230 L442,227 L446,225 L444,223 L452,221 L453,218 L472,218 L478,222 L478,226 L471,227 L463,234 L454,237 L452,240 L446,241 L446,243 L442,246 L446,255 L445,264 L455,266 L453,269 L457,267 L460,269 L458,270 L482,266 L489,263 L488,265 L505,263 L507,266 L520,270 L502,271 L500,274 L480,272 L462,276 L465,283 L471,283 L470,292 L464,295 L454,288 L447,290 L441,298 L443,312 L437,312 L442,306 L438,311 L432,312 L427,317 L422,317 L419,314 L422,314 L416,313 L384,321 L379,319 L386,323 L372,317 L368,316 L358,321 L354,320 L355,317 L345,316 L346,315 L342,311 L343,308 L349,301 L354,299 L349,298 L352,288 L341,293 L334,294 L331,297 L336,297 L339,294 L339,297 L330,298 L330,307 L334,308 L335,314 L337,316 L335,318 L344,324 L334,321 L333,326 L326,323 L322,323 L322,327 L319,325 L308,327 L301,329 L295,338 L296,341 L295,341 L297,342 L290,342 L297,343 L275,347 L272,354 L262,357 L261,359 L264,360 L250,360 L249,358 L244,357 L248,366 L237,367 L232,365 L220,367 L224,369 L221,369 L223,371 L220,372 L223,374 L245,379 L241,379 L243,382 L250,387 L251,391 L250,392 L256,398 L251,393 L250,401 L251,400 L246,411 L221,411 L194,408 L181,415 L186,421 L184,426 L186,434 L179,451 L182,452 L185,449 L181,452 L181,454 L186,454 L184,454 L183,466 L201,464 L207,467 L205,470 L212,475 L223,469 L241,469 L246,463 L254,461 L256,455 L262,451 L257,446 L260,442 L269,432 L278,430 L288,424 L286,416 L288,413 L295,410 L313,414 L336,403 L348,407 L351,415 L356,420 L360,421 L373,430 L378,430 L381,434 L385,435 L384,436 L387,435 L389,439 L395,441 L400,450 L395,458 L398,458 L403,451 L408,449 L407,446 L402,443 L406,437 L414,438 L418,442 L419,439 L397,428 L399,424 L391,424 L385,421 L381,418 L377,410 L367,404 L366,400 L368,398 L366,394 L377,391 L379,392 L377,394 L379,399 L383,395 L385,395 L393,404 L391,405 L398,411 L406,412 L413,416 L407,415 L421,420 L429,425 L427,438 L431,440 L435,447 L442,449 L439,450 L442,455 L453,454 L459,456 L457,458 L448,455 L442,459 L447,463 L446,466 L449,469 L450,466 L453,471 L456,468 L459,471 L456,462 L462,463 L458,459 L462,458 L467,461 L467,457 L454,451 L459,449 L457,447 L461,448 L455,440 L455,437 L457,436 L461,441 L464,441 L462,439 L466,441 L464,438 L470,440 L465,434 L476,432 L485,436 L491,435 L486,440 L497,432 L509,432 L510,430 L503,427 L497,420 L500,417 L502,412 L506,411 L509,398 L510,400 L514,399 L515,392 L520,390 L525,384 L534,384 L533,379 L536,384 L540,384 L532,384 L536,385 L534,387 L549,388 L550,390 L540,394 L549,397 L548,402 L552,403 L565,397 L573,397 L575,394 L565,395 L561,392 L560,388 L563,385 L562,388 L568,384 L597,378 L598,380 L591,382 L591,383 L585,384 L591,388 L587,389 L584,395 L577,394 L575,396 L593,404 L616,417 L619,424 L616,429 L607,433 L599,431 L590,433 L573,430 L570,426 L564,426 L561,423 L547,423 L529,431 L511,430 L511,433 L517,434 L509,435 L508,436 L510,437 L490,437 L485,441 L485,445 L492,445 L490,447 L493,450 L490,452 L494,454 L490,455 L488,452 L486,456 L494,458 L493,461 L497,465 L495,467 L503,466 L497,469 L509,469 L516,474 L522,473 L524,468 L529,468 L542,475 L550,474 L559,468 L565,470 L570,467 L572,470 L568,473 L570,475 L568,479 L570,488 L567,492" fill="none" stroke={accentColor} stroke-width="1.6" opacity="0.55" stroke-linejoin="round"/>
           <path d="M226,290 L244,289 L239,298 L232,300 L237,301 L228,302 L238,303 L246,307 L250,314 L260,319 L261,324 L255,323 L263,326 L261,330 L275,331 L274,337 L264,342 L272,343 L272,345 L263,348 L234,349 L231,349 L229,353 L224,351 L212,354 L224,345 L233,344 L239,340 L232,343 L215,339 L225,335 L225,330 L220,331 L224,328 L237,326 L234,325 L236,319 L233,319 L229,316 L234,312 L218,314 L216,313 L220,307 L218,306 L221,304 L219,302 L215,304 L217,301 L214,303 L212,308 L211,309 L216,297 L212,299 L208,297 L212,294 L210,291 L212,290 L212,287 L216,287 L214,284 L217,284 L217,281 L234,281 L233,283 L226,286 L226,290 Z" fill="none" stroke={accentColor} stroke-width="1.6" opacity="0.55" stroke-linejoin="round"/>
           <path d="M133,214 L130,216 L134,217 L133,219 L143,221 L142,223 L143,225 L134,231 L100,239 L87,238 L79,235 L65,236 L65,234 L69,234 L76,231 L71,232 L75,229 L54,227 L72,225 L73,224 L67,224 L72,222 L50,221 L55,221 L53,219 L60,219 L55,218 L58,218 L56,217 L59,216 L67,218 L63,215 L67,215 L61,214 L63,213 L76,217 L76,219 L74,220 L79,223 L81,220 L84,221 L86,216 L93,219 L94,217 L98,216 L104,219 L103,216 L109,217 L119,215 L118,213 L123,213 L127,215 L133,214 Z" fill="none" stroke={accentColor} stroke-width="1.6" opacity="0.55" stroke-linejoin="round"/>
@@ -319,6 +517,9 @@ const ambientGlowBackground = `radial-gradient(ellipse 70% 55% at 50% 10%, ${acc
           <path d="M390,191 L384,194 L391,195 L393,193 L390,191 Z" fill="none" stroke={accentColor} stroke-width="1" opacity="0.4" stroke-linejoin="round"/>
           <path d="M453,279 L454,280 L458,279 L455,277 L450,278 L453,279 Z" fill="none" stroke={accentColor} stroke-width="1" opacity="0.4" stroke-linejoin="round"/>
           <path d="M488,448 L487,446 L483,448 L486,448 L485,449 L487,450 L488,448 Z" fill="none" stroke={accentColor} stroke-width="1" opacity="0.4" stroke-linejoin="round"/>
+          </g>
+          </defs>
+          <use href="#europe-coastline" />
 
           <g class="hero-map-motion">
             <g class="hero-map-scale">
@@ -337,6 +538,54 @@ const ambientGlowBackground = `radial-gradient(ellipse 70% 55% at 50% 10%, ${acc
         </g>
       </svg>
       </div>
+
+      <!-- Fixed dive-layer instance (story 6): always position:fixed,
+           invisible until #bestemming becomes visible, then plays the
+           lock/zoom/flash/caption sequence, reusing the ambient instance's
+           coastline geometry via <use href="#europe-coastline">. Sibling of
+           .hero-map inside .hero, not nested inside it, since
+           position:fixed lifts it out of flow regardless of parent. -->
+      <div class="hero-map-dive" aria-hidden="true">
+        <svg class="hero-map-dive-svg" viewBox="0 0 800 800">
+          <g class="hero-map-dive-zoom">
+            <g class="hero-map-dive-grid">
+              <line x1="0" y1="100" x2="800" y2="100" stroke={accentColor} stroke-width="0.6" opacity="0.16"/>
+              <line x1="0" y1="200" x2="800" y2="200" stroke={accentColor} stroke-width="0.6" opacity="0.16"/>
+              <line x1="0" y1="300" x2="800" y2="300" stroke={accentColor} stroke-width="0.6" opacity="0.16"/>
+              <line x1="0" y1="400" x2="800" y2="400" stroke={accentColor} stroke-width="0.6" opacity="0.16"/>
+              <line x1="0" y1="500" x2="800" y2="500" stroke={accentColor} stroke-width="0.6" opacity="0.16"/>
+              <line x1="0" y1="600" x2="800" y2="600" stroke={accentColor} stroke-width="0.6" opacity="0.16"/>
+              <line x1="0" y1="700" x2="800" y2="700" stroke={accentColor} stroke-width="0.6" opacity="0.16"/>
+              <line x1="100" y1="0" x2="100" y2="800" stroke={accentColor} stroke-width="0.6" opacity="0.16"/>
+              <line x1="200" y1="0" x2="200" y2="800" stroke={accentColor} stroke-width="0.6" opacity="0.16"/>
+              <line x1="300" y1="0" x2="300" y2="800" stroke={accentColor} stroke-width="0.6" opacity="0.16"/>
+              <line x1="400" y1="0" x2="400" y2="800" stroke={accentColor} stroke-width="0.6" opacity="0.16"/>
+              <line x1="500" y1="0" x2="500" y2="800" stroke={accentColor} stroke-width="0.6" opacity="0.16"/>
+              <line x1="600" y1="0" x2="600" y2="800" stroke={accentColor} stroke-width="0.6" opacity="0.16"/>
+              <line x1="700" y1="0" x2="700" y2="800" stroke={accentColor} stroke-width="0.6" opacity="0.16"/>
+              <circle cx="400" cy="400" r="360" fill="none" stroke={accentColor} stroke-width="0.7" opacity="0.14"/>
+              <circle cx="400" cy="400" r="260" fill="none" stroke={accentColor} stroke-width="0.7" opacity="0.14"/>
+              <circle cx="400" cy="400" r="160" fill="none" stroke={accentColor} stroke-width="0.7" opacity="0.14"/>
+            </g>
+            <use href="#europe-coastline" />
+            <g class="hero-map-dive-motion">
+              <g class="hero-map-dive-scale">
+                <circle class="hero-map-dive-flash" r="70" fill="none" stroke={accentColor} stroke-width="1"/>
+                <line x1="-90" y1="0" x2="90" y2="0" stroke={accentColor} stroke-width="1"/>
+                <line x1="0" y1="-90" x2="0" y2="90" stroke={accentColor} stroke-width="1"/>
+                <circle r="46" fill="none" stroke={accentColor} stroke-width="1.3"/>
+                <circle r="20" fill="none" stroke={accentColor} stroke-width="1.3"/>
+                <circle class="hero-map-dive-dot" r="2.6" fill={accentColor}/>
+                <path d="M-90,-70 L-90,-90 L-70,-90" fill="none" stroke={accentColor} stroke-width="2" stroke-linecap="round"/>
+                <path d="M70,-90 L90,-90 L90,-70" fill="none" stroke={accentColor} stroke-width="2" stroke-linecap="round"/>
+                <path d="M90,70 L90,90 L70,90" fill="none" stroke={accentColor} stroke-width="2" stroke-linecap="round"/>
+                <path d="M-70,90 L-90,90 L-90,70" fill="none" stroke={accentColor} stroke-width="2" stroke-linecap="round"/>
+              </g>
+            </g>
+          </g>
+        </svg>
+        <div class="fixed-scan-caption mono" aria-hidden="true">Locatie zoeken&hellip;</div>
+      </div>
     </div>
 
     <!-- CHAPTER SLOTS — only id/order/kind drive this markup. Each slot
@@ -347,18 +596,39 @@ const ambientGlowBackground = `radial-gradient(ellipse 70% 55% at 50% 10%, ${acc
          embedded here. -->
     <div class="chapters">
       {
-        chapterSlots.map((chapter) => (
-          <section class="chapter-slot" id={chapter.id} data-order={chapter.order} data-kind={chapter.kind}>
-            <div class="chapter-index mono">{String(chapter.order).padStart(2, '0')}</div>
-            <div class="chapter-content">
-              <h2 class="chapter-title" data-field="title" />
-              <p class="chapter-meta">
-                <span data-field="time" /> <span data-field="location" />
-              </p>
-              <p class="chapter-description" data-field="description" />
-            </div>
-          </section>
-        ))
+        chapterSlots.map((chapter) => {
+          const isCinematic = chapter.kind === 'cinematic';
+          return (
+            <section
+              class={`chapter-slot ${isCinematic ? 'cinematic-reveal' : 'reveal'}`}
+              id={chapter.id}
+              data-order={chapter.order}
+              data-kind={chapter.kind}
+            >
+              <div class="chapter-index mono">{String(chapter.order).padStart(2, '0')}</div>
+              {isCinematic ? (
+                <div class="chapter-content">
+                  <p class="chapter-meta ct-eyebrow">
+                    <span data-field="time" /> <span data-field="location" />
+                  </p>
+                  <h2 class="chapter-title ct-title" data-field="title" />
+                  <p class="chapter-description ct-copy" data-field="description" />
+                  <button type="button" class="chapter-replay ct-cta" data-replay-target={chapter.id}>
+                    Bekijk opnieuw
+                  </button>
+                </div>
+              ) : (
+                <div class="chapter-content">
+                  <h2 class="chapter-title" data-field="title" />
+                  <p class="chapter-meta">
+                    <span data-field="time" /> <span data-field="location" />
+                  </p>
+                  <p class="chapter-description" data-field="description" />
+                </div>
+              )}
+            </section>
+          );
+        })
       }
     </div>
 
@@ -369,6 +639,12 @@ const ambientGlowBackground = `radial-gradient(ellipse 70% 55% at 50% 10%, ${acc
       const body = document.body;
       const startISO = body.dataset.start;
       const tripSlug = body.dataset.tripSlug;
+
+      // Set once #bestemming's reveal observer fires (see IntersectionObserver
+      // setup below) — stops startViewfinderWander's recursive step() so an
+      // un-stopped tick can't resume overwriting the ambient map's inline
+      // transform style after the dive sequence's CSS animation ends.
+      let wanderStopped = false;
 
       function computeDaysLeft(): number {
         const target = new Date(startISO ?? '');
@@ -415,6 +691,8 @@ const ambientGlowBackground = `radial-gradient(ellipse 70% 55% at 50% 10%, ${acc
         const randomBetween = (min: number, max: number) => min + Math.random() * (max - min);
 
         function step(): void {
+          if (wanderStopped) return;
+
           const x = randomBetween(X_MIN, X_MAX);
           const y = randomBetween(Y_MIN, Y_MAX);
           const scale = randomBetween(SCALE_MIN, SCALE_MAX);
@@ -438,6 +716,55 @@ const ambientGlowBackground = `radial-gradient(ellipse 70% 55% at 50% 10%, ${acc
       }
 
       startViewfinderWander();
+
+      // Reveal / cinematic choreography (ported unchanged from
+      // Main.dc.html's componentDidMount): the observer is created and
+      // observes every .reveal/.reveal-fade/.cinematic-reveal element
+      // synchronously here, independent of loadTripState()'s async fetch — a
+      // locked chapter's slot already carries its reveal class server-side
+      // (see chapter-slot markup above), it's just display:none until
+      // unlocked, so it's observed from the start.
+      const revealTargets = document.querySelectorAll('.reveal, .reveal-fade, .cinematic-reveal');
+      const prefersReducedMotion =
+        window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+      if (typeof IntersectionObserver === 'undefined' || prefersReducedMotion) {
+        revealTargets.forEach((el) => el.classList.add('is-visible'));
+        wanderStopped = true;
+      } else {
+        const revealObserver = new IntersectionObserver(
+          (entries) => {
+            entries.forEach((entry) => {
+              if (entry.isIntersecting) {
+                entry.target.classList.add('is-visible');
+                revealObserver.unobserve(entry.target);
+                if (entry.target.id === 'bestemming') {
+                  wanderStopped = true;
+                }
+              }
+            });
+          },
+          { threshold: 0.2, rootMargin: '0px 0px -10% 0px' },
+        );
+        revealTargets.forEach((el) => revealObserver.observe(el));
+      }
+
+      // Replay ("Bekijk opnieuw"): remove then re-add .is-visible on the
+      // chapter's own reveal/cinematic-reveal element so its CSS
+      // transitions retrigger from the start (and, for Bestemming, the dive
+      // layer along with it, since both key off the same
+      // body:has(#bestemming.is-visible) trigger).
+      document.querySelectorAll<HTMLButtonElement>('[data-replay-target]').forEach((button) => {
+        button.addEventListener('click', () => {
+          const targetId = button.dataset.replayTarget;
+          const target = targetId ? document.getElementById(targetId) : null;
+          if (!target) return;
+          if (targetId === 'bestemming') wanderStopped = true;
+          target.classList.remove('is-visible');
+          void target.offsetWidth;
+          requestAnimationFrame(() => target.classList.add('is-visible'));
+        });
+      });
 
       // Merge real content into unlocked chapter slots via the redacted
       // trip-state API (AD-2). Locked chapters are never touched — they
