@@ -89,12 +89,17 @@ const ambientGlowBackground = `radial-gradient(ellipse 70% 55% at 50% 10%, ${acc
       }
       .hero-map-svg {
         width: min(88vw, 560px);
-        height: min(88vw, 560px);
+        height: auto;
+        aspect-ratio: 650 / 550;
         overflow: visible;
         opacity: 0.3;
       }
+      /* transform-origin is 43.846% 35.455% of the cropped viewBox (see
+         .hero-map-svg's viewBox="20 140 650 550" below) — the point that
+         maps back to absolute (305,335), the NL anchor used by the wander
+         default position and fixedScanLockMove/-Scale keyframes. */
       .hero-map-zoom {
-        transform-origin: 38.125% 41.875%;
+        transform-origin: 43.846% 35.455%;
       }
       /* Movement/scale are driven client-side (random walk, see script)
          rather than a fixed CSS keyframe loop, so the viewfinder wanders
@@ -147,11 +152,12 @@ const ambientGlowBackground = `radial-gradient(ellipse 70% 55% at 50% 10%, ${acc
       }
       .hero-map-dive-svg {
         width: min(82vw, 640px);
-        height: min(82vw, 640px);
+        height: auto;
+        aspect-ratio: 650 / 550;
         overflow: visible;
       }
       .hero-map-dive-zoom {
-        transform-origin: 38.125% 41.875%;
+        transform-origin: 43.846% 35.455%;
       }
       .hero-map-dive-scale {
         transform-box: fill-box;
@@ -250,10 +256,13 @@ const ambientGlowBackground = `radial-gradient(ellipse 70% 55% at 50% 10%, ${acc
         }
         .hero-map {
           flex: 1 1 auto;
+          align-self: stretch;
         }
         .hero-map-svg {
-          width: min(50vw, 920px);
-          height: min(50vw, 920px);
+          height: min(84dvh, 920px);
+          width: auto;
+          aspect-ratio: 650 / 550;
+          max-width: 100%;
           opacity: 0.4;
         }
       }
@@ -464,7 +473,7 @@ const ambientGlowBackground = `radial-gradient(ellipse 70% 55% at 50% 10%, ${acc
 
       <!-- Europe scan-loop viewfinder (ported, scan-loop mode only). -->
       <div class="hero-map" aria-hidden="true">
-      <svg class="hero-map-svg" viewBox="0 0 800 800">
+      <svg class="hero-map-svg" viewBox="20 140 650 550">
         <g class="hero-map-zoom">
           <g class="hero-map-grid">
             <line x1="0" y1="100" x2="800" y2="100" stroke={accentColor} stroke-width="0.6" opacity="0.16"/>
@@ -546,7 +555,7 @@ const ambientGlowBackground = `radial-gradient(ellipse 70% 55% at 50% 10%, ${acc
            .hero-map inside .hero, not nested inside it, since
            position:fixed lifts it out of flow regardless of parent. -->
       <div class="hero-map-dive" aria-hidden="true">
-        <svg class="hero-map-dive-svg" viewBox="0 0 800 800">
+        <svg class="hero-map-dive-svg" viewBox="20 140 650 550">
           <g class="hero-map-dive-zoom">
             <g class="hero-map-dive-grid">
               <line x1="0" y1="100" x2="800" y2="100" stroke={accentColor} stroke-width="0.6" opacity="0.16"/>
