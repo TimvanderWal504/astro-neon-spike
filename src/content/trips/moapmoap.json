@@ -55,7 +55,7 @@
     }
   ],
   "packingList": [
-    { "id": "schoenen", "label": "Dichte schoenen (voor het blokarten)" },
+    { "id": "schoenen", "label": "Dichte schoenen" },
     { "id": "regenjas", "label": "Regenjas, voor de zekerheid" },
     { "id": "zwemkleding", "label": "Zwemkleding, super handig!" },
     { "id": "spelletjes", "label": "Een spelletje voor vrijdagavond" },
