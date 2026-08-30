@@ -122,18 +122,19 @@
     explicitly, don't leave them silent.
 
 - id: "9"
-  title: Shared packing list
+  title: Packing list (per-device)
   description: >-
-    Build packing/check as an explicit set-state ({id, checked}), never a
-    bare toggle (AD-6), with shared rendering always visible independent of
-    any chapter's lock state.
+    Build a per-device packing-list checklist tracked entirely client-side
+    in localStorage (AD-6, reversed from the original shared/Neon-backed
+    model during this story's planning) — rendering always visible
+    independent of any chapter's lock state. No DB table, no API route.
   spec_checkpoint: true
   done_checkpoint: true
   invoke_dev_with: >-
-    packing/check takes a desired end-state, never a bare toggle — the
-    server performs a plain write, not a read-modify-write, so concurrent
-    edits from different friends resolve last-write-wins with no
-    lost-update race.
+    Checked state lives only in that browser's localStorage, keyed by
+    packingList[].id — never sent to the server. There is no packing_checked
+    table and no packing/check route to build; if either already exists
+    from earlier work, remove them rather than wiring them up.
 
 - id: "10"
   title: Reusable-template validation

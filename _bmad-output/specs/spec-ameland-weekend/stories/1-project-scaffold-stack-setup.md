@@ -56,7 +56,7 @@ Greenfield project — no existing code. Paths below are new, matching ARCHITECT
 - `src/content/trips/.gitkeep` -- story 2 adds the real `<slug>.json` Ameland entry here.
 - `src/pages/[trip]/index.astro` -- stub with `export const prerender = true`; stories 3 implements.
 - `src/pages/[trip]/admin.astro` -- stub with `export const prerender = false`; stories 4-5 implement.
-- `src/pages/api/trip/[slug].ts`, `src/pages/api/admin/toggle.ts`, `src/pages/api/push/subscribe.ts`, `src/pages/api/packing/check.ts` -- stubs, each with `export const prerender = false`; stories 3, 5, 8, 9 implement.
+- `src/pages/api/trip/[slug].ts`, `src/pages/api/admin/toggle.ts`, `src/pages/api/push/subscribe.ts` -- stubs, each with `export const prerender = false`; stories 3, 5, 8 implement. (No `src/pages/api/packing/check.ts` stub: AD-6 was reversed to per-device `localStorage` tracking during story 9's planning, 2026-08-30 — packing state never becomes a server route, so story 9 implements no API route at all. An earlier scaffolding pass had created this stub before the reversal; it has since been deleted.)
 - `src/islands/.gitkeep` -- placeholder.
 - `src/lib/db.ts` -- Neon HTTP client (`neon()`) behind a memoized `getSql()`, reading `DATABASE_URL` lazily on first call, not at module scope.
 - `src/lib/push.ts` -- stub; story 8 implements.

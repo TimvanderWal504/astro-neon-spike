@@ -31,6 +31,10 @@ const chapterSlots = sortByOrder(trip.data.chapters).map((chapter) => ({
   order: chapter.order,
   kind: chapter.kind,
 }));
+// Static, non-gated content (AD-2: the packing-list section is exempt from
+// chapter-content-gating) — safe to read directly here, unlike chapter
+// title/time/location/description above.
+const packingList = trip.data.packingList;
 
 // 8-digit hex-with-alpha strings (e.g. "#E3A64A24") for the ambient glow —
 // computed here since CSS custom properties can't have hex digits appended
@@ -555,6 +559,150 @@ const installStepIconBg = `${accentColor}26`;
         color: var(--accent);
         outline: 1px solid var(--accent);
         outline-offset: 3px;
+      }
+
+      /* PAKLIJST — floating button + bottom-sheet overlay, ported from
+         Main.dc.html:590-620 (mockup's sc-if/setState pseudo-framework ->
+         plain DOM class/hidden toggling, story 7's approach). Renders
+         unconditionally, independent of chapter lock state (AD-2). z-index
+         must clear .hero-map-dive's z-index:50 (story 6) — the mockup's own
+         50/60 values collide with it, so these go higher. */
+      .packing-toggle {
+        position: fixed;
+        right: 20px;
+        bottom: 20px;
+        z-index: 65;
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        padding: 14px 20px;
+        border-radius: 999px;
+        border: none;
+        background: #f4f1ea;
+        color: #0a0d0c;
+        font-weight: 600;
+        font-size: 14px;
+        font-family: inherit;
+        cursor: pointer;
+        box-shadow: 0 12px 30px -8px rgba(0, 0, 0, 0.6);
+      }
+      .packing-toggle:hover {
+        opacity: 0.85;
+      }
+      .packing-toggle:focus-visible {
+        outline: 1px solid var(--accent);
+        outline-offset: 3px;
+      }
+      .packing-overlay {
+        position: fixed;
+        inset: 0;
+        z-index: 75;
+        background: rgba(5, 6, 6, 0.65);
+        backdrop-filter: blur(4px);
+        display: flex;
+        align-items: flex-end;
+        justify-content: center;
+      }
+      .packing-overlay[hidden] {
+        display: none;
+      }
+      .packing-sheet {
+        width: 100%;
+        max-width: 480px;
+        max-height: 76dvh;
+        overflow-y: auto;
+        background: #12160f;
+        border-radius: 24px 24px 0 0;
+        border: 1px solid rgba(244, 241, 234, 0.1);
+        padding: 28px 24px 32px;
+      }
+      .packing-sheet-header {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        margin-bottom: 6px;
+      }
+      .packing-sheet-title {
+        margin: 0;
+        font-size: 19px;
+        font-weight: 600;
+      }
+      .packing-close {
+        background: none;
+        border: none;
+        color: #9a9a91;
+        cursor: pointer;
+        padding: 4px;
+      }
+      .packing-close:hover {
+        color: #f4f1ea;
+      }
+      .packing-close:focus-visible {
+        outline: 1px solid var(--accent);
+        outline-offset: 3px;
+      }
+      .packing-sheet-copy {
+        color: #9a9a91;
+        font-size: 13px;
+        margin: 0 0 20px;
+      }
+      .packing-list {
+        list-style: none;
+        margin: 0;
+        padding: 0;
+      }
+      .packing-item {
+        border-bottom: 1px solid rgba(244, 241, 234, 0.08);
+      }
+      .packing-item:last-child {
+        border-bottom: none;
+      }
+      .packing-item-label {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        padding: 13px 2px;
+        cursor: pointer;
+      }
+      .packing-checkbox {
+        appearance: none;
+        -webkit-appearance: none;
+        flex: 0 0 auto;
+        width: 22px;
+        height: 22px;
+        margin: 0;
+        border-radius: 6px;
+        border: 1px solid rgba(244, 241, 234, 0.3);
+        background: transparent;
+        position: relative;
+        cursor: pointer;
+      }
+      .packing-checkbox:checked {
+        background: var(--accent);
+        border-color: var(--accent);
+      }
+      .packing-checkbox:checked::after {
+        content: '';
+        position: absolute;
+        left: 7px;
+        top: 3px;
+        width: 5px;
+        height: 10px;
+        border: solid #0a0d0c;
+        border-width: 0 2px 2px 0;
+        transform: rotate(45deg);
+      }
+      .packing-checkbox:focus-visible {
+        outline: 1px solid var(--accent);
+        outline-offset: 3px;
+      }
+      .packing-item-text {
+        font-size: 14px;
+        color: #e5e2d9;
+      }
+      .packing-item-label:has(.packing-checkbox:checked) .packing-item-text {
+        color: #7d7c74;
+        text-decoration: line-through;
       }
 
       @media (prefers-reduced-motion: reduce) {
@@ -1749,6 +1897,51 @@ c-22 -1 -33 -6 -33 -16 0 -8 -9 -15 -20 -15 -22 0 -26 -20 -8 -38 7 -7 9 -12
       }
     </div>
 
+    <!-- PAKLIJST — floating button + bottom-sheet checklist, ported from
+         Main.dc.html:590-620. Renders unconditionally, independent of any
+         chapter's lock state (AD-2). Items come from static
+         `trip.data.packingList` (AD-7) — no fetch needed. Checked state is
+         client-only, read/written via localStorage (AD-6, see script
+         below); native <input type="checkbox"> gives real a11y semantics
+         from the start (checked state, keyboard operability) instead of a
+         div-based fake checkbox. -->
+    <button
+      type="button"
+      id="packing-toggle"
+      class="packing-toggle"
+      aria-haspopup="dialog"
+      aria-expanded="false"
+      aria-controls="packing-overlay"
+    >
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg>
+      Paklijst
+    </button>
+
+    <div id="packing-overlay" class="packing-overlay" hidden>
+      <div class="packing-sheet" role="dialog" aria-modal="true" aria-labelledby="packing-title">
+        <div class="packing-sheet-header">
+          <h3 id="packing-title" class="packing-sheet-title">Paklijst</h3>
+          <button type="button" id="packing-close" class="packing-close" aria-label="Sluiten">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M18 6L6 18M6 6l12 12"/></svg>
+          </button>
+        </div>
+        <p class="packing-sheet-copy">Staat vast vanaf dag &eacute;&eacute;n, ook al zijn niet alle hoofdstukken al open.</p>
+
+        <ul class="packing-list">
+          {
+            packingList.map((item) => (
+              <li class="packing-item">
+                <label class="packing-item-label">
+                  <input type="checkbox" class="packing-checkbox" data-packing-id={item.id} />
+                  <span class="packing-item-text">{item.label}</span>
+                </label>
+              </li>
+            ))
+          }
+        </ul>
+      </div>
+    </div>
+
     <script>
       // daysLeft is always computed fresh, client-side, from the static
       // `data-start` attribute — never baked in once at build time, so a
@@ -1939,6 +2132,100 @@ c-22 -1 -33 -6 -33 -16 0 -8 -9 -15 -20 -15 -22 0 -26 -20 -8 -38 7 -7 9 -12
               btn.setAttribute('aria-pressed', String(btn.dataset.platformBtn === platform));
             });
           });
+        });
+      }
+
+      // Paklijst (story 9): checked state is client-only, per-device
+      // (AD-6) — one JSON blob per trip, `packingChecked:{tripSlug}` ->
+      // {[itemId]: boolean}, never sent to the server. All localStorage
+      // reads/writes are wrapped in try/catch and swallowed silently (same
+      // graceful-degradation convention as the service-worker registration
+      // below) so private-mode/storage-disabled browsers still render a
+      // fully clickable checklist, just without persistence.
+      const packingToggleButton = document.getElementById('packing-toggle');
+      const packingOverlay = document.getElementById('packing-overlay');
+      const packingCloseButton = document.getElementById('packing-close');
+
+      function packingStorageKey(): string | null {
+        return tripSlug ? `packingChecked:${tripSlug}` : null;
+      }
+
+      function readPackingChecked(): Record<string, boolean> {
+        const key = packingStorageKey();
+        if (!key) return {};
+        try {
+          const raw = localStorage.getItem(key);
+          if (!raw) return {};
+          const parsed = JSON.parse(raw);
+          return parsed && typeof parsed === 'object' && !Array.isArray(parsed) ? parsed : {};
+        } catch {
+          return {};
+        }
+      }
+
+      function writePackingChecked(state: Record<string, boolean>): void {
+        const key = packingStorageKey();
+        if (!key) return;
+        try {
+          localStorage.setItem(key, JSON.stringify(state));
+        } catch {
+          // Swallow — private mode / storage disabled. The checklist stays
+          // fully interactive this session, it just won't persist.
+        }
+      }
+
+      if (packingToggleButton && packingOverlay) {
+        const packingCheckboxes =
+          packingOverlay.querySelectorAll<HTMLInputElement>('.packing-checkbox');
+
+        // Initial-load snapshot only, to paint the starting checked state —
+        // never mutated in place afterwards. The change handler below
+        // re-reads fresh from localStorage at write time instead of
+        // reusing this variable, so a second tab open on the same trip
+        // can't silently revert this tab's writes with a stale in-memory
+        // copy of every other item (the same read-modify-write race AD-6
+        // was written to rule out, just across tabs instead of the server).
+        const initialPackingChecked = readPackingChecked();
+
+        packingCheckboxes.forEach((checkbox) => {
+          const id = checkbox.dataset.packingId;
+          if (id && initialPackingChecked[id]) checkbox.checked = true;
+          checkbox.addEventListener('change', () => {
+            if (!id) return;
+            const currentPackingChecked = readPackingChecked();
+            currentPackingChecked[id] = checkbox.checked;
+            writePackingChecked(currentPackingChecked);
+          });
+        });
+
+        function openPacking(): void {
+          packingOverlay!.hidden = false;
+          packingToggleButton!.setAttribute('aria-expanded', 'true');
+          packingCloseButton?.focus();
+        }
+
+        function closePacking(): void {
+          packingOverlay!.hidden = true;
+          packingToggleButton!.setAttribute('aria-expanded', 'false');
+          packingToggleButton!.focus();
+        }
+
+        packingToggleButton.addEventListener('click', openPacking);
+        packingCloseButton?.addEventListener('click', closePacking);
+
+        // Backdrop click closes (mockup's onClick={closePaklijst} on the
+        // outer overlay div + onClick={stop} on the sheet): only a direct
+        // click on the overlay element itself (the backdrop) counts — a
+        // click on the sheet or its children targets a descendant, not the
+        // overlay, so it never reaches this branch.
+        packingOverlay.addEventListener('click', (event) => {
+          if (event.target === packingOverlay) closePacking();
+        });
+
+        document.addEventListener('keydown', (event) => {
+          if (event.key === 'Escape' && !packingOverlay!.hidden) {
+            closePacking();
+          }
         });
       }
 

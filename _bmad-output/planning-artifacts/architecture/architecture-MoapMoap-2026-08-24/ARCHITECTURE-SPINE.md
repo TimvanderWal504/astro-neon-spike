@@ -57,7 +57,7 @@ flowchart LR
 
 - **Binds:** all
 - **Prevents:** ad-hoc client-side unlock logic reappearing — the current mockup (`Main.dc.html`) has zero conditional logic on `unlocked` at all; every chapter always renders regardless of the admin toggle.
-- **Rule:** Only the page *shell* (structure, nav, hero, install flow, chapter slot order) is static/prerendered. A chapter's real content (title, description, time, location, illustration) is never part of that static build — it is fetched live and merged into the shell client-side per AD-2. Only `unlocked` (per chapter), push subscriptions, and packing-list checked-state are server-held mutable data; nothing else is read from or written to the database.
+- **Rule:** Only the page *shell* (structure, nav, hero, install flow, chapter slot order) is static/prerendered. A chapter's real content (title, description, time, location, illustration) is never part of that static build — it is fetched live and merged into the shell client-side per AD-2. Only `unlocked` (per chapter) and push subscriptions are server-held mutable data; nothing else is read from or written to the database. Packing-list checked-state is tracked client-side only (per-device `localStorage`, AD-6) and never touches the database.
   - **Astro mechanics:** `astro.config.mjs` sets `output: 'server'` (this app is fundamentally DB-backed via its API routes — Astro 5+ defaults to `'static'`, which the Vercel adapter alone does not change). `src/pages/[trip]/index.astro` explicitly sets `export const prerender = true` to keep the shell static per this rule despite the server-mode default. Every `src/pages/api/**` route and `src/pages/[trip]/admin.astro` explicitly set `export const prerender = false` — redundant under `output: 'server'`'s own default, but stated explicitly on each file so the routes stay correct even if the global default is ever revisited.
 
 ### AD-2 — Content-gating contract
@@ -72,9 +72,9 @@ flowchart LR
 
 ### AD-3 — Mutation boundary
 
-- **Binds:** all write paths, with two named exceptions below
+- **Binds:** all write paths, with one named exception below
 - **Prevents:** a public-reachable chapter-toggle or debug endpoint breaking the secrecy premise the whole site depends on.
-- **Rule:** Only the authenticated admin route may write chapter `unlocked` state. The public page and its read-only trip-state API (`GET /api/trip/[slug]`) expose no mutation. `push/subscribe` and `packing/check` are **intentional exceptions**, scoped narrowly to AD-4 and AD-6 respectively: both are public and unauthenticated by design, and each writes nothing outside its own named field(s).
+- **Rule:** Only the authenticated admin route may write chapter `unlocked` state. The public page and its read-only trip-state API (`GET /api/trip/[slug]`) expose no mutation. `push/subscribe` is the sole **intentional exception**, scoped narrowly to AD-4: it is public and unauthenticated by design, and writes nothing outside its own named field. Packing-list checked-state (AD-6) is not a server write path at all — there is no `packing/check` route; it is tracked entirely client-side.
 
 ### AD-4 — Push trigger coupling and delivery contract
 
@@ -96,18 +96,18 @@ flowchart LR
 
 ### AD-6 — Packing-list sharing model `[ADOPTED]`
 
-- **Binds:** packing-list data shape and write endpoint
-- **Prevents:** divergent shared-vs-per-device implementations of checked state, and a lost-update race between two friends checking the same item near-simultaneously.
-- **Rule:** The packing list is one shared, trip-wide list; any participant's check/uncheck is visible to everyone, with no per-user identity. `packing/check` takes an explicit desired end-state (`{id, checked: boolean}`), never a bare toggle — the server performs a plain write, not a read-modify-write, so concurrent edits resolve by last-write-wins with no lost-update race. BUILD_BRIEF left the shared-vs-per-person question open; Tim has since confirmed shared/trip-wide is correct.
+- **Binds:** packing-list data shape and client-side storage
+- **Prevents:** building a server write path (DB table + API route) for state that is explicitly per-device; one guest's checks silently overwriting another guest's.
+- **Rule:** The packing list is tracked per-device: each guest's check/uncheck lives in that browser's `localStorage` only, never sent to or persisted by the server. There is no `packing_checked` table and no `packing/check` API route. Reinstalling the PWA, clearing site data, or opening the trip on a second device starts that device's list unchecked from empty — accepted v1 behavior, not a bug. BUILD_BRIEF left the shared-vs-per-person question open; Tim first confirmed shared/trip-wide during `bmad-spec`, then reversed to per-device during story 1.9 planning (2026-08-30) — per-device is current.
 
 ### AD-7 — Content-config data shape
 
 - **Binds:** data layer boundary
 - **Prevents:** a new trip requiring code changes instead of a new content entry (the reusable-template guarantee); the redeploy-silently-relocks-chapters bug that a single blended schema invites.
 - **Rule:**
-  - **`TripContent`** (on-disk, static, versioned in git — encoded via the Content Layer API at `src/content.config.ts`, a `glob()` loader over `src/content/trips/`, **not** the pre-Astro-5 `src/content/config.ts` + `type: 'content'` pattern, which silently no-ops under Astro 7): `{slug, startDate, accentColor, chapters: [{id, order, kind: 'cinematic'|'knap', title, time, location, description, svgVariant}], packingList: [{id, label}]}`. `time` and `location` are nullable, so a chapter can exist before its details are confirmed (e.g. Zondag's unconfirmed wadlopen slot). This shape **never** contains `unlocked` or packing checked-state, in any form, including as a seed/default value. `chapters[].id` and `packingList[].id` double as the Neon foreign keys stories 5 and 9 key rows on — the schema must `.refine()`-enforce uniqueness within each array, and both ids are a stable public contract: renaming one orphans existing unlock/checked state in the DB.
+  - **`TripContent`** (on-disk, static, versioned in git — encoded via the Content Layer API at `src/content.config.ts`, a `glob()` loader over `src/content/trips/`, **not** the pre-Astro-5 `src/content/config.ts` + `type: 'content'` pattern, which silently no-ops under Astro 7): `{slug, startDate, accentColor, chapters: [{id, order, kind: 'cinematic'|'knap', title, time, location, description, svgVariant}], packingList: [{id, label}]}`. `time` and `location` are nullable, so a chapter can exist before its details are confirmed (e.g. Zondag's unconfirmed wadlopen slot). This shape **never** contains `unlocked` or packing checked-state, in any form, including as a seed/default value. `chapters[].id` doubles as the Neon foreign key story 5 keys rows on; `packingList[].id` doubles as the `localStorage` key story 9's client-side tracking keys on (AD-6) — the schema must `.refine()`-enforce uniqueness within each array, and both ids are a stable public contract: renaming `chapters[].id` orphans existing unlock state in the DB, renaming `packingList[].id` orphans existing checked state in guests' `localStorage`.
   - Trip entries are one JSON file per trip under `src/content/trips/` (JSON, not Markdown/frontmatter — the shape is nested structured data, not prose), named `<slug>.json` by convention. `slug` in the schema is the **only** source of truth for a trip's identity: the `glob()` loader's `generateId` derives the collection entry id from `data.slug`, not from the filename (verify the exact Content Layer API for a data-derived id at implementation time) — this rules out the filename and the schema field ever silently disagreeing. The glob pattern is scoped explicitly (e.g. `**/*.json` under `src/content/trips/`) so it can't match `.gitkeep` or other non-content files.
-  - **`TripState`** (the API response shape, computed): `TripContent` merged with `{chapters: {[id]: {unlocked: boolean}}, packingChecked: {[id]: boolean}}` read live from Neon, defaulting to `false`/unchecked when absent from the DB. `unlocked`/checked-state exist only in Neon, created on first admin-toggle / packing-check.
+  - **`TripState`** (the API response shape, computed): `TripContent` merged with `{chapters: {[id]: {unlocked: boolean}}}` read live from Neon, defaulting to `false` when absent from the DB. `unlocked` exists only in Neon, created on first admin-toggle. Packing-list checked-state is **not** part of `TripState` or any server response at all (AD-6) — it is computed client-side from `localStorage`, keyed by `packingList[].id`, defaulting to unchecked when absent.
   - `svgVariant` is a closed enum over the existing code-defined illustration treatments (the vizier/Europa layer, the Blokarten rig, the Brouwerij kettle, and the two "knap" treatments). AD-7's "no code change for a new trip" guarantee covers copy/timing/lock fields only: reusing an existing illustration treatment for a new trip is code-free, but a genuinely new cinematic treatment is a code addition, not a content-only change.
   - Push subscriptions carry a `tripSlug` field — subscriptions are per-trip; a new trip's content entry requires visitors to re-subscribe (no automatic carry-over of a previous trip's subscribers).
 
@@ -115,7 +115,7 @@ flowchart LR
 
 - **Binds:** all API routes
 - **Prevents:** building against a runtime Vercel itself has deprecated for new projects.
-- **Rule:** Deploy to Vercel. All API routes (admin toggle, push subscribe, packing check, trip-state read) run as **Vercel Functions on the Node.js runtime** — Vercel deprecated standalone Edge Functions outright for new projects (as of its docs updated 2026-07-29) and consolidated on Node.js as the default runtime under Fluid Compute; this is a platform default being followed, not a niche crypto-compatibility workaround (PushForge, the push library in Stack, doesn't force this either — it works on Node or Edge).
+- **Rule:** Deploy to Vercel. All API routes (admin toggle, push subscribe, trip-state read) run as **Vercel Functions on the Node.js runtime** — Vercel deprecated standalone Edge Functions outright for new projects (as of its docs updated 2026-07-29) and consolidated on Node.js as the default runtime under Fluid Compute; this is a platform default being followed, not a niche crypto-compatibility workaround (PushForge, the push library in Stack, doesn't force this either — it works on Node or Edge).
 
 ### AD-9 — Environments
 
@@ -128,8 +128,8 @@ flowchart LR
 | Concern | Convention |
 | --- | --- |
 | Naming (entities, files, interfaces, events) | Chapter ids stay the existing Dutch slugs (`bestemming`, `vrijdag`, `blokarten`, `brouwerij`, `zondag`) — they're already load-bearing as DOM ids the CSS/animation system targets (`#bestemming.is-visible`, etc.). Don't translate or reshape them. |
-| Data & formats (ids, dates, error shapes, envelopes) | Dates as ISO 8601 (`2026-10-02T11:30:00`), matching the existing `daysLeft` countdown calculation. Trip `slug` is the routing key everywhere (URL, DB foreign key, content entry filename). All 4 API routes (`trip/[slug]`, `admin/toggle`, `push/subscribe`, `packing/check`) share one JSON envelope: `{ok: true, data}` on success, `{ok: false, error}` on failure. |
-| State & cross-cutting (mutation, errors, logging, config, auth) | All writes go through the admin-authenticated API except the two named public exceptions (AD-3); VAPID keys and the admin passcode are Vercel environment variables, never committed or hardcoded; `prefers-reduced-motion` handling is a first-class requirement on any new animated element, not an afterthought. Rotating the passcode or VAPID keys is a redeploy with new env values; rotate the cookie-signing secret alongside a passcode rotation to invalidate existing admin sessions. |
+| Data & formats (ids, dates, error shapes, envelopes) | Dates as ISO 8601 (`2026-10-02T11:30:00`), matching the existing `daysLeft` countdown calculation. Trip `slug` is the routing key everywhere (URL, DB foreign key, content entry filename). All 3 API routes (`trip/[slug]`, `admin/toggle`, `push/subscribe`) share one JSON envelope: `{ok: true, data}` on success, `{ok: false, error}` on failure. |
+| State & cross-cutting (mutation, errors, logging, config, auth) | All server writes go through the admin-authenticated API except the one named public exception (AD-3, `push/subscribe`); packing-list state never reaches the server at all (AD-6). VAPID keys and the admin passcode are Vercel environment variables, never committed or hardcoded; `prefers-reduced-motion` handling is a first-class requirement on any new animated element, not an afterthought. Rotating the passcode or VAPID keys is a redeploy with new env values; rotate the cookie-signing secret alongside a passcode rotation to invalidate existing admin sessions. |
 
 ## Stack
 
@@ -174,8 +174,8 @@ flowchart TB
         trip/[slug].ts        # GET, redacted-per-lock for public / unredacted for admin (AD-2, AD-3)
         admin/toggle.ts        # POST, unlock + push fanout (AD-3, AD-4)
         push/subscribe.ts      # POST, public exception (AD-3), stores a tripSlug-scoped subscription
-        packing/check.ts       # POST, public exception (AD-3), set-state semantics (AD-6)
     islands/                  # small client:load vanilla-JS components (toggle, checkbox, replay)
+                               # packing-list checkbox reads/writes localStorage only (AD-6), no API call
     lib/
       db.ts                  # Neon client
       push.ts                # PushForge VAPID wrapper + 404/410 cleanup (AD-4)
@@ -189,11 +189,11 @@ flowchart TB
 ## Deferred
 
 - **`web-push`/PWA-plugin ecosystem churn** — Astro and its plugin ecosystem are moving fast (Astro 7 shipped mid-2026, `@vite-pwa/astro` lags behind current Astro majors); re-verify the Astro patch version and PushForge's current state at implementation start rather than trusting this spine's snapshot.
-- **Packing-list per-person tracking** — AD-6 is confirmed shared/trip-wide for v1; per-person tracking would be a future v2 addition (a lightweight device/participant id, not a full account system) if it's ever wanted.
+- **Packing-list cross-device sync** — AD-6 is per-device (`localStorage`) for v1, so checks don't carry over across a reinstall or a second device; a future addition could add optional shared or account-based sync if that proves annoying in practice.
 - **Real photo/video assets** — replacing the current hand-drawn SVG line art is a content swap via the existing asset-reference field in AD-7's schema; no architecture change needed.
 - **New cinematic illustration treatments** — AD-7 scopes `svgVariant` to a closed, code-defined enum; a genuinely new bespoke choreography (not reusing an existing treatment) is a code addition for that trip, not a content-only change.
 - **hyperframes MP4 teaser pipeline** — explored earlier for a standalone teaser video, explicitly out of scope for this v1 architecture; would be a separate offline tool, not part of the PWA runtime.
 - **v2 two-way interaction** (comments, photo uploads) — needs a new mutation surface and likely real per-user identity; when it lands, revisit AD-5 (auth) and AD-6 (packing-list identity) together rather than bolting identity on ad hoc.
 - **Multi-organizer / multi-tenant scaling** — this spine assumes one project, one organizer, "new trip = new content entry." If it ever needs to serve concurrent organizers or a public trip gallery, AD-5 (shared passcode) and AD-8 (single Vercel project) both need rework.
 - **Observability** — no dedicated error-tracking service for v1; rely on Vercel's built-in function logs. Revisit if push-fanout failure rates become a problem.
-- **Testing strategy** — no automated tests for v1; manual QA against BUILD_BRIEF's acceptance items (gating, push delivery, admin auth, packing-list concurrency).
+- **Testing strategy** — no automated tests for v1; manual QA against BUILD_BRIEF's acceptance items (gating, push delivery, admin auth, packing-list persistence across reload on one device).

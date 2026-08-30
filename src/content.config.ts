@@ -34,8 +34,10 @@ const chapterSchema = z.object({
 });
 
 const packingItemSchema = z.object({
-  // Stable public contract: this id is the Neon foreign key story 9 keys
-  // checked-state rows on. Never rename it — renaming orphans checked state.
+  // Stable public contract: this id is the localStorage key story 9's
+  // client-side tracking keys on (AD-6), not a Neon foreign key — packing
+  // state never reaches the server. Never rename it — renaming orphans
+  // guests' locally-saved checked state, not a DB row.
   id: z.string().min(1),
   label: z.string().min(1),
 });

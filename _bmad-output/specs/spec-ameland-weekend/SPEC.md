@@ -32,9 +32,9 @@ Tim (organizer) is running a secret, hype-building surprise trip to Ameland (2�
   - **intent:** The organizer always sees the full trip (every chapter, including locked ones) and can toggle each chapter's unlocked state independently.
   - **success:** The passcode-gated admin page renders all chapters unredacted with working per-chapter toggles, matching the existing mockup's row layout and always-on packing-list row.
 
-- **CAP-5** — Shared packing list
-  - **intent:** Any participant can check off packing items from a shared list, visible to everyone, independent of any chapter's lock state.
-  - **success:** The packing list always renders in full even before any chapter unlocks; a check/uncheck by one participant is visible to the others; concurrent edits from different people resolve deterministically.
+- **CAP-5** — Packing list (per-device)
+  - **intent:** Any participant can check off packing items from a list, tracked per-device (AD-6), independent of any chapter's lock state.
+  - **success:** The packing list always renders in full even before any chapter unlocks; a check/uncheck persists across reload on that same device/browser via `localStorage`; a different device or browser starts unchecked.
 
 - **CAP-6** — Tiered chapter treatment (cinematic vs knap)
   - **intent:** Bestemming, Blokarten, and Brouwerij get full grandeur scroll-triggered choreography; Vrijdag and Zondag stay polished-but-restrained; any cinematic chapter is replayable on demand.
@@ -48,7 +48,7 @@ Tim (organizer) is running a secret, hype-building surprise trip to Ameland (2�
 
 - v1 is one-way only: the organizer publishes/unlocks, guests consume. This rules out any guest-writable content endpoint beyond the packing list and push subscription.
 - Admin access is a single shared passcode with a long-lived signed cookie and per-IP throttling — this rules out any user-account or OAuth system for the organizer.
-- Only three things are ever server-mutable: chapter unlocked flags, push subscriptions, and packing-list checked state. This rules out storing any other trip content (copy, timing, illustration choice) anywhere but static authored content.
+- Only two things are ever server-mutable: chapter unlocked flags and push subscriptions. This rules out storing any other trip content (copy, timing, illustration choice) anywhere but static authored content; packing-list checked-state is tracked client-side only (per-device `localStorage`, AD-6), never touching the database.
 - Stack is pinned by the adopted architecture spine: Astro (latest 7.x), a hand-written manifest/service worker, PushForge for VAPID push, Vercel Functions (Node runtime), Neon Postgres via the Vercel Marketplace integration. Changing any of these means amending the architecture spine first, not deciding ad hoc during build.
 - The existing CSS/animation system (reveal/cinematic-reveal classes, staggered delays, SVG line-draw, the persistent fixed-position viewfinder layer, the replay mechanism) is the visual/interaction source of truth and must transfer into the real build unchanged — this rules out redesigning or reimplementing the motion system in a different style.
 - The compagnon-review checkpoint is 2026-09-14; the group link only goes out to the other 5 friends after that review passes. This rules out an open-ended build timeline — a working build (or a close approximation) must exist before that date.
@@ -56,7 +56,7 @@ Tim (organizer) is running a secret, hype-building surprise trip to Ameland (2�
 ## Non-goals
 
 - Two-way guest interaction (comments, photo/video uploads) — a deliberate v2 extension, not an oversight.
-- Per-guest identity or accounts — packing-list state is shared/trip-wide, and guests never log in; only the organizer has the shared admin passcode.
+- Per-guest identity or accounts — packing-list state is tracked per-device (`localStorage`, AD-6), not per-person, and guests never log in; only the organizer has the shared admin passcode.
 - Real photo/video assets — the hand-drawn SVG line art ships as-is for v1; swapping in real media is a future content update.
 - A standalone MP4 teaser video (the previously-explored hyperframes render pipeline) — a separate offline tool, not part of the PWA build.
 - An automated test suite — verification for v1 is manual QA against this spec's success criteria before the 2026-09-14 checkpoint.
@@ -64,7 +64,7 @@ Tim (organizer) is running a secret, hype-building surprise trip to Ameland (2�
 
 ## Success signal
 
-Before the 2026-09-14 compagnon-review checkpoint: the organizer can toggle any chapter unlocked/locked from the admin view, and an installed guest device receives a push notification and sees the revealed content without a manual reload — while the packing list stays checkable and shared across devices throughout, even with every chapter still locked. A second trip's content can be authored as a new content entry with zero code changes, demonstrating the reusable-template capability (CAP-7).
+Before the 2026-09-14 compagnon-review checkpoint: the organizer can toggle any chapter unlocked/locked from the admin view, and an installed guest device receives a push notification and sees the revealed content without a manual reload — while the packing list stays checkable throughout on each device, even with every chapter still locked (checks persist per-device via `localStorage`, not shared across devices, AD-6). A second trip's content can be authored as a new content entry with zero code changes, demonstrating the reusable-template capability (CAP-7).
 
 ## Open Questions
 
