@@ -46,6 +46,12 @@ const ambientGlowBackground = `radial-gradient(ellipse 70% 55% at 50% 10%, ${acc
 // rgba(227,166,74,0.15), rebuilt from the trip's own accentColor so a
 // different trip's accent isn't stuck showing Main.dc.html's default).
 const installStepIconBg = `${accentColor}26`;
+
+// VAPID public key (story 8, AD-4): read server-side at prerender time and
+// embedded via a data attribute for the client script's pushManager.subscribe
+// call below — no PUBLIC_ rename needed, this build never ships to the
+// client any other way.
+const vapidPublicKey = import.meta.env.VAPID_PUBLIC_KEY ?? '';
 ---
 
 <html lang="nl">
@@ -491,6 +497,40 @@ const installStepIconBg = `${accentColor}26`;
         font-size: 14px;
         line-height: 1.55;
         color: #e5e2d9;
+      }
+
+      /* MELDINGEN AANZETTEN (story 8, AD-4) — minimal, on-brand control
+         next to #installeren; no mockup exists for this, styled to match
+         .installeren-btn/.installeren-copy rather than invent a new visual
+         language. */
+      .notify-block {
+        margin-top: 24px;
+      }
+      .notify-toggle {
+        display: block;
+        width: 100%;
+        padding: 13px;
+        border-radius: 10px;
+        border: 1px solid rgba(244, 241, 234, 0.18);
+        background: transparent;
+        color: #f4f1ea;
+        font-weight: 600;
+        font-size: 14px;
+        font-family: inherit;
+        cursor: pointer;
+      }
+      .notify-toggle:hover {
+        opacity: 0.8;
+      }
+      .notify-toggle:focus-visible {
+        outline: 1px solid var(--accent);
+        outline-offset: 3px;
+      }
+      .notify-message {
+        margin: 12px 0 0;
+        font-size: 13px;
+        line-height: 1.5;
+        color: #c9c6bc;
       }
 
       /* CHAPTER SLOTS */
@@ -1851,6 +1891,17 @@ c-22 -1 -33 -6 -33 -16 0 -8 -9 -15 -20 -15 -22 0 -26 -20 -8 -38 7 -7 9 -12
           <p>Kies <strong>"Zet op beginscherm"</strong>. Zonder deze stap werken meldingen op iPhone niet.</p>
         </div>
       </div>
+
+      <!-- MELDINGEN AANZETTEN — story 8, AD-4. Permission-denied,
+           already-subscribed, and subscribe-failure states are all shown
+           explicitly via #notify-message (see script), never a silent
+           no-op or a repeated browser prompt. -->
+      <div class="notify-block" id="notify-controls" data-vapid-key={vapidPublicKey}>
+        <button type="button" id="notify-subscribe-button" class="notify-toggle">
+          Meldingen aanzetten
+        </button>
+        <p id="notify-message" class="notify-message" role="status" hidden></p>
+      </div>
     </section>
 
     <!-- CHAPTER SLOTS — only id/order/kind drive this markup. Each slot
@@ -2237,7 +2288,117 @@ c-22 -1 -33 -6 -33 -16 0 -8 -9 -15 -20 -15 -22 0 -26 -20 -8 -38 7 -7 9 -12
         navigator.serviceWorker.register('/sw.js').catch((err) => {
           console.error('Service worker registration failed', err);
         });
+
+        // Re-fetch + re-render on the service worker's push-triggered
+        // broadcast (AD-4): `push`'s handler in sw.js posts this message to
+        // every open client instead of transporting state itself, so a
+        // dropped/offline push can't leave this tab stale once it
+        // reconnects — loadTripState() is the same render path the initial
+        // page load already uses.
+        navigator.serviceWorker.addEventListener('message', (event) => {
+          if (event.data && event.data.type === 'trip-updated') {
+            loadTripState();
+          }
+        });
       }
+
+      // Meldingen aanzetten (story 8, AD-4): guest opt-in control near
+      // #installeren. Every outcome shows its own explicit message —
+      // unsupported browser, missing VAPID key, permission denied, already
+      // subscribed, subscribe failure, success — never a silent no-op, and
+      // a denied permission is checked up front so a repeat click never
+      // re-triggers the browser's permission prompt.
+      const notifyControls = document.getElementById('notify-controls');
+      const notifyButton = document.getElementById('notify-subscribe-button');
+      const notifyMessage = document.getElementById('notify-message');
+
+      function showNotifyMessage(text: string): void {
+        if (!(notifyMessage instanceof HTMLElement)) return;
+        notifyMessage.textContent = text;
+        notifyMessage.hidden = false;
+      }
+
+      function urlBase64ToUint8Array(base64String: string): Uint8Array<ArrayBuffer> {
+        const padding = '='.repeat((4 - (base64String.length % 4)) % 4);
+        const base64 = (base64String + padding).replace(/-/g, '+').replace(/_/g, '/');
+        const rawData = window.atob(base64);
+        // Constructed from an explicit ArrayBuffer (not a bare length) so
+        // the result types as Uint8Array<ArrayBuffer>, matching
+        // pushManager.subscribe's applicationServerKey (BufferSource)
+        // expectation exactly under TS's typed-array generics.
+        const outputArray = new Uint8Array(new ArrayBuffer(rawData.length));
+        for (let i = 0; i < rawData.length; i++) {
+          outputArray[i] = rawData.charCodeAt(i);
+        }
+        return outputArray;
+      }
+
+      async function subscribeToPushNotifications(): Promise<void> {
+        if (!('Notification' in window) || !('serviceWorker' in navigator) || !('PushManager' in window)) {
+          showNotifyMessage('Meldingen worden niet ondersteund op dit toestel.');
+          return;
+        }
+
+        const vapidKey = notifyControls instanceof HTMLElement ? notifyControls.dataset.vapidKey : undefined;
+        if (!vapidKey) {
+          showNotifyMessage('Meldingen zijn nu niet beschikbaar. Probeer het later opnieuw.');
+          return;
+        }
+
+        // Checked up front: once a guest has blocked notifications, calling
+        // requestPermission() again cannot show the prompt again either —
+        // this just makes that state explicit instead of silently no-op-ing.
+        if (Notification.permission === 'denied') {
+          showNotifyMessage(
+            'Je hebt meldingen geblokkeerd. Zet dit aan via je browser- of toestelinstellingen om updates te ontvangen.',
+          );
+          return;
+        }
+
+        try {
+          const registration = await navigator.serviceWorker.ready;
+
+          const existingSubscription = await registration.pushManager.getSubscription();
+          if (existingSubscription) {
+            showNotifyMessage('Meldingen staan al aan op dit toestel.');
+            return;
+          }
+
+          const permission = await Notification.requestPermission();
+          if (permission !== 'granted') {
+            showNotifyMessage(
+              'Je hebt meldingen geblokkeerd. Zet dit aan via je browser- of toestelinstellingen om updates te ontvangen.',
+            );
+            return;
+          }
+
+          const subscription = await registration.pushManager.subscribe({
+            userVisibleOnly: true,
+            applicationServerKey: urlBase64ToUint8Array(vapidKey),
+          });
+
+          const res = await fetch('/api/push/subscribe', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ tripSlug, ...subscription.toJSON() }),
+          });
+          const payload = await res.json();
+
+          if (!res.ok || !payload.ok) {
+            showNotifyMessage('Meldingen aanzetten is niet gelukt. Probeer het later opnieuw.');
+            return;
+          }
+
+          showNotifyMessage('Meldingen staan aan. Je krijgt een seintje zodra er een hoofdstuk opengaat.');
+        } catch (err) {
+          console.error('Failed to subscribe to push notifications', err);
+          showNotifyMessage('Meldingen aanzetten is niet gelukt. Probeer het later opnieuw.');
+        }
+      }
+
+      notifyButton?.addEventListener('click', () => {
+        void subscribeToPushNotifications();
+      });
     </script>
   </body>
 </html>

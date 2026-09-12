@@ -93,3 +93,23 @@
 - source_spec: `_bmad-output/specs/spec-ameland-weekend/stories/9-packing-list.md`
   summary: An empty `packingList` (zero items) renders the packing button/overlay with header and copy text but no items and no empty-state message.
   evidence: Raised independently by the blind-hunter and edge-case-hunter review layers on story 9's diff. Not reachable by the current Ameland trip content (5 items), but the schema's `.refine()` only enforces id-uniqueness, not a minimum length, so a future CAP-7 trip entry (story 10) with an empty packing list would hit this. Cheap to add later (a simple "Nog geen paklijst." fallback), not blocking this story's acceptance criteria.
+
+- source_spec: `_bmad-output/specs/spec-ameland-weekend/stories/8-push-notifications.md`
+  summary: `public/sw.js` has no `pushsubscriptionchange` handler — if the browser/push service silently rotates or invalidates a subscription outside of an actual push delivery, the old `push_subscriptions` row just goes dead with no resubscribe/re-POST and no server-side signal.
+  evidence: Raised by blind-hunter review of story 8's diff. Not a trivial fix (the service worker has no page context to read `tripSlug` from on this event; it would need to be persisted, e.g. via IndexedDB, at subscribe time). Given this app's usage window is a single ~4-day trip, the odds of a subscription rotating mid-trip are low — worth a real fix only if this becomes a longer-lived or reusable-template deployment (story 10).
+
+- source_spec: `_bmad-output/specs/spec-ameland-weekend/stories/8-push-notifications.md`
+  summary: The public page's subscribe control treats `pushManager.getSubscription()` returning a value as proof the guest is subscribed, with no check that the corresponding `push_subscriptions` row still exists server-side (e.g. after a 404/410 cleanup deleted it) — the two can silently desync with no reconciliation path.
+  evidence: Raised by blind-hunter review of story 8's diff. Same root cause family as the missing `pushsubscriptionchange` handling above; fixing both together (verify-with-server-on-load, resubscribe-on-change) is a more coherent unit of work than patching either in isolation.
+
+- source_spec: `_bmad-output/specs/spec-ameland-weekend/stories/8-push-notifications.md`
+  summary: The "Meldingen aanzetten" button always renders the same call-to-action on page load regardless of actual subscription state — the already-subscribed check only runs inside the click handler, so a returning subscribed guest has to click before learning they're already opted in.
+  evidence: Raised by blind-hunter review of story 8's diff. UX polish, not a functional bug (the click handler already handles this state correctly, just one click later than ideal) — deferred rather than patched now to avoid touching the subscribe flow's control flow again right after this story's own review round.
+
+- source_spec: `_bmad-output/specs/spec-ameland-weekend/stories/8-push-notifications.md`
+  summary: `POST /api/push/subscribe` is an intentionally public/unauthenticated write (AD-3) with no rate limiting and no length bounds on `endpoint`/`p256dh`/`auth`/`tripSlug` (only non-emptiness is checked) — open to unbounded row growth from abuse.
+  evidence: Raised by blind-hunter review of story 8's diff. Low real-world risk today (an obscure URL shared with a small trusted group, no public listing), but worth revisiting if story 10's reusable-template work ever makes this a more public-facing product.
+
+- source_spec: `_bmad-output/specs/spec-ameland-weekend/stories/8-push-notifications.md`
+  summary: `push/subscribe`'s `endpoint` validation only restricts the URL scheme to `https:` (closing the classic http-only cloud-metadata SSRF vector), not the host — any `https://` URL is accepted and later fetched server-side from `src/lib/push.ts` on every chapter unlock, leaving a residual SSRF surface against other internal/external https-only services.
+  evidence: Raised by blind-hunter review of story 8's diff; the scheme restriction was a deliberate, spec-documented partial mitigation ("shrinks the SSRF surface"), not a claimed full fix. A real host allowlist would need to enumerate every browser push-service origin (FCM, Mozilla autopush, Apple, Windows Notification Hub, etc.) and risks breaking legitimate subscriptions if incomplete — a deliberate trade-off to revisit if this app's exposure grows beyond a small trusted group.

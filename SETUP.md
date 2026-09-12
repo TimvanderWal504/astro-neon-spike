@@ -76,7 +76,7 @@ then set the value in **both** places: your local `.env` and Vercel's
 | `DATABASE_URL` | copied from the Neon integration (step 3) | Production = prod branch, Preview/Dev = dev branch |
 | `ADMIN_PASSCODE` | `openssl rand -base64 32` | all environments |
 | `COOKIE_SIGNING_SECRET` | `openssl rand -base64 32` | all environments |
-| `VAPID_PUBLIC_KEY` / `VAPID_PRIVATE_KEY` | `pnpm dlx web-push generate-vapid-keys` (generates both at once) | all environments |
+| `VAPID_PUBLIC_KEY` / `VAPID_PRIVATE_KEY` | `npx @pushforge/builder vapid` (generates both at once) -- use its "Public Key:" line and the full "Private Key (JWK):" JSON line verbatim; the unrelated `web-push` package's `generate-vapid-keys` produces a raw base64 key PushForge's own send call rejects | all environments |
 
 Use a **different** `ADMIN_PASSCODE` value for local `.env` vs. production if
 you want separate access; otherwise reuse the same value everywhere for

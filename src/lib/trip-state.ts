@@ -83,30 +83,58 @@ export async function getTripState(slug: string): Promise<TripState | null> {
   };
 }
 
+/** Return shape of `setChapterUnlocked` (story 8): both the written value
+ * and the value the row held immediately before this statement ran, so the
+ * caller can detect a false→true transition without a second query. */
+export type SetChapterUnlockedResult = {
+  unlocked: boolean;
+  /** `null` when the chapter had no row yet (i.e. it read as locked). */
+  previousUnlocked: boolean | null;
+};
+
 /**
- * Atomic upsert into `chapter_unlocks` (story 5): a single
- * `INSERT ... ON CONFLICT DO UPDATE ... RETURNING`, never a separate
- * SELECT-then-write, so two concurrent toggles of the same chapter can never
- * lose an update — the row simply ends up matching whichever request's
- * write landed last. Kept as its own exported function (not inlined in the
- * route) so story 8 can later wrap it plus a push fan-out in one
- * `sql.transaction([...])` without restructuring the route's
- * auth/parsing/response logic.
+ * Atomic upsert into `chapter_unlocks` (story 5), extended by story 8 to
+ * also report the pre-write value in the same statement: a `WITH previous AS
+ * (SELECT ...) INSERT ... ON CONFLICT DO UPDATE ... RETURNING unlocked,
+ * (SELECT unlocked FROM previous)`, never a separate SELECT-then-write. This
+ * keeps the read-before-write and the write itself in one atomic round trip,
+ * so two concurrent toggles of the same chapter can never lose an update —
+ * the row simply ends up matching whichever request's write landed last.
+ *
+ * The push fan-out (AD-4) is deliberately NOT wrapped together with this
+ * write in a `sql.transaction([...])`: the fan-out is an external HTTP call
+ * to the push service and can't participate in a Postgres transaction, so
+ * atomicity only applies to this `chapter_unlocks` write. The caller
+ * (`admin/toggle.ts`) reads `previousUnlocked`/`unlocked` from this
+ * function's result and awaits the fan-out separately.
+ *
+ * Known limitation, not fixed here: under a genuine race (two concurrent
+ * toggles of the same chapter), both requests can read `previousUnlocked:
+ * false` before either commits, causing a double-send — acceptable given
+ * this is a single-admin manual-click UI.
  */
 export async function setChapterUnlocked(
   tripSlug: string,
   chapterId: string,
   unlocked: boolean,
-): Promise<boolean> {
+): Promise<SetChapterUnlockedResult> {
   const sql = getSql();
   const rows = (await sql`
+    WITH previous AS (
+      SELECT unlocked FROM chapter_unlocks
+      WHERE trip_slug = ${tripSlug} AND chapter_id = ${chapterId}
+    )
     INSERT INTO chapter_unlocks (trip_slug, chapter_id, unlocked)
     VALUES (${tripSlug}, ${chapterId}, ${unlocked})
     ON CONFLICT (trip_slug, chapter_id) DO UPDATE SET unlocked = EXCLUDED.unlocked
-    RETURNING unlocked
-  `) as { unlocked: boolean }[];
+    RETURNING unlocked, (SELECT unlocked FROM previous) AS previous_unlocked
+  `) as { unlocked: boolean; previous_unlocked: boolean | null }[];
 
-  return rows[0]?.unlocked ?? unlocked;
+  const row = rows[0];
+  return {
+    unlocked: row?.unlocked ?? unlocked,
+    previousUnlocked: row?.previous_unlocked ?? null,
+  };
 }
 
 /**
