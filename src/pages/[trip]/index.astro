@@ -686,6 +686,20 @@ const vapidPublicKey = import.meta.env.VAPID_PUBLIC_KEY ?? '';
         font-size: 13px;
         margin: 0 0 20px;
       }
+      .packing-category {
+        margin: 0 0 4px;
+      }
+      .packing-category-title {
+        margin: 20px 0 2px;
+        font-size: 12px;
+        font-weight: 600;
+        letter-spacing: 0.04em;
+        text-transform: uppercase;
+        color: #9a9a91;
+      }
+      .packing-sheet-copy + .packing-category .packing-category-title {
+        margin-top: 0;
+      }
       .packing-list {
         list-style: none;
         margin: 0;
@@ -1978,18 +1992,25 @@ c-22 -1 -33 -6 -33 -16 0 -8 -9 -15 -20 -15 -22 0 -26 -20 -8 -38 7 -7 9 -12
         </div>
         <p class="packing-sheet-copy">Staat vast vanaf dag &eacute;&eacute;n, ook al zijn niet alle hoofdstukken al open.</p>
 
-        <ul class="packing-list">
-          {
-            packingList.map((item) => (
-              <li class="packing-item">
-                <label class="packing-item-label">
-                  <input type="checkbox" class="packing-checkbox" data-packing-id={item.id} />
-                  <span class="packing-item-text">{item.label}</span>
-                </label>
-              </li>
-            ))
-          }
-        </ul>
+        {
+          packingList.map((category) => (
+            <div class="packing-category" role="group" aria-labelledby={`packing-category-${category.id}`}>
+              <h4 id={`packing-category-${category.id}`} class="packing-category-title">{category.label}</h4>
+              <ul class="packing-list">
+                {
+                  category.items.map((item) => (
+                    <li class="packing-item">
+                      <label class="packing-item-label">
+                        <input type="checkbox" class="packing-checkbox" data-packing-id={item.id} />
+                        <span class="packing-item-text">{item.label}</span>
+                      </label>
+                    </li>
+                  ))
+                }
+              </ul>
+            </div>
+          ))
+        }
       </div>
     </div>
 

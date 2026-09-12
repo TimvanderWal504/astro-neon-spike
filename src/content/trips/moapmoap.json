@@ -55,10 +55,83 @@
     }
   ],
   "packingList": [
-    { "id": "schoenen", "label": "Dichte schoenen" },
-    { "id": "regenjas", "label": "Regenjas, voor de zekerheid" },
-    { "id": "zwemkleding", "label": "Zwemkleding, super handig!" },
-    { "id": "spelletjes", "label": "Een spelletje voor vrijdagavond" },
-    { "id": "oplader", "label": "Telefoonoplader of powerbank" }
+    {
+      "id": "badkleding",
+      "label": "Badkleding & Water",
+      "items": [
+        { "id": "zwembroek", "label": "Zwembroek/badpak" },
+        { "id": "badslippers", "label": "Badslippers/flip-flops" },
+        { "id": "handdoeken", "label": "Handdoeken (minstens 2)" },
+        { "id": "badjas", "label": "Badjas" },
+        { "id": "saunahandoek", "label": "Extra handdoekje voor sauna" },
+        { "id": "saunaslippers", "label": "Sauna-slippers/houten klompen" },
+        { "id": "wasklandje", "label": "Washandje" }
+      ]
+    },
+    {
+      "id": "kleding",
+      "label": "Kleding",
+      "items": [
+        { "id": "shirts", "label": "T-shirts/tops (2-3 stuks)" },
+        { "id": "broeken", "label": "Broeken/leggings (1-2 stuks)" },
+        { "id": "pyjama", "label": "Pyjama/nachtkleding" },
+        { "id": "sokken", "label": "Sokken (minstens 3 paar)" },
+        { "id": "ondergoed", "label": "Ondergoed (3-4 sets)" },
+        { "id": "hoodie", "label": "Hoodie/fleece" },
+        { "id": "jas", "label": "Jas/regenjas" },
+        { "id": "schoenen", "label": "Schoenen (casual + dichte schoenen voor blokarten)" }
+      ]
+    },
+    {
+      "id": "toiletries",
+      "label": "Toiletries & Persoonlijke Verzorging",
+      "items": [
+        { "id": "tandenborstel", "label": "Tandenborstel + tandpasta" },
+        { "id": "deodorant", "label": "Deodorant" },
+        { "id": "zeep", "label": "Zeep/bodywash" },
+        { "id": "shampoo", "label": "Shampoo + conditioner" },
+        { "id": "gezichtsreiniger", "label": "Gezichtsreiniger/moisturizer" },
+        { "id": "medicijnen", "label": "Medicijnen (pillen, pijnstillers)" },
+        { "id": "zonnebrand", "label": "Zonnebrand (SPF 30+)" },
+        { "id": "lipbalm", "label": "Lip balm met SPF" },
+        { "id": "kam", "label": "Kam/borstel" },
+        { "id": "scheren", "label": "Scheerapparaat + scheerschuim" },
+        { "id": "hygieneproducten", "label": "Dameshygiëneproducten" },
+        { "id": "parfum", "label": "Aftershave/parfum" }
+      ]
+    },
+    {
+      "id": "documenten",
+      "label": "Documenten & Essentiëlen",
+      "items": [
+        { "id": "portemonnee", "label": "Portemonnee/pinpas/contant geld" },
+        { "id": "id", "label": "Identiteitsbewijs/paspoort" },
+        { "id": "mobiel", "label": "Mobiel + oplaadkabel" },
+        { "id": "verzekering", "label": "Verzekeringsdocumenten" }
+      ]
+    },
+    {
+      "id": "optioneel",
+      "label": "Optioneel/Comfort",
+      "items": [
+        { "id": "laptop", "label": "Laptop/tablet" },
+        { "id": "koptelefoon", "label": "Koptelefoon" },
+        { "id": "camera", "label": "Camera" },
+        { "id": "boek", "label": "Boek/e-reader" },
+        { "id": "spellen", "label": "Kaartspellen/spelletjes" },
+        { "id": "snacks", "label": "Goodie-bag items (snoep, drankjes)" },
+        { "id": "adapter", "label": "Reisadapter" }
+      ]
+    },
+    {
+      "id": "praktisch",
+      "label": "Praktisch",
+      "items": [
+        { "id": "zakken", "label": "Plastic zakken (vuile kleding, natte items)" },
+        { "id": "pleisters", "label": "Pleisters/verbandmateriaal" },
+        { "id": "insectenspray", "label": "Insectenspray" },
+        { "id": "toiletpapier", "label": "Toiletpapier (voor onderweg)" }
+      ]
+    }
   ]
 }

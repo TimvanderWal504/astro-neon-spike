@@ -42,6 +42,16 @@ const packingItemSchema = z.object({
   label: z.string().min(1),
 });
 
+const packingCategorySchema = z.object({
+  // Not read for rendering (only `label` and `items` are) — kept for the
+  // same reason chapter/item ids are: a stable key so a future feature
+  // (e.g. per-category collapse state) has something to key off of that
+  // isn't derived from the (renameable) display label.
+  id: z.string().min(1),
+  label: z.string().min(1),
+  items: z.array(packingItemSchema).min(1),
+});
+
 const tripSchema = z
   .object({
     // Only source of truth for a trip's identity — the `<slug>.json`
@@ -56,16 +66,24 @@ const tripSchema = z
     startDate: z.string().datetime({ local: true }),
     accentColor: z.string().regex(/^#[0-9A-Fa-f]{6}$/, 'accentColor must be a 6-digit hex color'),
     chapters: z.array(chapterSchema),
-    packingList: z.array(packingItemSchema),
+    packingList: z.array(packingCategorySchema).min(1),
   })
   .refine(
     (trip) => new Set(trip.chapters.map((chapter) => chapter.id)).size === trip.chapters.length,
     { message: 'chapters[].id must be unique within a trip', path: ['chapters'] },
   )
   .refine(
-    (trip) =>
-      new Set(trip.packingList.map((item) => item.id)).size === trip.packingList.length,
+    (trip) => new Set(trip.packingList.map((category) => category.id)).size === trip.packingList.length,
     { message: 'packingList[].id must be unique within a trip', path: ['packingList'] },
+  )
+  .refine(
+    (trip) => {
+      const allItemIds = trip.packingList.flatMap((category) => category.items.map((item) => item.id));
+      return new Set(allItemIds).size === allItemIds.length;
+    },
+    // Uniqueness spans the whole flattened list, not just within one category —
+    // AD-6's localStorage state is keyed by item id alone, with no category scoping.
+    { message: 'packingList[].items[].id must be unique across the whole trip', path: ['packingList'] },
   )
   .refine(
     (trip) => new Set(trip.chapters.map((chapter) => chapter.order)).size === trip.chapters.length,
