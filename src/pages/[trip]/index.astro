@@ -414,6 +414,49 @@ const vapidPublicKey = import.meta.env.VAPID_PUBLIC_KEY ?? '';
       }
       .cinematic-reveal.is-visible .ct-cta { opacity: 1; transform: translateY(0); }
 
+      /* BLOKARTEN / BROUWERIJ ILLUSTRATIONS — ported from
+         Main.dc.html:110-141,507-551 (hand-drawn SVG line art, never
+         previously wired into this page — svgVariant was threaded through
+         the data model but had no consumer, see deferred-work.md). Group
+         coordinates are re-centered from the mockup's left-aligned original
+         (translate(560,…)) to the viewBox's horizontal center
+         (translate(400,…)) since this page's cinematic sections are
+         center-aligned, not left-aligned like the mockup's. Shared
+         stroke-draw-in keyframe (revealRouteDraw) also backs #bestemming's
+         .reveal-route above. */
+      @keyframes revealRouteDraw { to { stroke-dashoffset: 0; } }
+
+      @keyframes revealRigIn { to { opacity: 0.7; transform: translateX(0); } }
+      #blokarten .reveal-rig { opacity: 0; transform: translateX(-140px); }
+      #blokarten.is-visible .reveal-rig { animation: revealRigIn 1300ms cubic-bezier(0.16,1,0.3,1) 200ms forwards; }
+      #blokarten .reveal-mast, #blokarten .reveal-sail { stroke-dasharray: 280; stroke-dashoffset: 280; }
+      #blokarten.is-visible .reveal-mast, #blokarten.is-visible .reveal-sail { animation: revealRouteDraw 800ms cubic-bezier(0.16,1,0.3,1) 700ms forwards; }
+      @keyframes revealWheelIn { to { opacity: 1; transform: scale(1); } }
+      #blokarten .reveal-wheel { opacity: 0; transform: scale(0); transform-box: fill-box; transform-origin: center; }
+      #blokarten.is-visible .reveal-wheel-1 { animation: revealWheelIn 480ms cubic-bezier(0.34,1.56,0.64,1) 1020ms forwards; }
+      #blokarten.is-visible .reveal-wheel-2 { animation: revealWheelIn 480ms cubic-bezier(0.34,1.56,0.64,1) 1090ms forwards; }
+      #blokarten.is-visible .reveal-wheel-3 { animation: revealWheelIn 480ms cubic-bezier(0.34,1.56,0.64,1) 1160ms forwards; }
+      #blokarten .reveal-track { stroke-dasharray: 1000; stroke-dashoffset: 1000; }
+      #blokarten.is-visible .reveal-track { animation: revealRouteDraw 1500ms cubic-bezier(0.16,1,0.3,1) 100ms forwards; }
+
+      @keyframes revealKettleIn { to { opacity: 0.6; transform: scale(1); } }
+      #brouwerij .reveal-kettle { opacity: 0; transform: scale(0.9); transform-box: fill-box; transform-origin: center; }
+      #brouwerij.is-visible .reveal-kettle { animation: revealKettleIn 900ms cubic-bezier(0.16,1,0.3,1) 200ms forwards; }
+      #brouwerij .reveal-steam { stroke-dasharray: 150; stroke-dashoffset: 150; }
+      #brouwerij.is-visible .reveal-steam-1 { animation: revealRouteDraw 1100ms cubic-bezier(0.16,1,0.3,1) 900ms forwards; }
+      #brouwerij.is-visible .reveal-steam-2 { animation: revealRouteDraw 1100ms cubic-bezier(0.16,1,0.3,1) 1050ms forwards; }
+      #brouwerij.is-visible .reveal-steam-3 { animation: revealRouteDraw 1100ms cubic-bezier(0.16,1,0.3,1) 1200ms forwards; }
+      @keyframes revealHopIn { to { opacity: 0.32; transform: rotate(0) scale(1); } }
+      #brouwerij .reveal-hop { opacity: 0; transform: rotate(-10deg) scale(0.92); transform-box: fill-box; transform-origin: center; }
+      #brouwerij.is-visible .reveal-hop { animation: revealHopIn 900ms cubic-bezier(0.16,1,0.3,1) 500ms forwards; }
+      @keyframes revealBubble1In { to { opacity: 0.28; transform: translateY(0); } }
+      @keyframes revealBubble2In { to { opacity: 0.22; transform: translateY(0); } }
+      @keyframes revealBubble3In { to { opacity: 0.18; transform: translateY(0); } }
+      #brouwerij .reveal-bubble { opacity: 0; transform: translateY(18px); transform-box: fill-box; }
+      #brouwerij.is-visible .reveal-bubble-1 { animation: revealBubble1In 700ms cubic-bezier(0.16,1,0.3,1) 1500ms forwards; }
+      #brouwerij.is-visible .reveal-bubble-2 { animation: revealBubble2In 700ms cubic-bezier(0.16,1,0.3,1) 1620ms forwards; }
+      #brouwerij.is-visible .reveal-bubble-3 { animation: revealBubble3In 700ms cubic-bezier(0.16,1,0.3,1) 1740ms forwards; }
+
       /* INSTALLEREN — ported from Main.dc.html:402-442. The toggle's
          sc-if/setState mechanism doesn't exist in this plain-script page:
          a `data-platform` attribute on #installeren (set by the click
@@ -572,6 +615,7 @@ const vapidPublicKey = import.meta.env.VAPID_PUBLIC_KEY ?? '';
          percentage always resolves against .chapters' own (centered)
          content width regardless of viewport size. */
       .chapter-slot[data-kind='cinematic'] {
+        position: relative;
         width: 100vw;
         margin-left: calc(50% - 50vw);
         margin-right: calc(50% - 50vw);
@@ -582,12 +626,27 @@ const vapidPublicKey = import.meta.env.VAPID_PUBLIC_KEY ?? '';
         align-items: center;
         justify-content: center;
         text-align: center;
+        overflow: hidden;
       }
       .chapter-slot[data-kind='cinematic'].is-unlocked {
         display: flex;
       }
+      /* Illustration backdrop (blokarten/brouwerij, see .chapter-illustration
+         below) sits behind the text — z-index:0 vs .chapter-content's 1 —
+         since a positioned element paints above static siblings regardless
+         of DOM order otherwise. */
       .chapter-slot[data-kind='cinematic'] .chapter-content {
+        position: relative;
+        z-index: 1;
         max-width: 640px;
+      }
+      .chapter-illustration {
+        position: absolute;
+        inset: 0;
+        z-index: 0;
+        width: 100%;
+        height: 100%;
+        pointer-events: none;
       }
       .chapter-index {
         font-family: 'JetBrains Mono', monospace;
@@ -603,9 +662,9 @@ const vapidPublicKey = import.meta.env.VAPID_PUBLIC_KEY ?? '';
       /* Cinematic titles get hero-level confidence instead of the
          knap card's modest 22px — this is the sell moment. */
       .chapter-slot[data-kind='cinematic'] .chapter-title {
-        font-size: clamp(40px, 9vw, 104px);
-        line-height: 1.02;
-        max-width: 16ch;
+        font-size: clamp(52px, 13vw, 140px);
+        line-height: 0.96;
+        max-width: 14ch;
         margin: 20px auto 18px;
       }
       .chapter-meta {
@@ -837,6 +896,19 @@ const vapidPublicKey = import.meta.env.VAPID_PUBLIC_KEY ?? '';
         .hero-map-dive {
           display: none;
         }
+        /* Blokarten/brouwerij illustrations settle at their end-state
+           instead of animating in (ported from Main.dc.html:238-248). */
+        #blokarten.is-visible .reveal-rig, #blokarten .reveal-rig { animation: none; opacity: 0.7; transform: none; }
+        #blokarten.is-visible .reveal-mast, #blokarten .reveal-mast,
+        #blokarten.is-visible .reveal-sail, #blokarten .reveal-sail { animation: none; stroke-dashoffset: 0; }
+        #blokarten.is-visible .reveal-wheel, #blokarten .reveal-wheel { animation: none; opacity: 1; transform: none; }
+        #blokarten.is-visible .reveal-track, #blokarten .reveal-track { animation: none; stroke-dashoffset: 0; }
+        #brouwerij.is-visible .reveal-kettle, #brouwerij .reveal-kettle { animation: none; opacity: 0.6; transform: none; }
+        #brouwerij.is-visible .reveal-steam, #brouwerij .reveal-steam { animation: none; stroke-dashoffset: 0; }
+        #brouwerij.is-visible .reveal-hop, #brouwerij .reveal-hop { animation: none; opacity: 0.32; transform: none; }
+        #brouwerij.is-visible .reveal-bubble-1, #brouwerij .reveal-bubble-1 { animation: none; opacity: 0.28; transform: none; }
+        #brouwerij.is-visible .reveal-bubble-2, #brouwerij .reveal-bubble-2 { animation: none; opacity: 0.22; transform: none; }
+        #brouwerij.is-visible .reveal-bubble-3, #brouwerij .reveal-bubble-3 { animation: none; opacity: 0.18; transform: none; }
       }
     </style>
   </head>
@@ -1987,6 +2059,56 @@ c-22 -1 -33 -6 -33 -16 0 -8 -9 -15 -20 -15 -22 0 -26 -20 -8 -38 7 -7 9 -12
               data-kind={chapter.kind}
             >
               <div class="chapter-index mono">{String(chapter.order).padStart(2, '0')}</div>
+              {chapter.id === 'blokarten' && (
+                // Hand-drawn land-sailing rig, ported from Main.dc.html:507-517
+                // (see the CSS block above this template for the reveal-*
+                // animation keyframes). Re-centered from the mockup's
+                // translate(560,…) to translate(400,…) — the viewBox's own
+                // horizontal center — since this section centers its text,
+                // unlike the mockup's left-aligned original.
+                <svg class="chapter-illustration" viewBox="0 0 800 800" preserveAspectRatio="xMidYMid slice" aria-hidden="true">
+                  <path class="reveal-track" d="M-40,180 C160,150 300,210 800,170" stroke={accentColor} stroke-width="1" opacity="0.16" fill="none" />
+                  <path class="reveal-track" d="M-40,230 C160,200 320,255 800,220" stroke={accentColor} stroke-width="1" opacity="0.12" fill="none" />
+                  <path class="reveal-track" d="M-40,650 C160,630 320,668 500,645 C620,630 720,650 800,640" stroke={accentColor} stroke-width="1" opacity="0.16" fill="none" />
+                  <path class="reveal-track" d="M-40,690 C160,670 320,708 500,685 C620,670 720,690 800,680" stroke={accentColor} stroke-width="1" opacity="0.1" fill="none" />
+                  <g class="reveal-rig">
+                    <g transform="translate(400,440)">
+                      <line class="reveal-mast" x1="0" y1="-190" x2="0" y2="10" stroke={accentColor} stroke-width="1.6" />
+                      <path d="M0,-185 C55,-150 70,-70 40,0 L0,-10 Z" fill={accentColor} opacity="0.2" />
+                      <path class="reveal-sail" d="M0,-185 C55,-150 70,-70 40,0 L0,-10 Z" stroke={accentColor} stroke-width="1.3" fill="none" />
+                      <path d="M-95,40 L95,40 L55,10 L-55,10 Z" fill="none" stroke={accentColor} stroke-width="1.6" />
+                      <circle class="reveal-wheel reveal-wheel-1" cx="-95" cy="55" r="14" fill="none" stroke={accentColor} stroke-width="1.6" />
+                      <circle class="reveal-wheel reveal-wheel-2" cx="95" cy="55" r="14" fill="none" stroke={accentColor} stroke-width="1.6" />
+                      <circle class="reveal-wheel reveal-wheel-3" cx="0" cy="65" r="12" fill="none" stroke={accentColor} stroke-width="1.6" />
+                    </g>
+                  </g>
+                </svg>
+              )}
+              {chapter.id === 'brouwerij' && (
+                // Hand-drawn kettle/steam/hop, ported from Main.dc.html:532-551,
+                // re-centered the same way as the Blokarten rig above.
+                <svg class="chapter-illustration" viewBox="0 0 800 800" preserveAspectRatio="xMidYMid slice" aria-hidden="true">
+                  <g class="reveal-kettle">
+                    <g transform="translate(400,470)">
+                      <path d="M-90,60 C-90,110 90,110 90,60 L80,-40 C80,-80 -80,-80 -80,-40 Z" fill={accentColor} opacity="0.12" />
+                      <path d="M-90,60 C-90,110 90,110 90,60 L80,-40 C80,-80 -80,-80 -80,-40 Z" stroke={accentColor} stroke-width="1.5" fill="none" />
+                      <ellipse cx="0" cy="-40" rx="80" ry="14" fill="none" stroke={accentColor} stroke-width="1.5" />
+                      <path class="reveal-steam reveal-steam-1" d="M30,-78 C30,-110 55,-120 55,-150" stroke={accentColor} stroke-width="1.5" fill="none" />
+                      <path class="reveal-steam reveal-steam-2" d="M-10,-95 C-25,-125 5,-140 -10,-170" stroke={accentColor} stroke-width="1.3" fill="none" opacity="0.55" />
+                      <path class="reveal-steam reveal-steam-3" d="M25,-105 C10,-135 40,-150 25,-180" stroke={accentColor} stroke-width="1.3" fill="none" opacity="0.4" />
+                    </g>
+                  </g>
+                  <g class="reveal-hop">
+                    <g transform="translate(220,190)">
+                      <path d="M0,-40 C22,-30 26,0 0,40 C-26,0 -22,-30 0,-40 Z" fill="none" stroke={accentColor} stroke-width="1.4" />
+                      <path d="M0,-30 L0,30 M-12,-14 L12,-14 M-14,4 L14,4 M-10,18 L10,18" stroke={accentColor} stroke-width="0.9" opacity="0.6" />
+                    </g>
+                  </g>
+                  <circle class="reveal-bubble reveal-bubble-1" cx="470" cy="560" r="4" fill={accentColor} />
+                  <circle class="reveal-bubble reveal-bubble-2" cx="500" cy="520" r="3" fill={accentColor} />
+                  <circle class="reveal-bubble reveal-bubble-3" cx="450" cy="480" r="2.5" fill={accentColor} />
+                </svg>
+              )}
               {isCinematic ? (
                 <div class="chapter-content">
                   <p class="chapter-meta ct-eyebrow">
