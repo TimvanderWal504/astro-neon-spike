@@ -7,14 +7,15 @@ import { glob } from 'astro/loaders';
 
 // svgVariant is a closed enum over the existing code-defined illustration
 // treatments (BUILD_BRIEF.md): the vizier/Europa layer (bestemming), the
-// Blokarten rig, the Brouwerij kettle, and the two restrained "knap"
-// treatments (vrijdag, zondag). Reusing one of these for a new trip is
-// content-only; a genuinely new cinematic treatment is a code change.
+// Blokarten rig, the Brouwerij kettle, and the restrained "knap"
+// treatments (vrijdag, zaterdag, zondag). Reusing one of these for a new trip
+// is content-only; a genuinely new cinematic treatment is a code change.
 const svgVariants = [
   'vizier-europa',
   'blokarten-rig',
   'brouwerij-kettle',
   'knap-vrijdag',
+  'knap-zaterdag',
   'knap-zondag',
 ] as const;
 

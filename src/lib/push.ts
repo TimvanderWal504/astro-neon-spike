@@ -74,7 +74,7 @@ async function sendToSubscription(
         // worker's `push` handler reads `tripSlug` from this payload solely
         // to know which client to focus/open and which trip to re-fetch.
         payload: {
-          title: 'Nieuw hoofdstuk geopend!',
+          title: 'Nieuwe update beschikbaar!',
           body: chapterTitle,
           tripSlug,
         },
