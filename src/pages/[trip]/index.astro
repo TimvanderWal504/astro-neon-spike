@@ -109,6 +109,14 @@ const vapidPublicKey = import.meta.env.VAPID_PUBLIC_KEY ?? '';
         justify-content: center;
         pointer-events: none;
         z-index: 3;
+        transition: opacity 500ms ease;
+      }
+      /* Prevents the "double map" glitch: without this, the ambient map
+         stays visible (it's mid-page, not scroll-cleared) while the fixed
+         dive layer (z-index 50, see .hero-map-dive) fills the whole
+         viewport on top of it the instant #bestemming comes into view. */
+      body:has(#bestemming.is-visible) .hero-map {
+        opacity: 0;
       }
       .hero-map-svg {
         width: min(88vw, 560px);
@@ -117,13 +125,14 @@ const vapidPublicKey = import.meta.env.VAPID_PUBLIC_KEY ?? '';
         overflow: visible;
         opacity: 0.3;
       }
-      /* transform-origin is 47.468% 50.633% of the viewBox (see
+      /* transform-origin is 39.620% 49.620% of the viewBox (see
          .hero-map-svg's viewBox="80 0 790 790" below, matched to the real
          Europe vector map's own coordinate space) — the point that maps
-         back to absolute (455,400), the NL anchor used by the wander
-         default position and fixedScanLockMove/-Scale keyframes. */
+         back to absolute (393,392), the Ameland anchor (pinpointed by hand
+         against the traced coastline) used by the wander default position
+         and fixedScanLockMove/-Scale keyframes. */
       .hero-map-zoom {
-        transform-origin: 47.468% 50.633%;
+        transform-origin: 39.620% 49.620%;
       }
       /* Movement/scale are driven client-side (random walk, see script)
          rather than a fixed CSS keyframe loop, so the viewfinder wanders
@@ -181,7 +190,7 @@ const vapidPublicKey = import.meta.env.VAPID_PUBLIC_KEY ?? '';
         overflow: visible;
       }
       .hero-map-dive-zoom {
-        transform-origin: 47.468% 50.633%;
+        transform-origin: 39.620% 49.620%;
       }
       .hero-map-dive-scale {
         transform-box: fill-box;
@@ -210,13 +219,13 @@ const vapidPublicKey = import.meta.env.VAPID_PUBLIC_KEY ?? '';
         white-space: nowrap;
       }
 
-      /* a dramatic hop between a few other countries before finally arriving on NL */
+      /* a dramatic hop between a few other countries before finally arriving on Ameland */
       @keyframes fixedScanLockMove {
         0%   { transform: translate(311px,230px); }
         30%  { transform: translate(554px,216px); }
         60%  { transform: translate(360px,402px); }
-        85%  { transform: translate(455px,400px); }
-        100% { transform: translate(455px,400px); }
+        85%  { transform: translate(393px,392px); }
+        100% { transform: translate(393px,392px); }
       }
       @keyframes fixedScanLockScale {
         0%   { transform: scale(1); }
@@ -230,12 +239,12 @@ const vapidPublicKey = import.meta.env.VAPID_PUBLIC_KEY ?? '';
         50%  { opacity: 0.7; transform: scale(1.6); }
         100% { opacity: 0; transform: scale(2.2); }
       }
-      /* Europe grows to fill the whole screen (0-20%), holds huge while the viewfinder hops between countries (20-78%), then dives through into the boat scene (78-100%) */
+      /* Europe grows to fill the whole screen (0-20%), holds huge while the viewfinder hops between countries (20-78%), then keeps diving in sharply through to Ameland (78-97%) — full opacity the whole way, so it reads as a crisp zoom rather than a gradual fade to haze. It only clears away right at the very end (97-100%), a quick cut rather than a long fade, so the destination content isn't left sitting under a lingering translucent map. */
       @keyframes fixedScanZoomSequence {
         0%   { transform: scale(1); opacity: 1; }
         20%  { transform: scale(7); opacity: 1; }
         78%  { transform: scale(7); opacity: 1; }
-        90%  { opacity: 0.45; }
+        97%  { transform: scale(28); opacity: 1; }
         100% { transform: scale(28); opacity: 0; }
       }
       @keyframes fixedScanCaptionFade { 0% { opacity:0; } 10% { opacity:1; } 85% { opacity:1; } 100% { opacity:0; } }
@@ -2045,16 +2054,16 @@ c-22 -1 -33 -6 -33 -16 0 -8 -9 -15 -20 -15 -22 0 -26 -20 -8 -38 7 -7 9 -12
 
       // Viewfinder wander: a random walk over the landmass area of the
       // real Europe vector map (roughly Western/Central Europe, anchored
-      // near the Netherlands) instead of a fixed CSS keyframe loop, so the
+      // near Ameland) instead of a fixed CSS keyframe loop, so the
       // motion never repeats the same path twice. Skipped entirely under
-      // prefers-reduced-motion, settling on the NL anchor point instead.
+      // prefers-reduced-motion, settling on the Ameland anchor point instead.
       function startViewfinderWander(): void {
         const motionEl = document.querySelector<SVGGElement>('.hero-map-motion');
         const scaleEl = document.querySelector<SVGGElement>('.hero-map-scale');
         if (!motionEl || !scaleEl) return;
 
         if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
-          motionEl.style.transform = 'translate(455px, 400px)';
+          motionEl.style.transform = 'translate(393px, 392px)';
           scaleEl.style.transform = 'scale(1.08)';
           return;
         }
@@ -2092,7 +2101,7 @@ c-22 -1 -33 -6 -33 -16 0 -8 -9 -15 -20 -15 -22 0 -26 -20 -8 -38 7 -7 9 -12
         // glide in from the SVG origin on page load.
         motionEl.style.transitionDuration = '0s';
         scaleEl.style.transitionDuration = '0s';
-        motionEl.style.transform = 'translate(455px, 400px)';
+        motionEl.style.transform = 'translate(393px, 392px)';
         scaleEl.style.transform = 'scale(1.08)';
         requestAnimationFrame(step);
       }

@@ -28,15 +28,25 @@
       "id": "vrijdag",
       "order": 3,
       "kind": "knap",
-      "title": "Onderweg naar het eiland",
+      "title": "Onderweg naar het appartement",
       "time": "Vrijdag 2 oktober, 14:45",
       "location": "Bliekeduun 8, Hollum",
-      "description": "14:45 — De boot, stipt, overtocht duurt tot 16:00.\n16:00 — Fietsen naar het appartement.\n's Avonds — Geen programma, wel spelletjes. Neem er eentje mee. Er staat er in elk geval één vast op het bord: Risk.",
+      "description": "14:45 — De boot, stipt, overtocht duurt tot 16:00.\n16:00 — Fietsen naar het appartement.",
+      "svgVariant": "knap-vrijdag"
+    },
+    {
+      "id": "spelletjes",
+      "order": 4,
+      "kind": "knap",
+      "title": "Geen programma, wel spelletjes.",
+      "time": "Vrijdag 2 oktober, 18:45",
+      "location": "Het appartement",
+      "description": "18:45 — Geen programma, wel spelletjes, bier en goede verhalen. Neem er eentje mee. Er staat er in elk geval één vast op het bord: Risk.",
       "svgVariant": "knap-vrijdag"
     },
     {
       "id": "blokarten",
-      "order": 4,
+      "order": 5,
       "kind": "cinematic",
       "title": "Blokarten",
       "time": "Zaterdag 3 oktober, 09:15",
@@ -46,7 +56,7 @@
     },
     {
       "id": "brouwerij",
-      "order": 5,
+      "order": 6,
       "kind": "cinematic",
       "title": "De brouwerij",
       "time": "Zaterdag 3 oktober, 12:30",
@@ -56,7 +66,7 @@
     },
     {
       "id": "uit eten",
-      "order": 6,
+      "order": 7,
       "kind": "knap",
       "title": "Uit eten",
       "time": "Zaterdag 3 oktober, 17:30",
@@ -67,7 +77,7 @@
     ,
     {
       "id": "uitchecken",
-      "order": 7,
+      "order": 8,
       "kind": "knap",
       "title": "uitchecken",
       "time": "Zondag 4 oktober, 11:00",
@@ -77,7 +87,7 @@
     },
     {
       "id": "zondag",
-      "order": 6,
+      "order": 9,
       "kind": "knap",
       "title": "De duinexcursie",
       "time": "Zondag 4 oktober, 11:30",
@@ -87,7 +97,7 @@
     },
     {
       "id": "terug",
-      "order": 3,
+      "order": 10,
       "kind": "knap",
       "title": "Onderweg naar het vaste land",
       "time": "Vrijdag 2 oktober, 16:00",
