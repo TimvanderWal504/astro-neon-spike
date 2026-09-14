@@ -445,7 +445,6 @@ const vapidPublicKey = import.meta.env.VAPID_PUBLIC_KEY ?? '';
       #brouwerij .reveal-steam { stroke-dasharray: 150; stroke-dashoffset: 150; }
       #brouwerij.is-visible .reveal-steam-1 { animation: revealRouteDraw 1100ms cubic-bezier(0.16,1,0.3,1) 900ms forwards; }
       #brouwerij.is-visible .reveal-steam-2 { animation: revealRouteDraw 1100ms cubic-bezier(0.16,1,0.3,1) 1050ms forwards; }
-      #brouwerij.is-visible .reveal-steam-3 { animation: revealRouteDraw 1100ms cubic-bezier(0.16,1,0.3,1) 1200ms forwards; }
       @keyframes revealHopIn { to { opacity: 0.32; transform: rotate(0) scale(1); } }
       #brouwerij .reveal-hop { opacity: 0; transform: rotate(-10deg) scale(0.92); transform-box: fill-box; transform-origin: center; }
       #brouwerij.is-visible .reveal-hop { animation: revealHopIn 900ms cubic-bezier(0.16,1,0.3,1) 500ms forwards; }
@@ -456,6 +455,26 @@ const vapidPublicKey = import.meta.env.VAPID_PUBLIC_KEY ?? '';
       #brouwerij.is-visible .reveal-bubble-1 { animation: revealBubble1In 700ms cubic-bezier(0.16,1,0.3,1) 1500ms forwards; }
       #brouwerij.is-visible .reveal-bubble-2 { animation: revealBubble2In 700ms cubic-bezier(0.16,1,0.3,1) 1620ms forwards; }
       #brouwerij.is-visible .reveal-bubble-3 { animation: revealBubble3In 700ms cubic-bezier(0.16,1,0.3,1) 1740ms forwards; }
+
+      /* DUINEXCURSIE ILLUSTRATION — dune ridge, helmgras tufts growing out
+         of the sand, a rabbit noticing you, an oystercatcher gliding
+         overhead. Same primitives as Blokarten/Brouwerij above: dune uses
+         revealKettleIn's fade+scale, grass reuses the wheel bounce curve
+         but grows from the base instead of popping from nothing. */
+      @keyframes revealDuneIn { to { opacity: 0.6; transform: scale(1); } }
+      #zondag .reveal-dune { opacity: 0; transform: scale(0.94); transform-box: fill-box; transform-origin: center; }
+      #zondag.is-visible .reveal-dune { animation: revealDuneIn 1000ms cubic-bezier(0.16,1,0.3,1) 200ms forwards; }
+      @keyframes revealGrassIn { to { opacity: 0.55; transform: scaleY(1); } }
+      #zondag .reveal-grass { opacity: 0; transform: scaleY(0); transform-box: fill-box; transform-origin: bottom; }
+      #zondag.is-visible .reveal-grass-1 { animation: revealGrassIn 480ms cubic-bezier(0.34,1.56,0.64,1) 900ms forwards; }
+      #zondag.is-visible .reveal-grass-2 { animation: revealGrassIn 480ms cubic-bezier(0.34,1.56,0.64,1) 980ms forwards; }
+      #zondag.is-visible .reveal-grass-3 { animation: revealGrassIn 480ms cubic-bezier(0.34,1.56,0.64,1) 1060ms forwards; }
+      @keyframes revealRabbitIn { to { opacity: 0.45; transform: scale(1); } }
+      #zondag .reveal-rabbit { opacity: 0; transform: scale(0.7); transform-box: fill-box; transform-origin: center; }
+      #zondag.is-visible .reveal-rabbit { animation: revealRabbitIn 700ms cubic-bezier(0.16,1,0.3,1) 1300ms forwards; }
+      @keyframes revealBirdIn { to { opacity: 0.5; transform: translate(220px, -10px) rotate(2deg); } }
+      #zondag .reveal-bird { opacity: 0; transform: translate(-80px, 6px) rotate(-4deg); transform-box: fill-box; transform-origin: center; }
+      #zondag.is-visible .reveal-bird { animation: revealBirdIn 1900ms cubic-bezier(0.16,1,0.3,1) 300ms forwards; }
 
       /* INSTALLEREN — ported from Main.dc.html:402-442. The toggle's
          sc-if/setState mechanism doesn't exist in this plain-script page:
@@ -909,6 +928,10 @@ const vapidPublicKey = import.meta.env.VAPID_PUBLIC_KEY ?? '';
         #brouwerij.is-visible .reveal-bubble-1, #brouwerij .reveal-bubble-1 { animation: none; opacity: 0.28; transform: none; }
         #brouwerij.is-visible .reveal-bubble-2, #brouwerij .reveal-bubble-2 { animation: none; opacity: 0.22; transform: none; }
         #brouwerij.is-visible .reveal-bubble-3, #brouwerij .reveal-bubble-3 { animation: none; opacity: 0.18; transform: none; }
+        #zondag.is-visible .reveal-dune, #zondag .reveal-dune { animation: none; opacity: 0.6; transform: none; }
+        #zondag.is-visible .reveal-grass, #zondag .reveal-grass { animation: none; opacity: 0.55; transform: none; }
+        #zondag.is-visible .reveal-rabbit, #zondag .reveal-rabbit { animation: none; opacity: 0.45; transform: none; }
+        #zondag.is-visible .reveal-bird, #zondag .reveal-bird { animation: none; opacity: 0.5; transform: none; }
       }
     </style>
   </head>
@@ -2060,53 +2083,130 @@ c-22 -1 -33 -6 -33 -16 0 -8 -9 -15 -20 -15 -22 0 -26 -20 -8 -38 7 -7 9 -12
             >
               <div class="chapter-index mono">{String(chapter.order).padStart(2, '0')}</div>
               {chapter.id === 'blokarten' && (
-                // Hand-drawn land-sailing rig, ported from Main.dc.html:507-517
-                // (see the CSS block above this template for the reveal-*
-                // animation keyframes). Re-centered from the mockup's
-                // translate(560,…) to translate(400,…) — the viewBox's own
-                // horizontal center — since this section centers its text,
-                // unlike the mockup's left-aligned original.
+                // Hand-drawn land-sailing rig, redrawn from Main.dc.html:507-517.
+                // The mockup's own numbers (mast to y=-190, ~255 units tall,
+                // centered dead-behind the text) read fine in its left-aligned
+                // layout but turned into an oversized, unreadable blob once
+                // centered behind this page's huge centered title — shrunk
+                // here (~0.6x) and grounded lower in the frame (y 440→580) so
+                // it sits as a supporting mark beneath the text, not behind it.
                 <svg class="chapter-illustration" viewBox="0 0 800 800" preserveAspectRatio="xMidYMid slice" aria-hidden="true">
                   <path class="reveal-track" d="M-40,180 C160,150 300,210 800,170" stroke={accentColor} stroke-width="1" opacity="0.16" fill="none" />
                   <path class="reveal-track" d="M-40,230 C160,200 320,255 800,220" stroke={accentColor} stroke-width="1" opacity="0.12" fill="none" />
                   <path class="reveal-track" d="M-40,650 C160,630 320,668 500,645 C620,630 720,650 800,640" stroke={accentColor} stroke-width="1" opacity="0.16" fill="none" />
                   <path class="reveal-track" d="M-40,690 C160,670 320,708 500,685 C620,670 720,690 800,680" stroke={accentColor} stroke-width="1" opacity="0.1" fill="none" />
                   <g class="reveal-rig">
-                    <g transform="translate(400,440)">
-                      <line class="reveal-mast" x1="0" y1="-190" x2="0" y2="10" stroke={accentColor} stroke-width="1.6" />
-                      <path d="M0,-185 C55,-150 70,-70 40,0 L0,-10 Z" fill={accentColor} opacity="0.2" />
-                      <path class="reveal-sail" d="M0,-185 C55,-150 70,-70 40,0 L0,-10 Z" stroke={accentColor} stroke-width="1.3" fill="none" />
-                      <path d="M-95,40 L95,40 L55,10 L-55,10 Z" fill="none" stroke={accentColor} stroke-width="1.6" />
-                      <circle class="reveal-wheel reveal-wheel-1" cx="-95" cy="55" r="14" fill="none" stroke={accentColor} stroke-width="1.6" />
-                      <circle class="reveal-wheel reveal-wheel-2" cx="95" cy="55" r="14" fill="none" stroke={accentColor} stroke-width="1.6" />
-                      <circle class="reveal-wheel reveal-wheel-3" cx="0" cy="65" r="12" fill="none" stroke={accentColor} stroke-width="1.6" />
+                    <g transform="translate(400,580)">
+                      <line class="reveal-mast" x1="0" y1="-112" x2="0" y2="6" stroke={accentColor} stroke-width="1.6" />
+                      <path d="M0,-109 C33,-89 42,-42 24,0 L0,-6 Z" fill={accentColor} opacity="0.2" />
+                      <path class="reveal-sail" d="M0,-109 C33,-89 42,-42 24,0 L0,-6 Z" stroke={accentColor} stroke-width="1.3" fill="none" />
+                      <path d="M-57,24 L57,24 L33,6 L-33,6 Z" fill="none" stroke={accentColor} stroke-width="1.6" />
+                      <circle class="reveal-wheel reveal-wheel-1" cx="-57" cy="33" r="8" fill="none" stroke={accentColor} stroke-width="1.6" />
+                      <circle class="reveal-wheel reveal-wheel-2" cx="57" cy="33" r="8" fill="none" stroke={accentColor} stroke-width="1.6" />
+                      <circle class="reveal-wheel reveal-wheel-3" cx="0" cy="39" r="7" fill="none" stroke={accentColor} stroke-width="1.6" />
                     </g>
                   </g>
                 </svg>
               )}
               {chapter.id === 'brouwerij' && (
-                // Hand-drawn kettle/steam/hop, ported from Main.dc.html:532-551,
-                // re-centered the same way as the Blokarten rig above.
+                // Brewing kettle, redrawn — the mockup's version (a bare
+                // trapezoid + ellipse, ~180 units wide, dead-centered behind
+                // this page's centered title) read as an unrecognizable blob
+                // rather than a kettle once ported here. Rebuilt as a rounded
+                // domed vessel with a lid knob and a spout so it actually
+                // reads as "kettle" on its own, shrunk (~0.7x) and grounded
+                // lower (y 470→600); the hop moved to sit right beside the
+                // kettle instead of floating alone elsewhere on the screen.
                 <svg class="chapter-illustration" viewBox="0 0 800 800" preserveAspectRatio="xMidYMid slice" aria-hidden="true">
                   <g class="reveal-kettle">
-                    <g transform="translate(400,470)">
-                      <path d="M-90,60 C-90,110 90,110 90,60 L80,-40 C80,-80 -80,-80 -80,-40 Z" fill={accentColor} opacity="0.12" />
-                      <path d="M-90,60 C-90,110 90,110 90,60 L80,-40 C80,-80 -80,-80 -80,-40 Z" stroke={accentColor} stroke-width="1.5" fill="none" />
-                      <ellipse cx="0" cy="-40" rx="80" ry="14" fill="none" stroke={accentColor} stroke-width="1.5" />
-                      <path class="reveal-steam reveal-steam-1" d="M30,-78 C30,-110 55,-120 55,-150" stroke={accentColor} stroke-width="1.5" fill="none" />
-                      <path class="reveal-steam reveal-steam-2" d="M-10,-95 C-25,-125 5,-140 -10,-170" stroke={accentColor} stroke-width="1.3" fill="none" opacity="0.55" />
-                      <path class="reveal-steam reveal-steam-3" d="M25,-105 C10,-135 40,-150 25,-180" stroke={accentColor} stroke-width="1.3" fill="none" opacity="0.4" />
+                    <g transform="translate(400,600)">
+                      <path
+                        d="M-62,18 C-62,-32 -42,-62 0,-62 C42,-62 62,-32 62,18 C62,42 48,52 0,52 C-48,52 -62,42 -62,18 Z"
+                        fill={accentColor}
+                        opacity="0.12"
+                      />
+                      <path
+                        d="M-62,18 C-62,-32 -42,-62 0,-62 C42,-62 62,-32 62,18 C62,42 48,52 0,52 C-48,52 -62,42 -62,18 Z"
+                        stroke={accentColor}
+                        stroke-width="1.5"
+                        fill="none"
+                      />
+                      <path d="M-52,-8 Q0,0 52,-8" stroke={accentColor} stroke-width="1.1" fill="none" opacity="0.6" />
+                      <path d="M-56,24 Q0,34 56,24" stroke={accentColor} stroke-width="1.1" fill="none" opacity="0.6" />
+                      <ellipse cx="0" cy="-62" rx="19" ry="5.5" fill="none" stroke={accentColor} stroke-width="1.5" />
+                      <circle cx="0" cy="-71" r="4.5" fill="none" stroke={accentColor} stroke-width="1.5" />
+                      <path d="M58,-6 C82,-10 90,4 82,13 C76,20 62,16 58,6 Z" fill="none" stroke={accentColor} stroke-width="1.3" />
+                      <path class="reveal-steam reveal-steam-1" d="M-9,-76 C-9,-100 7,-108 -2,-130" stroke={accentColor} stroke-width="1.4" fill="none" />
+                      <path class="reveal-steam reveal-steam-2" d="M4,-78 C4,-102 -10,-112 0,-136" stroke={accentColor} stroke-width="1.2" fill="none" opacity="0.55" />
                     </g>
                   </g>
                   <g class="reveal-hop">
-                    <g transform="translate(220,190)">
-                      <path d="M0,-40 C22,-30 26,0 0,40 C-26,0 -22,-30 0,-40 Z" fill="none" stroke={accentColor} stroke-width="1.4" />
-                      <path d="M0,-30 L0,30 M-12,-14 L12,-14 M-14,4 L14,4 M-10,18 L10,18" stroke={accentColor} stroke-width="0.9" opacity="0.6" />
+                    <g transform="translate(496,614)">
+                      <path d="M0,-18 C10,-13 12,0 0,18 C-12,0 -10,-13 0,-18 Z" fill="none" stroke={accentColor} stroke-width="1.3" />
+                      <path d="M0,-14 L0,14 M-5,-6 L5,-6 M-6,2 L6,2 M-5,9 L5,9" stroke={accentColor} stroke-width="0.8" opacity="0.6" />
                     </g>
                   </g>
-                  <circle class="reveal-bubble reveal-bubble-1" cx="470" cy="560" r="4" fill={accentColor} />
-                  <circle class="reveal-bubble reveal-bubble-2" cx="500" cy="520" r="3" fill={accentColor} />
-                  <circle class="reveal-bubble reveal-bubble-3" cx="450" cy="480" r="2.5" fill={accentColor} />
+                  <circle class="reveal-bubble reveal-bubble-1" cx="428" cy="640" r="3" fill={accentColor} />
+                  <circle class="reveal-bubble reveal-bubble-2" cx="446" cy="618" r="2.3" fill={accentColor} />
+                  <circle class="reveal-bubble reveal-bubble-3" cx="368" cy="628" r="2" fill={accentColor} />
+                </svg>
+              )}
+              {chapter.id === 'zondag' && (
+                // Hand-drawn dune ridge, helmgras, a rabbit and a gliding
+                // oystercatcher — the flora/fauna guided walk that closes
+                // the weekend. Same layered approach as Blokarten/Brouwerij
+                // above: bird painted first (sky, farthest back), dune
+                // ridge next, grass tufts on the crest, rabbit last
+                // (foreground). See the CSS block above for the reveal-*
+                // animation keyframes.
+                <svg class="chapter-illustration" viewBox="0 0 800 800" preserveAspectRatio="xMidYMid slice" aria-hidden="true">
+                  <g class="reveal-bird" transform="translate(200,190)">
+                    <path
+                      d="M0,0 C-14,-10 -30,-8 -40,0 C-26,-2 -14,2 0,8 C14,2 26,-2 40,0 C30,-8 14,-10 0,0 Z"
+                      fill={accentColor}
+                    />
+                  </g>
+                  <g class="reveal-dune" transform="translate(400,480)">
+                    <path
+                      d="M-400,150 C-300,-40 -180,-70 -60,-30 C60,10 160,-50 260,-20 C340,4 400,60 400,150 Z"
+                      fill={accentColor}
+                      opacity="0.12"
+                    />
+                    <path
+                      d="M-400,150 C-300,-40 -180,-70 -60,-30 C60,10 160,-50 260,-20 C340,4 400,60 400,150 Z"
+                      stroke={accentColor}
+                      stroke-width="1.5"
+                      fill="none"
+                    />
+                  </g>
+                  <g class="reveal-grass reveal-grass-1" transform="translate(300,420)">
+                    <path d="M-6,0 C-10,-30 -4,-46 2,-58" stroke={accentColor} stroke-width="1.3" fill="none" />
+                    <path d="M0,0 C0,-34 4,-50 8,-64" stroke={accentColor} stroke-width="1.3" fill="none" />
+                    <path d="M6,0 C10,-28 14,-42 18,-52" stroke={accentColor} stroke-width="1.3" fill="none" />
+                  </g>
+                  <g class="reveal-grass reveal-grass-2" transform="translate(430,395)">
+                    <path d="M-6,0 C-10,-30 -4,-46 2,-58" stroke={accentColor} stroke-width="1.3" fill="none" />
+                    <path d="M0,0 C0,-34 4,-50 8,-64" stroke={accentColor} stroke-width="1.3" fill="none" />
+                    <path d="M6,0 C10,-28 14,-42 18,-52" stroke={accentColor} stroke-width="1.3" fill="none" />
+                  </g>
+                  <g class="reveal-grass reveal-grass-3" transform="translate(560,415)">
+                    <path d="M-6,0 C-10,-30 -4,-46 2,-58" stroke={accentColor} stroke-width="1.3" fill="none" />
+                    <path d="M0,0 C0,-34 4,-50 8,-64" stroke={accentColor} stroke-width="1.3" fill="none" />
+                    <path d="M6,0 C10,-28 14,-42 18,-52" stroke={accentColor} stroke-width="1.3" fill="none" />
+                  </g>
+                  <g class="reveal-rabbit" transform="translate(390,452)">
+                    <path
+                      d="M-14,10 C-14,-6 -4,-14 6,-12 C10,-20 16,-24 18,-18 C20,-14 16,-10 14,-8 C20,-4 22,4 16,10 C8,16 -8,16 -14,10 Z"
+                      fill={accentColor}
+                      opacity="0.14"
+                    />
+                    <path
+                      d="M-14,10 C-14,-6 -4,-14 6,-12 C10,-20 16,-24 18,-18 C20,-14 16,-10 14,-8 C20,-4 22,4 16,10 C8,16 -8,16 -14,10 Z"
+                      stroke={accentColor}
+                      stroke-width="1.2"
+                      fill="none"
+                    />
+                  </g>
                 </svg>
               )}
               {isCinematic ? (
