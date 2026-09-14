@@ -555,15 +555,39 @@ const vapidPublicKey = import.meta.env.VAPID_PUBLIC_KEY ?? '';
       }
       .chapter-slot {
         display: none;
-        border: 1px solid rgba(244, 241, 234, 0.1);
-        border-radius: 16px;
-        padding: 28px;
-      }
-      .chapter-slot[data-kind='knap'] {
-        border-style: dashed;
       }
       .chapter-slot.is-unlocked {
         display: block;
+      }
+      /* KNAP — compact logistics card (time/location). Not a sell
+         moment, stays a modest card in the 640px column. */
+      .chapter-slot[data-kind='knap'] {
+        border: 1px dashed rgba(244, 241, 234, 0.1);
+        border-radius: 16px;
+        padding: 28px;
+      }
+      /* CINEMATIC — full-bleed sell moment (destination/activity
+         reveals). Breaks out of .chapters' 640px column via the
+         standard calc(50% - 50vw) containing-block trick, since the
+         percentage always resolves against .chapters' own (centered)
+         content width regardless of viewport size. */
+      .chapter-slot[data-kind='cinematic'] {
+        width: 100vw;
+        margin-left: calc(50% - 50vw);
+        margin-right: calc(50% - 50vw);
+        min-height: 100dvh;
+        padding: 64px 24px;
+        display: none;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        text-align: center;
+      }
+      .chapter-slot[data-kind='cinematic'].is-unlocked {
+        display: flex;
+      }
+      .chapter-slot[data-kind='cinematic'] .chapter-content {
+        max-width: 640px;
       }
       .chapter-index {
         font-family: 'JetBrains Mono', monospace;
@@ -576,17 +600,35 @@ const vapidPublicKey = import.meta.env.VAPID_PUBLIC_KEY ?? '';
         font-size: 22px;
         margin: 8px 0 6px;
       }
+      /* Cinematic titles get hero-level confidence instead of the
+         knap card's modest 22px — this is the sell moment. */
+      .chapter-slot[data-kind='cinematic'] .chapter-title {
+        font-size: clamp(40px, 9vw, 104px);
+        line-height: 1.02;
+        max-width: 16ch;
+        margin: 20px auto 18px;
+      }
       .chapter-meta {
         font-family: 'JetBrains Mono', monospace;
         font-size: 12px;
         color: #9a9a91;
         margin: 0 0 10px;
       }
+      .chapter-slot[data-kind='cinematic'] .chapter-meta {
+        font-size: 13px;
+        letter-spacing: 0.22em;
+      }
       .chapter-description {
         font-size: 15px;
         line-height: 1.6;
         color: #e5e2d9;
         white-space: pre-line;
+      }
+      .chapter-slot[data-kind='cinematic'] .chapter-description {
+        font-size: clamp(16px, 2vw, 19px);
+        max-width: 44ch;
+        margin-left: auto;
+        margin-right: auto;
       }
       .chapter-replay {
         display: inline-block;
