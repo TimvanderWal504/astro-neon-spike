@@ -267,13 +267,15 @@ Astro.response.headers.set('Cache-Control', 'private, no-store');
                       <div class="chapter-row-info">
                         <div class="chapter-row-heading">
                           <span class="chapter-row-title" data-chapter-title>{chapter.title}</span>
-                          <span
-                            class="chapter-tag mono"
-                            data-chapter-tag
-                            data-unlocked={chapter.unlocked ? 'true' : 'false'}
-                          >
-                            {chapter.unlocked ? 'Onthuld' : 'Op slot'}
-                          </span>
+                          {!chapter.alwaysUnlocked && (
+                            <span
+                              class="chapter-tag mono"
+                              data-chapter-tag
+                              data-unlocked={chapter.unlocked ? 'true' : 'false'}
+                            >
+                              {chapter.unlocked ? 'Onthuld' : 'Op slot'}
+                            </span>
+                          )}
                         </div>
                         <p class="chapter-meta">
                           {[
@@ -285,18 +287,22 @@ Astro.response.headers.set('Cache-Control', 'private, no-store');
                             .join(' · ')}
                         </p>
                       </div>
-                      <button
-                        type="button"
-                        class="chapter-toggle"
-                        data-chapter-toggle
-                        data-chapter-id={chapter.id}
-                        data-trip-slug={tripState.slug}
-                        data-unlocked={chapter.unlocked ? 'true' : 'false'}
-                        aria-pressed={chapter.unlocked ? 'true' : 'false'}
-                        aria-label={`${chapter.title} ${chapter.unlocked ? 'vergrendelen' : 'ontgrendelen'}`}
-                      >
-                        <span class="chapter-toggle-thumb" aria-hidden="true" />
-                      </button>
+                      {chapter.alwaysUnlocked ? (
+                        <div class="always-on-badge">altijd aan</div>
+                      ) : (
+                        <button
+                          type="button"
+                          class="chapter-toggle"
+                          data-chapter-toggle
+                          data-chapter-id={chapter.id}
+                          data-trip-slug={tripState.slug}
+                          data-unlocked={chapter.unlocked ? 'true' : 'false'}
+                          aria-pressed={chapter.unlocked ? 'true' : 'false'}
+                          aria-label={`${chapter.title} ${chapter.unlocked ? 'vergrendelen' : 'ontgrendelen'}`}
+                        >
+                          <span class="chapter-toggle-thumb" aria-hidden="true" />
+                        </button>
+                      )}
                     </div>
                     <p
                       class="chapter-row-error mono"

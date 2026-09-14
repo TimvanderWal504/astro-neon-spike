@@ -4,28 +4,39 @@
   "accentColor": "#E3A64A",
   "chapters": [
     {
-      "id": "bestemming",
+      "id": "verzamelen",
       "order": 1,
+      "kind": "knap",
+      "title": "Verzamelen",
+      "time": "Vrijdag 2 oktober, 11:30",
+      "location": "Van der Valk Zwolle, Nieuwleusenerdijk 1, 8028 PH Zwolle",
+      "description": "11:30 — Verzamelen bij Van der Valk Zwolle, vanuit verschillende steden.\nDaarna sluiten we samen aan bij de boot — waar we naartoe gaan, onthullen we zo.",
+      "svgVariant": "knap-vrijdag",
+      "alwaysUnlocked": true
+    },
+    {
+      "id": "bestemming",
+      "order": 2,
       "kind": "cinematic",
       "title": "Ameland",
       "time": null,
       "location": null,
-      "description": "Drie dagen, zeven man, een boot over het wad. We verzamelen vrijdag rond 11:30 en fietsen na aankomst naar het appartement.",
+      "description": "Drie dagen, zeven man, een boot over het wad.",
       "svgVariant": "vizier-europa"
     },
     {
       "id": "vrijdag",
-      "order": 2,
+      "order": 3,
       "kind": "knap",
       "title": "Onderweg naar het eiland",
-      "time": "Vrijdag 2 oktober, 11:30",
+      "time": "Vrijdag 2 oktober, 14:45",
       "location": "Bliekeduun 8, Hollum",
-      "description": "11:30 — Verzamelen, vanuit verschillende steden, richting de boot.\n14:45 — De boot, stipt, overtocht duurt tot 16:00.\n16:00 — Fietsen naar het appartement.\n's Avonds — Geen programma, wel spelletjes. Neem er eentje mee. Er staat er in elk geval één vast op het bord: Risk.",
+      "description": "14:45 — De boot, stipt, overtocht duurt tot 16:00.\n16:00 — Fietsen naar het appartement.\n's Avonds — Geen programma, wel spelletjes. Neem er eentje mee. Er staat er in elk geval één vast op het bord: Risk.",
       "svgVariant": "knap-vrijdag"
     },
     {
       "id": "blokarten",
-      "order": 3,
+      "order": 4,
       "kind": "cinematic",
       "title": "Blokarten",
       "time": "Zaterdag 3 oktober, 09:15",
@@ -35,7 +46,7 @@
     },
     {
       "id": "brouwerij",
-      "order": 4,
+      "order": 5,
       "kind": "cinematic",
       "title": "De brouwerij",
       "time": "Zaterdag 3 oktober, 12:30",
@@ -45,7 +56,7 @@
     },
     {
       "id": "zondag",
-      "order": 5,
+      "order": 6,
       "kind": "knap",
       "title": "De laatste dag",
       "time": "Zondag 4 oktober, 11:00",
@@ -55,18 +66,27 @@
     }
   ],
   "packingList": [
+     {
+      "id": "praktisch",
+      "label": "Praktische zaken",
+      "items": [
+        { "id": "Reistas/Sporttas", "label": "Reistas/sporttas (Geen koffer!!)" },
+        { "id": "zakken", "label": "Plastic zakken (vuile kleding, natte items)" }
+      ]
+    },
     {
       "id": "kleding",
       "label": "Kleding",
       "items": [
-        { "id": "zwembroek", "label": "Zwembroek/badpak" },
+        
         { "id": "shirts", "label": "T-shirts (2-3 stuks)" },
-        { "id": "broeken", "label": "Broeken/leggings (1-2 stuks)" },
+        { "id": "broeken", "label": "Broeken (1-2 stuks)" },
         { "id": "sokken", "label": "Sokken (minstens 3 paar)" },
         { "id": "ondergoed", "label": "Ondergoed (3-4 sets)" },
         { "id": "hoodie", "label": "Hoodie/fleece" },
-        { "id": "jas", "label": "Jas/regenjas" },
-        { "id": "schoenen", "label": "Stevige schoenen" }
+        { "id": "jas", "label": "(Regen)jas" },
+        { "id": "schoenen", "label": "Stevige schoenen" },
+        { "id": "zwembroek", "label": "Zwembroek/badpak" }
       ]
     },
     {
@@ -77,7 +97,7 @@
         { "id": "deodorant", "label": "Deodorant" },
         { "id": "zeep", "label": "Zeep/bodywash" },
         { "id": "shampoo", "label": "Shampoo" },
-        { "id": "medicijnen", "label": "Medicijnen (pillen, pijnstillers)" },
+        { "id": "medicijnen", "label": "Eventuele medicijnen" },
         { "id": "scheren", "label": "Scheerapparaat + scheerschuim" },
         { "id": "handdoeken", "label": "Handdoeken (minstens 2)" }
       ]
@@ -97,16 +117,10 @@
       "label": "Optioneel/Comfort",
       "items": [
         { "id": "koptelefoon", "label": "Koptelefoon" },
+        { "id": "speaker", "label": "Speaker" },
         { "id": "spellen", "label": "Kaartspellen/spelletjes" },
         { "id": "snacks", "label": "Goodie-bag items (snoep, drankjes)" }
       ]
-    },
-    {
-      "id": "praktisch",
-      "label": "Praktisch",
-      "items": [
-        { "id": "zakken", "label": "Plastic zakken (vuile kleding, natte items)" }
-      ]
-    }
+    }   
   ]
 }

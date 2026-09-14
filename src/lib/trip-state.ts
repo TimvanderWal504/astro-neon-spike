@@ -17,6 +17,7 @@ export type TripChapterState = {
   location: string | null;
   description: string;
   svgVariant: string;
+  alwaysUnlocked: boolean;
   unlocked: boolean;
 };
 
@@ -72,7 +73,10 @@ export async function getTripState(slug: string): Promise<TripState | null> {
       location: chapter.location,
       description: chapter.description,
       svgVariant: chapter.svgVariant,
-      unlocked: unlockedMap.get(chapter.id) ?? false,
+      alwaysUnlocked: chapter.alwaysUnlocked,
+      // An alwaysUnlocked chapter never consults chapter_unlocks — it's not
+      // part of the reveal gate at all, so no row for it needs to exist.
+      unlocked: chapter.alwaysUnlocked || (unlockedMap.get(chapter.id) ?? false),
     }));
 
   return {

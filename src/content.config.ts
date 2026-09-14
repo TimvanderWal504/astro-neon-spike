@@ -31,6 +31,12 @@ const chapterSchema = z.object({
   location: z.string().nullable(),
   description: z.string(),
   svgVariant: z.enum(svgVariants),
+  // Content-authored bypass of the Neon `chapter_unlocks` gate (distinct from
+  // the live per-chapter `unlocked` state, which per AD-7 never lives here):
+  // a chapter marked true always renders unlocked, with no admin toggle and
+  // no chapter_unlocks row involved, for logistics that were never meant to
+  // be part of the reveal (e.g. where to meet before departure).
+  alwaysUnlocked: z.boolean().default(false),
 });
 
 const packingItemSchema = z.object({
