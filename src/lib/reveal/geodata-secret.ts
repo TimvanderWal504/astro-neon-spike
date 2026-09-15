@@ -74,6 +74,19 @@ export const CAMERA_KEYPOINTS = {
   amelandDeep: [AMELAND_POINT[0], AMELAND_POINT[1], W_85X] as ZoomPoint,
 } as const;
 
+// Scale values below are computed, not guessed — the earlier ones (Ameland
+// at scale 1) were sized as if the camera would eventually zoom in ~6-7x
+// further than it actually does, so by the time LOD2 reached full opacity
+// the island was already bigger than the screen: pure fill with no
+// visible edge, reported back as "still blobs, I cannot see the outlines."
+//
+// ISLAND_SHAPE spans about 30 local units wide (x: -16..14). The screen's
+// visible width in viewBox units at zoom Z is `790 / Z` (790 = the shared
+// viewBox's own width, "1x"). Solving `30 * scale = targetFraction *
+// (790 / Z)` for scale, at the zoom level each layer is actually visible:
+// LOD2 (island-chain overview) targets ~55% of frame width at zoom ~30
+// (roughly where it now fades in, see the fadeInOut thresholds in
+// index.astro's tick()): scale = 0.55 * 790 / (30 * 30) ≈ 0.48.
 /** Five Wadden islands, west to east — Texel, Vlieland, Terschelling,
  * Ameland, Schiermonnikoog — each an instance of geodata-public.ts's
  * shared ISLAND_SHAPE (rendered client-side as
@@ -82,28 +95,35 @@ export const CAMERA_KEYPOINTS = {
  * island's head-to-tail axis angled up and to the right, matching the
  * user-supplied reference); `scale` follows the real islands' relative
  * sizes (Terschelling and Ameland are the two big ones, Vlieland and
- * Schiermonnikoog noticeably smaller, Texel the largest of all). */
+ * Schiermonnikoog noticeably smaller, Texel the largest of all) around
+ * that computed 0.48 baseline for Ameland. */
 export const LOD2_ISLANDS: readonly { cx: number; cy: number; rotation: number; scale: number }[] = [
-  { cx: AMELAND_POINT[0] - 105, cy: AMELAND_POINT[1] + 22, rotation: -18, scale: 1.15 }, // Texel
-  { cx: AMELAND_POINT[0] - 68, cy: AMELAND_POINT[1] + 14, rotation: -16, scale: 0.6 }, // Vlieland
-  { cx: TERSCHELLING_POINT[0], cy: TERSCHELLING_POINT[1], rotation: -14, scale: 1 }, // Terschelling
-  { cx: AMELAND_POINT[0], cy: AMELAND_POINT[1], rotation: -12, scale: 1 }, // Ameland
-  { cx: AMELAND_POINT[0] + 34, cy: AMELAND_POINT[1] - 8, rotation: -10, scale: 0.55 }, // Schiermonnikoog
+  { cx: AMELAND_POINT[0] - 105, cy: AMELAND_POINT[1] + 22, rotation: -18, scale: 0.55 }, // Texel
+  { cx: AMELAND_POINT[0] - 68, cy: AMELAND_POINT[1] + 14, rotation: -16, scale: 0.28 }, // Vlieland
+  { cx: TERSCHELLING_POINT[0], cy: TERSCHELLING_POINT[1], rotation: -14, scale: 0.48 }, // Terschelling
+  { cx: AMELAND_POINT[0], cy: AMELAND_POINT[1], rotation: -12, scale: 0.48 }, // Ameland
+  { cx: AMELAND_POINT[0] + 34, cy: AMELAND_POINT[1] - 8, rotation: -10, scale: 0.26 }, // Schiermonnikoog
 ];
 
+// LOD3 (the Ameland close-up) targets ~75% of frame width at zoom ~78
+// (near the deepest point the camera actually reaches, 85x):
+// scale = 0.75 * 790 / (30 * 78) ≈ 0.25.
 /** Ameland close-up (Act 4 deepest point / Act 5): the same ISLAND_SHAPE
  * family as LOD2's own Ameland entry, just larger and re-centered for a
  * close-up framing, plus three village-position dots (Nes, Ballum, Hollum,
- * west to east along the island's inhabited south side). */
+ * west to east along the island's inhabited south side) — offsets scaled
+ * down to match this shape's actual footprint at 0.25 (the old ±14..16
+ * offsets were sized for the old scale-2.4 version and would have placed
+ * every village dot well outside the new, correctly-sized outline). */
 export const LOD3_AMELAND = {
   cx: AMELAND_POINT[0],
   cy: AMELAND_POINT[1],
   rotation: -12,
-  scale: 2.4,
+  scale: 0.25,
   villages: [
-    { x: AMELAND_POINT[0] - 16, y: AMELAND_POINT[1] + 4 },
-    { x: AMELAND_POINT[0] - 2, y: AMELAND_POINT[1] + 2 },
-    { x: AMELAND_POINT[0] + 14, y: AMELAND_POINT[1] + 3 },
+    { x: AMELAND_POINT[0] - 3.5, y: AMELAND_POINT[1] + 0.5 },
+    { x: AMELAND_POINT[0] - 0.5, y: AMELAND_POINT[1] + 0.2 },
+    { x: AMELAND_POINT[0] + 3, y: AMELAND_POINT[1] + 0.4 },
   ] as { x: number; y: number }[],
 };
 

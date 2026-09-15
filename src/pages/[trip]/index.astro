@@ -2154,7 +2154,7 @@ c-22 -1 -33 -6 -33 -16 0 -8 -9 -15 -20 -15 -22 0 -26 -20 -8 -38 7 -7 9 -12
           <!-- LOD1: generic NL outline — safe to prerender, doesn't encode
                which Wadden island is the destination (see
                src/lib/reveal/geodata-public.ts). -->
-          <path id="reveal-lod1" d={LOD1_NL_OUTLINE} fill={accentColor} fill-opacity="0.14" stroke={accentColor} stroke-width="0.8" vector-effect="non-scaling-stroke" />
+          <path id="reveal-lod1" d={LOD1_NL_OUTLINE} fill={accentColor} fill-opacity="0.16" stroke={accentColor} stroke-width="1.3" vector-effect="non-scaling-stroke" />
           <!-- LOD2/LOD3: intentionally EMPTY here — island positions,
                channel geometry, and the Ameland outline are all
                destination-revealing, so they're built client-side only
@@ -2804,7 +2804,14 @@ c-22 -1 -33 -6 -33 -16 0 -8 -9 -15 -20 -15 -22 0 -26 -20 -8 -38 7 -7 9 -12
           el.setAttribute('d', ISLAND_SHAPE);
           el.setAttribute('transform', `translate(${island.cx},${island.cy}) rotate(${island.rotation}) scale(${island.scale})`);
           el.setAttribute('fill', accent);
-          el.setAttribute('opacity', '0.6');
+          el.setAttribute('fill-opacity', '0.35');
+          // A fill alone read as a soft, edgeless blob — the whole point of
+          // tracing a real island silhouette (the head tapering to a spit)
+          // is lost without a crisp outline. non-scaling-stroke keeps that
+          // outline a constant width regardless of the scale() above.
+          el.setAttribute('stroke', accent);
+          el.setAttribute('stroke-width', '1.4');
+          el.setAttribute('vector-effect', 'non-scaling-stroke');
           lod2Group.appendChild(el);
         }
         for (const seg of revealData.channels) {
@@ -2824,13 +2831,19 @@ c-22 -1 -33 -6 -33 -16 0 -8 -9 -15 -20 -15 -22 0 -26 -20 -8 -38 7 -7 9 -12
           `translate(${revealData.ameland.cx},${revealData.ameland.cy}) rotate(${revealData.ameland.rotation}) scale(${revealData.ameland.scale})`,
         );
         outlineEl.setAttribute('fill', accent);
-        outlineEl.setAttribute('opacity', '0.7');
+        outlineEl.setAttribute('fill-opacity', '0.4');
+        outlineEl.setAttribute('stroke', accent);
+        outlineEl.setAttribute('stroke-width', '1.6');
+        outlineEl.setAttribute('vector-effect', 'non-scaling-stroke');
         lod3Group.appendChild(outlineEl);
         for (const v of revealData.villages ?? []) {
           const dot = document.createElementNS(SVG_NS, 'circle');
           dot.setAttribute('cx', String(v.x));
           dot.setAttribute('cy', String(v.y));
-          dot.setAttribute('r', '1.4');
+          // Sized for LOD3's new 0.25 scale (was 1.4, sized for the old 2.4
+          // scale) — a village dot should read as a small marker on the
+          // island, not dominate it.
+          dot.setAttribute('r', '0.4');
           dot.setAttribute('fill', '#0a0d0c');
           lod3Group.appendChild(dot);
         }
@@ -3032,11 +3045,21 @@ c-22 -1 -33 -6 -33 -16 0 -8 -9 -15 -20 -15 -22 0 -26 -20 -8 -38 7 -7 9 -12
           // levels past what it was drawn for. Each LOD's own thresholds
           // below overlap their neighbors' by design, so the swap reads as
           // a crossfade rather than a cut.
+          // These thresholds and the LOD2/LOD3 scale values in
+          // geodata-secret.ts are computed together, not independently: a
+          // layer fading to full opacity AFTER the camera has already
+          // zoomed past its own natural size just shows a cropped fill
+          // with no visible shape (reported back twice now — once as
+          // "blurry", once as "still blobs, cannot see outlines" — same
+          // root cause both times). NL's traced outline is ~170 units
+          // wide; for it to fit within frame (790/Z) with room to spare,
+          // full visibility needs to land well before Z≈4.6 (where it
+          // would exactly fill the screen), not after.
           const zoom = camera!.wide[2] / w;
           if (lod0El) (lod0El as unknown as HTMLElement).style.opacity = String(fadeInOut(zoom, 0, 0, 5, 9));
-          if (lod1El) (lod1El as unknown as HTMLElement).style.opacity = String(fadeInOut(zoom, 3, 6, 20, 30));
-          (lod2Group as unknown as HTMLElement).style.opacity = String(ramp(18, 30, zoom));
-          (lod3Group as unknown as HTMLElement).style.opacity = String(ramp(40, 65, zoom));
+          if (lod1El) (lod1El as unknown as HTMLElement).style.opacity = String(fadeInOut(zoom, 1.3, 2.2, 4.5, 7));
+          (lod2Group as unknown as HTMLElement).style.opacity = String(fadeInOut(zoom, 10, 20, 55, 75));
+          (lod3Group as unknown as HTMLElement).style.opacity = String(ramp(55, 75, zoom));
 
           if (telemetryEl) {
             const altKm = Math.max(0, Math.round((w / camera!.wide[2]) * 8042));
