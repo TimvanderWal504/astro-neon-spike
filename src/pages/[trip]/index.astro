@@ -2150,7 +2150,7 @@ c-22 -1 -33 -6 -33 -16 0 -8 -9 -15 -20 -15 -22 0 -26 -20 -8 -38 7 -7 9 -12
             <circle cx="455" cy="400" r="320" fill="none" stroke={accentColor} stroke-width="0.7" opacity="0.14"/>
             <circle cx="455" cy="400" r="195" fill="none" stroke={accentColor} stroke-width="0.7" opacity="0.14"/>
           </g>
-          <use href="#europe-coastline" />
+          <use id="reveal-lod0" href="#europe-coastline" />
           <!-- LOD1: generic NL outline — safe to prerender, doesn't encode
                which Wadden island is the destination (see
                src/lib/reveal/geodata-public.ts). -->
@@ -2775,6 +2775,8 @@ c-22 -1 -33 -6 -33 -16 0 -8 -9 -15 -20 -15 -22 0 -26 -20 -8 -38 7 -7 9 -12
         const zoomG = document.querySelector<SVGGElement>('.hero-map-dive-zoom');
         const motionG = document.querySelector<SVGGElement>('.hero-map-dive-motion');
         const scaleG = document.querySelector<SVGGElement>('.hero-map-dive-scale');
+        const lod0El = document.getElementById('reveal-lod0');
+        const lod1El = document.getElementById('reveal-lod1');
         const lod2Group = document.getElementById('reveal-lod2');
         const lod3Group = document.getElementById('reveal-lod3');
         const prologueEl = document.querySelector<HTMLElement>('.reveal-prologue');
@@ -2923,6 +2925,18 @@ c-22 -1 -33 -6 -33 -16 0 -8 -9 -15 -20 -15 -22 0 -26 -20 -8 -38 7 -7 9 -12
           return interpAt(stops[idx], stops[idx + 1], localT);
         }
 
+        // Linear ramp from 0 at `edge0` to 1 at `edge1`, clamped — used to
+        // crossfade LOD layers by current zoom level (see fadeInRange
+        // in-out below) rather than by act/localT, so the fades stay
+        // correct even while scroll-scrubbing back and forth.
+        function ramp(edge0: number, edge1: number, x: number): number {
+          if (edge0 === edge1) return x >= edge1 ? 1 : 0;
+          return Math.max(0, Math.min(1, (x - edge0) / (edge1 - edge0)));
+        }
+        function fadeInOut(x: number, inStart: number, inEnd: number, outStart: number, outEnd: number): number {
+          return Math.min(ramp(inStart, inEnd, x), 1 - ramp(outStart, outEnd, x));
+        }
+
         function cameraAt(elapsedS: number): { x: number; y: number; w: number } {
           const { act, localT } = getActState(elapsedS);
           switch (act.id) {
@@ -2996,13 +3010,27 @@ c-22 -1 -33 -6 -33 -16 0 -8 -9 -15 -20 -15 -22 0 -26 -20 -8 -38 7 -7 9 -12
           }
           svgEl!.classList.toggle('is-inverted', act.id === 'inversion' || act.id === 'name');
 
-          if (act.id === 'dive2') {
-            (lod2Group as unknown as HTMLElement).style.opacity = String(Math.min(1, localT * 1.3));
-            (lod3Group as unknown as HTMLElement).style.opacity = localT > 0.6 ? String((localT - 0.6) / 0.4) : '0';
-          } else if (act.id === 'inversion' || act.id === 'name') {
-            (lod2Group as unknown as HTMLElement).style.opacity = '1';
-            (lod3Group as unknown as HTMLElement).style.opacity = '1';
-          }
+          // LOD crossfade by current zoom level, not by act — this is what
+          // REVEAL.md §8 calls "Fase 2" and it was still missing: without
+          // it, LOD0 (the wide Europe coastline) stayed at full opacity
+          // through the ENTIRE zoom, meaning the deepest part of the dive
+          // was rendering a coastline asset traced for a 1-6x view blown
+          // up to 85x — that's the actual source of the blur reported
+          // after watching this run, not a fixable rendering flag. Vector
+          // content scaled 85x through a GPU-composited transform (the
+          // only technique REVEAL.md's own §10 allows — animating viewBox
+          // instead "forceert layout op elke frame", which is exactly the
+          // per-device-jank risk §9's performance bar is guarding against)
+          // will always soften at that multiple; the fix is to not still
+          // BE looking at that same low-detail asset once it's 20+ zoom
+          // levels past what it was drawn for. Each LOD's own thresholds
+          // below overlap their neighbors' by design, so the swap reads as
+          // a crossfade rather than a cut.
+          const zoom = camera!.wide[2] / w;
+          if (lod0El) (lod0El as unknown as HTMLElement).style.opacity = String(fadeInOut(zoom, 0, 0, 5, 9));
+          if (lod1El) (lod1El as unknown as HTMLElement).style.opacity = String(fadeInOut(zoom, 3, 6, 20, 30));
+          (lod2Group as unknown as HTMLElement).style.opacity = String(ramp(18, 30, zoom));
+          (lod3Group as unknown as HTMLElement).style.opacity = String(ramp(40, 65, zoom));
 
           if (telemetryEl) {
             const altKm = Math.max(0, Math.round((w / camera!.wide[2]) * 8042));
