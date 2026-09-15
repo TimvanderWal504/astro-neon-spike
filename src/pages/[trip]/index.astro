@@ -2109,76 +2109,84 @@ c-22 -1 -33 -6 -33 -16 0 -8 -9 -15 -20 -15 -22 0 -26 -20 -8 -38 7 -7 9 -12
       </svg>
       </div>
 
-      <!-- Fixed dive-layer instance (story 6): always position:fixed,
-           invisible until #bestemming becomes visible, then plays the
-           lock/zoom/flash/caption sequence, reusing the ambient instance's
-           coastline geometry via <use href="#europe-coastline">. Sibling of
-           .hero-map inside .hero, not nested inside it, since
-           position:fixed lifts it out of flow regardless of parent. -->
-      <div class="hero-map-dive" aria-hidden="true">
-        <svg class="hero-map-dive-svg" viewBox="80 0 790 790">
-          <g class="hero-map-dive-zoom">
-            <g class="hero-map-dive-grid">
-              <line x1="80" y1="100" x2="870" y2="100" stroke={accentColor} stroke-width="0.6" opacity="0.16"/>
-              <line x1="80" y1="200" x2="870" y2="200" stroke={accentColor} stroke-width="0.6" opacity="0.16"/>
-              <line x1="80" y1="300" x2="870" y2="300" stroke={accentColor} stroke-width="0.6" opacity="0.16"/>
-              <line x1="80" y1="400" x2="870" y2="400" stroke={accentColor} stroke-width="0.6" opacity="0.16"/>
-              <line x1="80" y1="500" x2="870" y2="500" stroke={accentColor} stroke-width="0.6" opacity="0.16"/>
-              <line x1="80" y1="600" x2="870" y2="600" stroke={accentColor} stroke-width="0.6" opacity="0.16"/>
-              <line x1="80" y1="700" x2="870" y2="700" stroke={accentColor} stroke-width="0.6" opacity="0.16"/>
-              <line x1="100" y1="0" x2="100" y2="790" stroke={accentColor} stroke-width="0.6" opacity="0.16"/>
-              <line x1="200" y1="0" x2="200" y2="790" stroke={accentColor} stroke-width="0.6" opacity="0.16"/>
-              <line x1="300" y1="0" x2="300" y2="790" stroke={accentColor} stroke-width="0.6" opacity="0.16"/>
-              <line x1="400" y1="0" x2="400" y2="790" stroke={accentColor} stroke-width="0.6" opacity="0.16"/>
-              <line x1="500" y1="0" x2="500" y2="790" stroke={accentColor} stroke-width="0.6" opacity="0.16"/>
-              <line x1="600" y1="0" x2="600" y2="790" stroke={accentColor} stroke-width="0.6" opacity="0.16"/>
-              <line x1="700" y1="0" x2="700" y2="790" stroke={accentColor} stroke-width="0.6" opacity="0.16"/>
-              <circle cx="455" cy="400" r="440" fill="none" stroke={accentColor} stroke-width="0.7" opacity="0.14"/>
-              <circle cx="455" cy="400" r="320" fill="none" stroke={accentColor} stroke-width="0.7" opacity="0.14"/>
-              <circle cx="455" cy="400" r="195" fill="none" stroke={accentColor} stroke-width="0.7" opacity="0.14"/>
-            </g>
-            <use href="#europe-coastline" />
-            <!-- LOD1: generic NL outline — safe to prerender, doesn't encode
-                 which Wadden island is the destination (see
-                 src/lib/reveal/geodata-public.ts). -->
-            <path id="reveal-lod1" d={LOD1_NL_OUTLINE} fill={accentColor} fill-opacity="0.14" stroke={accentColor} stroke-width="0.8" vector-effect="non-scaling-stroke" />
-            <!-- LOD2/LOD3: intentionally EMPTY here — island positions,
-                 channel geometry, and the Ameland outline are all
-                 destination-revealing, so they're built client-side only
-                 after the gated fetch confirms bestemming is unlocked (see
-                 initReveal in the script below), never server-rendered. -->
-            <g id="reveal-lod2"></g>
-            <g id="reveal-lod3"></g>
-            <g class="hero-map-dive-motion">
-              <g class="hero-map-dive-scale">
-                <circle class="hero-map-dive-flash" r="70" fill="none" stroke={accentColor} stroke-width="1"/>
-                <line x1="-90" y1="0" x2="90" y2="0" stroke={accentColor} stroke-width="1"/>
-                <line x1="0" y1="-90" x2="0" y2="90" stroke={accentColor} stroke-width="1"/>
-                <circle r="46" fill="none" stroke={accentColor} stroke-width="1.3"/>
-                <circle r="20" fill="none" stroke={accentColor} stroke-width="1.3"/>
-                <circle class="hero-map-dive-dot" r="2.6" fill={accentColor}/>
-                <path d="M-90,-70 L-90,-90 L-70,-90" fill="none" stroke={accentColor} stroke-width="2" stroke-linecap="round"/>
-                <path d="M70,-90 L90,-90 L90,-70" fill="none" stroke={accentColor} stroke-width="2" stroke-linecap="round"/>
-                <path d="M90,70 L90,90 L70,90" fill="none" stroke={accentColor} stroke-width="2" stroke-linecap="round"/>
-                <path d="M-70,90 L-90,90 L-90,70" fill="none" stroke={accentColor} stroke-width="2" stroke-linecap="round"/>
-              </g>
+    </div>
+
+    <!-- Fixed dive-layer instance + the REVEAL.md engine's overlay elements
+         (prologue/telemetry/skip/debug) — direct children of <body>, NOT
+         nested inside .hero. That nesting was the actual site of a real bug
+         found via Playwright: .hero has `position:relative; z-index:3`,
+         which makes it a stacking context — a position:fixed descendant's
+         z-index is only compared WITHIN that context, not globally. Since
+         .chapters also sits at z-index:3 and comes later in DOM order, it
+         painted OVER this entire overlay regardless of the overlay's own
+         z-index:50/60/etc, which is exactly what a screenshot caught
+         (bestemming's own chapter-index number visible through a
+         supposedly-opaque, higher-z-index prologue). Moving these here, as
+         true siblings of .hero/.chapters in the root stacking context, is
+         the fix — confirmed by re-screenshotting after. -->
+    <div class="hero-map-dive" aria-hidden="true">
+      <svg class="hero-map-dive-svg" viewBox="80 0 790 790">
+        <g class="hero-map-dive-zoom">
+          <g class="hero-map-dive-grid">
+            <line x1="80" y1="100" x2="870" y2="100" stroke={accentColor} stroke-width="0.6" opacity="0.16"/>
+            <line x1="80" y1="200" x2="870" y2="200" stroke={accentColor} stroke-width="0.6" opacity="0.16"/>
+            <line x1="80" y1="300" x2="870" y2="300" stroke={accentColor} stroke-width="0.6" opacity="0.16"/>
+            <line x1="80" y1="400" x2="870" y2="400" stroke={accentColor} stroke-width="0.6" opacity="0.16"/>
+            <line x1="80" y1="500" x2="870" y2="500" stroke={accentColor} stroke-width="0.6" opacity="0.16"/>
+            <line x1="80" y1="600" x2="870" y2="600" stroke={accentColor} stroke-width="0.6" opacity="0.16"/>
+            <line x1="80" y1="700" x2="870" y2="700" stroke={accentColor} stroke-width="0.6" opacity="0.16"/>
+            <line x1="100" y1="0" x2="100" y2="790" stroke={accentColor} stroke-width="0.6" opacity="0.16"/>
+            <line x1="200" y1="0" x2="200" y2="790" stroke={accentColor} stroke-width="0.6" opacity="0.16"/>
+            <line x1="300" y1="0" x2="300" y2="790" stroke={accentColor} stroke-width="0.6" opacity="0.16"/>
+            <line x1="400" y1="0" x2="400" y2="790" stroke={accentColor} stroke-width="0.6" opacity="0.16"/>
+            <line x1="500" y1="0" x2="500" y2="790" stroke={accentColor} stroke-width="0.6" opacity="0.16"/>
+            <line x1="600" y1="0" x2="600" y2="790" stroke={accentColor} stroke-width="0.6" opacity="0.16"/>
+            <line x1="700" y1="0" x2="700" y2="790" stroke={accentColor} stroke-width="0.6" opacity="0.16"/>
+            <circle cx="455" cy="400" r="440" fill="none" stroke={accentColor} stroke-width="0.7" opacity="0.14"/>
+            <circle cx="455" cy="400" r="320" fill="none" stroke={accentColor} stroke-width="0.7" opacity="0.14"/>
+            <circle cx="455" cy="400" r="195" fill="none" stroke={accentColor} stroke-width="0.7" opacity="0.14"/>
+          </g>
+          <use href="#europe-coastline" />
+          <!-- LOD1: generic NL outline — safe to prerender, doesn't encode
+               which Wadden island is the destination (see
+               src/lib/reveal/geodata-public.ts). -->
+          <path id="reveal-lod1" d={LOD1_NL_OUTLINE} fill={accentColor} fill-opacity="0.14" stroke={accentColor} stroke-width="0.8" vector-effect="non-scaling-stroke" />
+          <!-- LOD2/LOD3: intentionally EMPTY here — island positions,
+               channel geometry, and the Ameland outline are all
+               destination-revealing, so they're built client-side only
+               after the gated fetch confirms bestemming is unlocked (see
+               initReveal in the script below), never server-rendered. -->
+          <g id="reveal-lod2"></g>
+          <g id="reveal-lod3"></g>
+          <g class="hero-map-dive-motion">
+            <g class="hero-map-dive-scale">
+              <circle class="hero-map-dive-flash" r="70" fill="none" stroke={accentColor} stroke-width="1"/>
+              <line x1="-90" y1="0" x2="90" y2="0" stroke={accentColor} stroke-width="1"/>
+              <line x1="0" y1="-90" x2="0" y2="90" stroke={accentColor} stroke-width="1"/>
+              <circle r="46" fill="none" stroke={accentColor} stroke-width="1.3"/>
+              <circle r="20" fill="none" stroke={accentColor} stroke-width="1.3"/>
+              <circle class="hero-map-dive-dot" r="2.6" fill={accentColor}/>
+              <path d="M-90,-70 L-90,-90 L-70,-90" fill="none" stroke={accentColor} stroke-width="2" stroke-linecap="round"/>
+              <path d="M70,-90 L90,-90 L90,-70" fill="none" stroke={accentColor} stroke-width="2" stroke-linecap="round"/>
+              <path d="M90,70 L90,90 L70,90" fill="none" stroke={accentColor} stroke-width="2" stroke-linecap="round"/>
+              <path d="M-70,90 L-90,90 L-90,70" fill="none" stroke={accentColor} stroke-width="2" stroke-linecap="round"/>
             </g>
           </g>
-        </svg>
-      </div>
-
-      <!-- REVEAL.md Act 0 (Proloog): black screen, three typed lines. The
-           coordinate in line3 is only ever set from the gated revealData
-           payload (initReveal in the script below) — never present here. -->
-      <div class="reveal-prologue" aria-hidden="true">
-        <div class="reveal-prologue-line1 mono" data-prologue="line1"></div>
-        <div class="reveal-prologue-line2 mono" data-prologue="line2"></div>
-        <div class="reveal-prologue-line3 mono" data-prologue="line3"></div>
-      </div>
-      <div class="reveal-telemetry mono" aria-hidden="true" data-reveal-telemetry></div>
-      <button type="button" class="reveal-skip" data-reveal-skip>Overslaan</button>
-      <div class="reveal-debug" data-reveal-debug aria-hidden="true"></div>
+        </g>
+      </svg>
     </div>
+
+    <!-- REVEAL.md Act 0 (Proloog): black screen, three typed lines. The
+         coordinate in line3 is only ever set from the gated revealData
+         payload (initReveal in the script below) — never present here. -->
+    <div class="reveal-prologue" aria-hidden="true">
+      <div class="reveal-prologue-line1 mono" data-prologue="line1"></div>
+      <div class="reveal-prologue-line2 mono" data-prologue="line2"></div>
+      <div class="reveal-prologue-line3 mono" data-prologue="line3"></div>
+    </div>
+    <div class="reveal-telemetry mono" aria-hidden="true" data-reveal-telemetry></div>
+    <button type="button" class="reveal-skip" data-reveal-skip>Overslaan</button>
+    <div class="reveal-debug" data-reveal-debug aria-hidden="true"></div>
 
     <!-- INSTALLEREN — ported from Main.dc.html:402-442. No .reveal class:
          renders statically at full opacity (story 1.6 scoped the reveal
