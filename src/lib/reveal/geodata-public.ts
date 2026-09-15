@@ -8,28 +8,35 @@
 // `geodata-secret.ts`'s own header comment for the full reasoning.
 
 /**
- * Soft radial-glow highlight over the Netherlands region (Act 2 backdrop) —
- * NOT a traced country outline. A hand-traced NL border was tried first
- * (from a reference sketch the user supplied) but didn't actually line up
- * with the real coastline it sits next to — visibly covering into Denmark,
- * missing real Dutch territory — since it was drawn from a differently-
- * scaled, differently-projected reference image with no coordinate
- * relationship to #europe-coastline's own data. Checked whether the real
- * outline could be extracted directly from #europe-coastline instead (it's
- * SVG, so in principle traceable): parsed its path data and confirmed it's
- * one fused 1503-point multi-contour shape covering all of connected
- * mainland Europe, not per-country pieces — there's no separate
- * "Netherlands" shape in that data to copy either.
- *
- * A soft glow sidesteps the whole problem: it only needs to be centered on
- * the right region, not shaped exactly like the country, so there's
- * nothing for it to visibly disagree with the real coastline about. Used
- * as an SVG radialGradient fill (`#reveal-glow`, defined in index.astro)
- * on an ellipse sized from this constant. Coordinates share
+ * Netherlands outline (Act 2 backdrop) — this time calibrated against the
+ * REAL rendered coastline instead of guessed from an unrelated reference
+ * image (twice) or replaced with a glow to dodge the problem (once). The
+ * calibration: froze the live camera transform mid-sequence, read its
+ * exact applied `scale()`/`translate()` values back out of the DOM (not
+ * predicted from timing — actual values), screenshotted the real coastline
+ * with the highlight layer hidden, and inverted the same transform formula
+ * to convert visually-read pixel coordinates back into this file's world
+ * coordinate space. Result: the real Netherlands is only about 75x45
+ * units here, not the 170x160 the earlier two attempts used — the country
+ * is genuinely much smaller relative to this viewBox than either previous
+ * pass assumed, which was as much the problem as the exact border shape.
+ * Deliberately modest vertex count (a recognizable silhouette: the
+ * southwest river-mouth notch, the west coast, the northern bulge, the
+ * eastern border) rather than a highly detailed trace — this is a "sell
+ * moment" highlight, not a survey map. Coordinates share
  * #europe-coastline's own viewBox ("80 0 790 790"). Doesn't encode which
  * Wadden island is the destination, so it's as safe to ship as the
- * coastline it glows over. */
-export const LOD1_GLOW = { cx: 465, cy: 388, rx: 115, ry: 100 };
+ * coastline it sits next to. */
+export const LOD1_NL_OUTLINE =
+  'M356,428 ' +
+  'Q360,412 367,400 ' + // west coast, rising north
+  'Q378,394 394,391 ' + // curving toward the north-central bulge
+  'Q408,389 420,388 ' + // northern coast
+  'Q426,390 428,395 ' + // northeast corner, toward the German border
+  'Q426,408 423,421 ' + // eastern (German) border heading south
+  'Q410,427 394,431 ' + // southern (Belgian) border
+  'Q380,430 367,429 ' + // back along the south
+  'Q358,429 356,428 Z';
 
 /**
  * One barrier-island silhouette — a rounded dune-covered "head" tapering

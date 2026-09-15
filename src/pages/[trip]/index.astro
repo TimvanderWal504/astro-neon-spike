@@ -2,7 +2,7 @@
 import { getCollection } from 'astro:content';
 import { sortByOrder } from '../../lib/trip-state';
 // Safe to prerender — see the LOD1/2/3 comment further down where it's used.
-import { LOD1_GLOW } from '../../lib/reveal/geodata-public';
+import { LOD1_NL_OUTLINE } from '../../lib/reveal/geodata-public';
 
 // Static shell per AD-1: only structure (nav, hero, chapter slot order,
 // ambient viewfinder) is prerendered. A chapter's real content never enters
@@ -1122,22 +1122,6 @@ const vapidPublicKey = import.meta.env.VAPID_PUBLIC_KEY ?? '';
             <circle cx="455" cy="400" r="195" fill="none" stroke={accentColor} stroke-width="0.7" opacity="0.14"/>
           </g>
           <defs>
-          {/* Referenced by #reveal-lod1 below (a sibling <svg>'s content —
-              cross-SVG id references work the same way #europe-coastline's
-              own <use> already does). A hand-traced NL outline was tried
-              first and didn't line up with the real coastline underneath
-              (checked with #europe-coastline's actual path data, which
-              turned out to be one fused multi-contour shape with no
-              separate per-country piece to copy either) — a soft radial
-              glow sidesteps needing pixel-perfect border matching
-              entirely: it only has to be centered right, not shaped right,
-              which also reads fine as "the reticle is searching this
-              general area" rather than claiming a precise border. */}
-          <radialGradient id="reveal-glow" cx="50%" cy="50%" r="50%">
-            <stop offset="0%" stop-color={accentColor} stop-opacity="0.5" />
-            <stop offset="55%" stop-color={accentColor} stop-opacity="0.22" />
-            <stop offset="100%" stop-color={accentColor} stop-opacity="0" />
-          </radialGradient>
           <g id="europe-coastline" transform="translate(0,803) scale(0.1,-0.1)" fill={accentColor} fill-opacity="0.6" stroke="none">
 <path d="M6000 7953 c0 -32 -28 -128 -29 -100 -1 9 -6 17 -12 17 -7 0 -9 9 -6
 21 7 28 -20 37 -38 13 -8 -11 -23 -44 -32 -74 -17 -52 -18 -53 -21 -22 -2 21
@@ -2167,12 +2151,13 @@ c-22 -1 -33 -6 -33 -16 0 -8 -9 -15 -20 -15 -22 0 -26 -20 -8 -38 7 -7 9 -12
             <circle cx="455" cy="400" r="195" fill="none" stroke={accentColor} stroke-width="0.7" opacity="0.14"/>
           </g>
           <use id="reveal-lod0" href="#europe-coastline" />
-          <!-- LOD1: a soft glow over the Netherlands region — not a traced
-               border (see the #reveal-glow gradient def's own comment for
-               why), so it doesn't encode which Wadden island is the
-               destination either way. Centered/sized in
-               src/lib/reveal/geodata-public.ts's LOD1_GLOW. -->
-          <ellipse id="reveal-lod1" cx={LOD1_GLOW.cx} cy={LOD1_GLOW.cy} rx={LOD1_GLOW.rx} ry={LOD1_GLOW.ry} fill="url(#reveal-glow)" />
+          <!-- LOD1: the Netherlands outline, calibrated against the real
+               rendered coastline this time (see LOD1_NL_OUTLINE's own
+               comment for how) — doesn't encode which Wadden island is the
+               destination either way. Bold stroke, low fill: an outline
+               reading as "there's a border here" matters more than the
+               fill's own color. -->
+          <path id="reveal-lod1" d={LOD1_NL_OUTLINE} fill={accentColor} fill-opacity="0.12" stroke={accentColor} stroke-width="2.2" vector-effect="non-scaling-stroke" />
           <!-- LOD2/LOD3: intentionally EMPTY here — island positions,
                channel geometry, and the Ameland outline are all
                destination-revealing, so they're built client-side only
@@ -2822,13 +2807,15 @@ c-22 -1 -33 -6 -33 -16 0 -8 -9 -15 -20 -15 -22 0 -26 -20 -8 -38 7 -7 9 -12
           el.setAttribute('d', ISLAND_SHAPE);
           el.setAttribute('transform', `translate(${island.cx},${island.cy}) rotate(${island.rotation}) scale(${island.scale})`);
           el.setAttribute('fill', accent);
-          el.setAttribute('fill-opacity', '0.35');
-          // A fill alone read as a soft, edgeless blob — the whole point of
-          // tracing a real island silhouette (the head tapering to a spit)
-          // is lost without a crisp outline. non-scaling-stroke keeps that
-          // outline a constant width regardless of the scale() above.
+          el.setAttribute('fill-opacity', '0.16');
+          // Still read as soft blobs even with a 1.4 stroke — the fill was
+          // still doing too much of the visual work. Pushed further: a
+          // much bolder stroke, a much fainter fill, so the outline is
+          // unmistakably the dominant feature, not a border on a blob.
+          // non-scaling-stroke keeps that outline a constant width
+          // regardless of the scale() above.
           el.setAttribute('stroke', accent);
-          el.setAttribute('stroke-width', '1.4');
+          el.setAttribute('stroke-width', '2.6');
           el.setAttribute('vector-effect', 'non-scaling-stroke');
           lod2Group.appendChild(el);
         }
@@ -2849,9 +2836,9 @@ c-22 -1 -33 -6 -33 -16 0 -8 -9 -15 -20 -15 -22 0 -26 -20 -8 -38 7 -7 9 -12
           `translate(${revealData.ameland.cx},${revealData.ameland.cy}) rotate(${revealData.ameland.rotation}) scale(${revealData.ameland.scale})`,
         );
         outlineEl.setAttribute('fill', accent);
-        outlineEl.setAttribute('fill-opacity', '0.4');
+        outlineEl.setAttribute('fill-opacity', '0.18');
         outlineEl.setAttribute('stroke', accent);
-        outlineEl.setAttribute('stroke-width', '1.6');
+        outlineEl.setAttribute('stroke-width', '2.8');
         outlineEl.setAttribute('vector-effect', 'non-scaling-stroke');
         lod3Group.appendChild(outlineEl);
         for (const v of revealData.villages ?? []) {
@@ -3069,20 +3056,19 @@ c-22 -1 -33 -6 -33 -16 0 -8 -9 -15 -20 -15 -22 0 -26 -20 -8 -38 7 -7 9 -12
           // zoomed past its own natural size just shows a cropped fill
           // with no visible shape (reported back twice now — once as
           // "blurry", once as "still blobs, cannot see outlines" — same
-          // root cause both times). NL's traced outline is ~170 units
-          // wide; for it to fit within frame (790/Z) with room to spare,
-          // full visibility needs to land well before Z≈4.6 (where it
-          // would exactly fill the screen), not after.
-          // LOD0's old fade-out (5-9) ended well before LOD2 started fading
-          // in (10-20), leaving a ~zoom 7-10 stretch with almost nothing
-          // visible — a real dead patch, not a rendering bug, caught by
-          // scrubbing through a dense frame-by-frame capture rather than
-          // just the hand-picked "peak" moments. Widened LOD0's fade-out to
-          // overlap LOD2's fade-in start instead of leaving a gap between
-          // them.
+          // root cause every time). Recalibrated against the REAL traced
+          // NL outline's actual size this time (~75x45 units — the earlier
+          // hand-guessed shape was 170x160, more than double, which is why
+          // every earlier threshold pass was also off): for it to fill
+          // ~55% of frame (790/Z), that's Z≈5.8, fully filling the screen
+          // at Z≈10.5. Full visibility now targets that range instead of
+          // the old 2-4.6 window sized for the wrong shape.
+          // LOD0's fade-out (5-12) overlaps LOD1 and gives LOD2 a smooth
+          // handoff instead of the dead patch a dense frame capture caught
+          // earlier — kept as-is, still correct for the new LOD1 timing.
           const zoom = camera!.wide[2] / w;
           if (lod0El) (lod0El as unknown as HTMLElement).style.opacity = String(fadeInOut(zoom, 0, 0, 5, 12));
-          if (lod1El) (lod1El as unknown as HTMLElement).style.opacity = String(fadeInOut(zoom, 1.3, 2.2, 4.5, 7));
+          if (lod1El) (lod1El as unknown as HTMLElement).style.opacity = String(fadeInOut(zoom, 3, 5, 10, 14));
           (lod2Group as unknown as HTMLElement).style.opacity = String(fadeInOut(zoom, 10, 20, 55, 75));
           (lod3Group as unknown as HTMLElement).style.opacity = String(ramp(55, 75, zoom));
 
