@@ -1,5 +1,7 @@
 import { getCollection } from 'astro:content';
 import { getSql } from './db';
+import { generateChannels } from './reveal/geodata-public';
+import { CAMERA_KEYPOINTS, CHANNEL_ENDPOINTS, LOD2_ISLANDS, LOD3_AMELAND } from './reveal/geodata-secret';
 
 // TripState (AD-7, computed): TripContent merged with live chapter_unlocks
 // state from Neon. This module's read (`getTripState`) is deliberately
@@ -11,6 +13,16 @@ export type ChapterKind = 'cinematic' | 'knap';
 export type ChapterRevealData = {
   coordinate: string;
   placeName: string;
+  // Everything below is computed server-side, on top of the content-
+  // authored coordinate/placeName above, from geodata-secret.ts — never
+  // imported client-side (see that module's own header). Optional/absent
+  // for any chapter whose content doesn't opt into the camera reveal
+  // (checked via svgVariant === 'vizier-europa' in getTripState below).
+  camera?: typeof CAMERA_KEYPOINTS;
+  islands?: typeof LOD2_ISLANDS;
+  amelandOutline?: string;
+  villages?: { x: number; y: number }[];
+  channels?: { d: string; strokeWidth: number }[];
 };
 
 export type TripChapterState = {
@@ -83,7 +95,20 @@ export async function getTripState(slug: string): Promise<TripState | null> {
       description: chapter.description,
       svgVariant: chapter.svgVariant,
       alwaysUnlocked: chapter.alwaysUnlocked,
-      revealData: chapter.revealData,
+      // The camera/geometry fields only ever apply to the vizier-europa
+      // (map-dive) chapter — computed fresh per request rather than stored,
+      // so geodata-secret.ts stays the single source of truth for them.
+      revealData:
+        chapter.revealData && chapter.svgVariant === 'vizier-europa'
+          ? {
+              ...chapter.revealData,
+              camera: CAMERA_KEYPOINTS,
+              islands: LOD2_ISLANDS,
+              amelandOutline: LOD3_AMELAND.outline,
+              villages: LOD3_AMELAND.villages,
+              channels: generateChannels(CHANNEL_ENDPOINTS.origin, CHANNEL_ENDPOINTS.toward, CHANNEL_ENDPOINTS.seed),
+            }
+          : chapter.revealData,
       // An alwaysUnlocked chapter never consults chapter_unlocks — it's not
       // part of the reveal gate at all, so no row for it needs to exist.
       unlocked: chapter.alwaysUnlocked || (unlockedMap.get(chapter.id) ?? false),
