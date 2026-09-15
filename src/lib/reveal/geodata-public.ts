@@ -7,26 +7,29 @@
 // response, a client bundle import has no gate at all. See
 // `geodata-secret.ts`'s own header comment for the full reasoning.
 
-/** Netherlands outline (Act 2 backdrop) — hand-traced from a reference
- * sketch the user supplied (not the placeholder oval this replaced),
- * carrying the shape's actual distinguishing features: the wavy Wadden
- * coast along the north, the IJsselmeer notch cut into the west side, the
- * crinkly Zeeland island cluster in the southwest, the zigzag eastern
- * (German) border, and the narrow Zeeuws-Vlaanderen/Limburg tail reaching
- * south. Doesn't encode which Wadden island is the destination, so it's as
- * safe to ship as the existing #europe-coastline it sits alongside.
- * Coordinates share that same viewBox ("80 0 790 790"). */
-export const LOD1_NL_OUTLINE =
-  'M440,317 ' +
-  'Q480,305 520,314 Q545,320 540,343 ' + // north coast, Wadden waviness
-  'Q530,360 540,377 Q532,394 520,411 ' + // eastern (German) border, zigzag
-  'Q508,422 494,436 Q486,456 474,467 ' + // continuing southeast border
-  'L466,460 Q470,450 454,433 ' + // Zeeuws-Vlaanderen/Limburg tail, narrowing south
-  'Q430,428 400,419 Q385,414 390,409 ' + // back up the west side
-  'Q378,405 386,399 Q374,395 394,392 ' + // Zeeland's crinkly island cluster
-  'Q410,388 406,368 Q404,350 414,351 ' + // west coast north of Zeeland
-  'Q426,346 446,354 Q460,348 450,337 ' + // IJsselmeer notch (concave)
-  'Q432,332 420,326 Z';
+/**
+ * Soft radial-glow highlight over the Netherlands region (Act 2 backdrop) —
+ * NOT a traced country outline. A hand-traced NL border was tried first
+ * (from a reference sketch the user supplied) but didn't actually line up
+ * with the real coastline it sits next to — visibly covering into Denmark,
+ * missing real Dutch territory — since it was drawn from a differently-
+ * scaled, differently-projected reference image with no coordinate
+ * relationship to #europe-coastline's own data. Checked whether the real
+ * outline could be extracted directly from #europe-coastline instead (it's
+ * SVG, so in principle traceable): parsed its path data and confirmed it's
+ * one fused 1503-point multi-contour shape covering all of connected
+ * mainland Europe, not per-country pieces — there's no separate
+ * "Netherlands" shape in that data to copy either.
+ *
+ * A soft glow sidesteps the whole problem: it only needs to be centered on
+ * the right region, not shaped exactly like the country, so there's
+ * nothing for it to visibly disagree with the real coastline about. Used
+ * as an SVG radialGradient fill (`#reveal-glow`, defined in index.astro)
+ * on an ellipse sized from this constant. Coordinates share
+ * #europe-coastline's own viewBox ("80 0 790 790"). Doesn't encode which
+ * Wadden island is the destination, so it's as safe to ship as the
+ * coastline it glows over. */
+export const LOD1_GLOW = { cx: 465, cy: 388, rx: 115, ry: 100 };
 
 /**
  * One barrier-island silhouette — a rounded dune-covered "head" tapering

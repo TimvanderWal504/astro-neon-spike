@@ -2,7 +2,7 @@
 import { getCollection } from 'astro:content';
 import { sortByOrder } from '../../lib/trip-state';
 // Safe to prerender — see the LOD1/2/3 comment further down where it's used.
-import { LOD1_NL_OUTLINE } from '../../lib/reveal/geodata-public';
+import { LOD1_GLOW } from '../../lib/reveal/geodata-public';
 
 // Static shell per AD-1: only structure (nav, hero, chapter slot order,
 // ambient viewfinder) is prerendered. A chapter's real content never enters
@@ -1122,6 +1122,22 @@ const vapidPublicKey = import.meta.env.VAPID_PUBLIC_KEY ?? '';
             <circle cx="455" cy="400" r="195" fill="none" stroke={accentColor} stroke-width="0.7" opacity="0.14"/>
           </g>
           <defs>
+          {/* Referenced by #reveal-lod1 below (a sibling <svg>'s content —
+              cross-SVG id references work the same way #europe-coastline's
+              own <use> already does). A hand-traced NL outline was tried
+              first and didn't line up with the real coastline underneath
+              (checked with #europe-coastline's actual path data, which
+              turned out to be one fused multi-contour shape with no
+              separate per-country piece to copy either) — a soft radial
+              glow sidesteps needing pixel-perfect border matching
+              entirely: it only has to be centered right, not shaped right,
+              which also reads fine as "the reticle is searching this
+              general area" rather than claiming a precise border. */}
+          <radialGradient id="reveal-glow" cx="50%" cy="50%" r="50%">
+            <stop offset="0%" stop-color={accentColor} stop-opacity="0.5" />
+            <stop offset="55%" stop-color={accentColor} stop-opacity="0.22" />
+            <stop offset="100%" stop-color={accentColor} stop-opacity="0" />
+          </radialGradient>
           <g id="europe-coastline" transform="translate(0,803) scale(0.1,-0.1)" fill={accentColor} fill-opacity="0.6" stroke="none">
 <path d="M6000 7953 c0 -32 -28 -128 -29 -100 -1 9 -6 17 -12 17 -7 0 -9 9 -6
 21 7 28 -20 37 -38 13 -8 -11 -23 -44 -32 -74 -17 -52 -18 -53 -21 -22 -2 21
@@ -2151,10 +2167,12 @@ c-22 -1 -33 -6 -33 -16 0 -8 -9 -15 -20 -15 -22 0 -26 -20 -8 -38 7 -7 9 -12
             <circle cx="455" cy="400" r="195" fill="none" stroke={accentColor} stroke-width="0.7" opacity="0.14"/>
           </g>
           <use id="reveal-lod0" href="#europe-coastline" />
-          <!-- LOD1: generic NL outline — safe to prerender, doesn't encode
-               which Wadden island is the destination (see
-               src/lib/reveal/geodata-public.ts). -->
-          <path id="reveal-lod1" d={LOD1_NL_OUTLINE} fill={accentColor} fill-opacity="0.16" stroke={accentColor} stroke-width="1.3" vector-effect="non-scaling-stroke" />
+          <!-- LOD1: a soft glow over the Netherlands region — not a traced
+               border (see the #reveal-glow gradient def's own comment for
+               why), so it doesn't encode which Wadden island is the
+               destination either way. Centered/sized in
+               src/lib/reveal/geodata-public.ts's LOD1_GLOW. -->
+          <ellipse id="reveal-lod1" cx={LOD1_GLOW.cx} cy={LOD1_GLOW.cy} rx={LOD1_GLOW.rx} ry={LOD1_GLOW.ry} fill="url(#reveal-glow)" />
           <!-- LOD2/LOD3: intentionally EMPTY here — island positions,
                channel geometry, and the Ameland outline are all
                destination-revealing, so they're built client-side only
