@@ -8,6 +8,11 @@ import { getSql } from './db';
 
 export type ChapterKind = 'cinematic' | 'knap';
 
+export type ChapterRevealData = {
+  coordinate: string;
+  placeName: string;
+};
+
 export type TripChapterState = {
   id: string;
   order: number;
@@ -19,6 +24,10 @@ export type TripChapterState = {
   svgVariant: string;
   alwaysUnlocked: boolean;
   unlocked: boolean;
+  // Destination-revealing map data (REVEAL.md) — null for every chapter
+  // except bestemming. Flows through redactTripState exactly like the
+  // fields above: stripped whenever the chapter is locked.
+  revealData: ChapterRevealData | null;
 };
 
 export type TripState = {
@@ -74,6 +83,7 @@ export async function getTripState(slug: string): Promise<TripState | null> {
       description: chapter.description,
       svgVariant: chapter.svgVariant,
       alwaysUnlocked: chapter.alwaysUnlocked,
+      revealData: chapter.revealData,
       // An alwaysUnlocked chapter never consults chapter_unlocks — it's not
       // part of the reveal gate at all, so no row for it needs to exist.
       unlocked: chapter.alwaysUnlocked || (unlockedMap.get(chapter.id) ?? false),

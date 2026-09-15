@@ -2564,6 +2564,16 @@ c-22 -1 -33 -6 -33 -16 0 -8 -9 -15 -20 -15 -22 0 -26 -20 -8 -38 7 -7 9 -12
             }
             const descEl = slot.querySelector('[data-field="description"]');
             if (descEl) descEl.textContent = chapter.description ?? '';
+
+            // REVEAL.md's map-dive: the destination coordinate/name only
+            // ever exists in memory here, after this chapter's own unlock
+            // check has already passed — never in the static HTML, never in
+            // a locked API response (see revealData in trip-state.ts). The
+            // actual camera rig (Phase 1) isn't built yet; this just proves
+            // the gated data reaches the client intact.
+            if (chapter.id === 'bestemming' && chapter.revealData) {
+              console.debug('[reveal] gated data received', chapter.revealData.placeName);
+            }
           }
         } catch (err) {
           console.error('Failed to load trip state', err);

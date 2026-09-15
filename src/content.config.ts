@@ -21,6 +21,23 @@ const svgVariants = [
   'knap-zondag',
 ] as const;
 
+// REVEAL.md's cinematic map-dive needs data that is itself destination-
+// revealing (the resolved coordinate, the place name, and — once built —
+// the per-LOD map geometry) — none of that may ever reach the client before
+// the chapter is unlocked. Modeled as a field on the chapter itself (not a
+// separate file) specifically so it flows through the exact same
+// TripChapterState -> redactTripState pipeline as title/description: a
+// locked chapter is redacted to {id,order,kind,unlocked:false} regardless of
+// what else lives on it, so this needs no gate of its own to stay secret.
+// Only meaningful today for a `vizier-europa` chapter; `null` elsewhere.
+const revealDataSchema = z
+  .object({
+    coordinate: z.string().min(1),
+    placeName: z.string().min(1),
+  })
+  .nullable()
+  .default(null);
+
 const chapterSchema = z.object({
   // Stable public contract: this id is the Neon foreign key story 5 keys
   // unlock rows on. Never rename it — renaming orphans existing unlock state.
@@ -40,6 +57,7 @@ const chapterSchema = z.object({
   // no chapter_unlocks row involved, for logistics that were never meant to
   // be part of the reveal (e.g. where to meet before departure).
   alwaysUnlocked: z.boolean().default(false),
+  revealData: revealDataSchema,
 });
 
 const packingItemSchema = z.object({

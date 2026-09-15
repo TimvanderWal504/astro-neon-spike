@@ -22,7 +22,11 @@
       "time": null,
       "location": "Grândyk 2B, 9151 AE Holwert",
       "description": "Drie dagen, zeven man, een boot richting het waddeneiland.",
-      "svgVariant": "vizier-europa"
+      "svgVariant": "vizier-europa",
+      "revealData": {
+        "coordinate": "53.44°N 5.71°E",
+        "placeName": "Ameland"
+      }
     },
     {
       "id": "vrijdag",
