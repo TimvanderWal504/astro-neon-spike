@@ -27,14 +27,20 @@ import type { ZoomPoint } from '../interpolate-zoom';
 
 // The Ameland anchor (393, 392) is NOT a new guess — it's the exact point
 // index.astro's existing dive sequence already hand-pinpointed against the
-// traced coastline. Reused here rather than re-derived. The Terschelling
-// point is a westward offset from it (Terschelling sits just west of
-// Ameland in the real Wadden chain), widened from the original -15 to -33
-// once real island silhouettes (see LOD2_ISLANDS below) replaced the old
-// ellipses — the actual island shapes need more room than two abstract
-// dots did to read as separate islands rather than overlapping.
+// traced coastline. Reused here rather than re-derived.
+//
+// The Terschelling point was widened from the original -15 offset to -33
+// at one point (to give real island silhouettes more room than two
+// abstract dots needed), but that moved the camera's Act-3 settle target
+// off the actual traced coastline — confirmed via screenshot: the reticle
+// ended up centered over open water, with the coastline itself sitting in
+// a corner of the frame instead of under it. Reverted to a small offset
+// close to the original, still-unverified-but-at-least-coastline-adjacent
+// value. Island spacing is instead handled by LOD2_ISLANDS' own offsets
+// below (which don't move the camera, only where islands are drawn), not
+// by relocating the one point the camera actually settles on.
 const AMELAND_POINT: readonly [number, number] = [393, 392];
-const TERSCHELLING_POINT: readonly [number, number] = [360, 388];
+const TERSCHELLING_POINT: readonly [number, number] = [381, 389];
 
 // Reused verbatim from the existing fixedScanLockMove keyframe (index.astro)
 // — the same "hop between a few other countries" waypoints already tuned
