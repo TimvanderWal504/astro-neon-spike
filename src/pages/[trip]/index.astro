@@ -219,7 +219,9 @@ const vapidPublicKey = import.meta.env.VAPID_PUBLIC_KEY ?? '';
         white-space: nowrap;
       }
 
-      /* a dramatic hop between a few other countries before finally arriving on Ameland */
+      /* A dramatic hop between a few other countries before finally arriving
+         on Ameland. Stretched from 2150ms to 3300ms (see fixedScanZoomSequence
+         below for why) — same 5 keyframe beats, just given room to breathe. */
       @keyframes fixedScanLockMove {
         0%   { transform: translate(311px,230px); }
         30%  { transform: translate(554px,216px); }
@@ -239,22 +241,31 @@ const vapidPublicKey = import.meta.env.VAPID_PUBLIC_KEY ?? '';
         50%  { opacity: 0.7; transform: scale(1.6); }
         100% { opacity: 0; transform: scale(2.2); }
       }
-      /* Europe grows to fill the whole screen (0-20%), holds huge while the viewfinder hops between countries (20-78%), then keeps diving in sharply through to Ameland (78-97%) — full opacity the whole way, so it reads as a crisp zoom rather than a gradual fade to haze. It only clears away right at the very end (97-100%), a quick cut rather than a long fade, so the destination content isn't left sitting under a lingering translucent map. */
+      /* Ameland is the site's single biggest reveal, so this got a full
+         re-pace (was one continuous 3700ms clip, felt rushed): Europe fills
+         the screen (0-15%, ~870ms), holds huge through the country-hopping
+         tease (15-70%, ~3190ms — was ~2150ms), then — new — a genuine pause
+         once it's settled on the Netherlands before diving (70-88%, ~1044ms
+         beat that didn't exist before), then a sharp dive-through (88-98%,
+         ~580ms) and a quick cut, not a lingering fade (98-100%, ~116ms), so
+         nothing is left translucent behind the destination content. Total
+         5800ms, up from 3700ms. */
       @keyframes fixedScanZoomSequence {
         0%   { transform: scale(1); opacity: 1; }
-        20%  { transform: scale(7); opacity: 1; }
-        78%  { transform: scale(7); opacity: 1; }
-        97%  { transform: scale(28); opacity: 1; }
+        15%  { transform: scale(7); opacity: 1; }
+        70%  { transform: scale(7); opacity: 1; }
+        88%  { transform: scale(7); opacity: 1; }
+        98%  { transform: scale(28); opacity: 1; }
         100% { transform: scale(28); opacity: 0; }
       }
-      @keyframes fixedScanCaptionFade { 0% { opacity:0; } 10% { opacity:1; } 85% { opacity:1; } 100% { opacity:0; } }
+      @keyframes fixedScanCaptionFade { 0% { opacity:0; } 8% { opacity:1; } 88% { opacity:1; } 100% { opacity:0; } }
 
-      /* the instant #bestemming becomes visible, the dive layer plays: Europe fills the screen, the viewfinder hops between countries, then locks onto NL and dives through */
-      body:has(#bestemming.is-visible) .hero-map-dive-zoom { animation: fixedScanZoomSequence 3700ms cubic-bezier(0.65,0,0.35,1) forwards; }
-      body:has(#bestemming.is-visible) .hero-map-dive-motion { animation: fixedScanLockMove 2150ms cubic-bezier(0.45,0,0.55,1) 750ms forwards; }
-      body:has(#bestemming.is-visible) .hero-map-dive-scale { animation: fixedScanLockScale 2150ms cubic-bezier(0.45,0,0.55,1) 750ms forwards; }
-      body:has(#bestemming.is-visible) .hero-map-dive-flash { animation: fixedScanLockFlash 550ms cubic-bezier(0.16,1,0.3,1) 2500ms forwards; }
-      body:has(#bestemming.is-visible) .fixed-scan-caption { animation: fixedScanCaptionFade 2900ms ease 0ms forwards; }
+      /* the instant #bestemming becomes visible, the dive layer plays: Europe fills the screen, the viewfinder hops between countries, holds once it's found the Netherlands, then locks onto Ameland and dives through */
+      body:has(#bestemming.is-visible) .hero-map-dive-zoom { animation: fixedScanZoomSequence 5800ms cubic-bezier(0.65,0,0.35,1) forwards; }
+      body:has(#bestemming.is-visible) .hero-map-dive-motion { animation: fixedScanLockMove 3300ms cubic-bezier(0.45,0,0.55,1) 750ms forwards; }
+      body:has(#bestemming.is-visible) .hero-map-dive-scale { animation: fixedScanLockScale 3300ms cubic-bezier(0.45,0,0.55,1) 750ms forwards; }
+      body:has(#bestemming.is-visible) .hero-map-dive-flash { animation: fixedScanLockFlash 550ms cubic-bezier(0.16,1,0.3,1) 4900ms forwards; }
+      body:has(#bestemming.is-visible) .fixed-scan-caption { animation: fixedScanCaptionFade 4600ms ease 0ms forwards; }
 
       /* HERO */
       .hero {
@@ -375,11 +386,11 @@ const vapidPublicKey = import.meta.env.VAPID_PUBLIC_KEY ?? '';
         transition: opacity 1100ms cubic-bezier(0.16,1,0.3,1), transform 1300ms cubic-bezier(0.16,1,0.3,1), filter 1100ms cubic-bezier(0.16,1,0.3,1);
       }
       .cinematic-reveal.is-visible { opacity: 1; transform: scale(1); filter: blur(0); }
-      /* bestemming's title/copy/cta arrive after the fixed dive layer (see .hero-map-dive) has filled the screen, hopped between countries, locked and dived through */
-      #bestemming.is-visible .ct-eyebrow { transition-delay: 3700ms; }
-      #bestemming.is-visible .ct-title { transition-delay: 3900ms; }
-      #bestemming.is-visible .ct-copy { transition-delay: 4200ms; }
-      #bestemming.is-visible .ct-cta { transition-delay: 4400ms; }
+      /* bestemming's title/copy/cta arrive after the fixed dive layer (see .hero-map-dive) has filled the screen, hopped between countries, locked and dived through — timings extended alongside fixedScanZoomSequence below (was 3700/3900/4200/4400ms, too rushed for the site's biggest reveal). */
+      #bestemming.is-visible .ct-eyebrow { transition-delay: 5800ms; }
+      #bestemming.is-visible .ct-title { transition-delay: 6000ms; }
+      #bestemming.is-visible .ct-copy { transition-delay: 6300ms; }
+      #bestemming.is-visible .ct-cta { transition-delay: 6500ms; }
 
       /* staggered delay modifiers for individually-cascading elements (chips, timeline rows) */
       .reveal-d1 { transition-delay: 90ms; }
@@ -664,27 +675,34 @@ const vapidPublicKey = import.meta.env.VAPID_PUBLIC_KEY ?? '';
         flex-direction: column;
         align-items: center;
         justify-content: center;
+        gap: 24px;
         text-align: center;
         overflow: hidden;
       }
       .chapter-slot[data-kind='cinematic'].is-unlocked {
         display: flex;
       }
-      /* Illustration backdrop (blokarten/brouwerij, see .chapter-illustration
-         below) sits behind the text — z-index:0 vs .chapter-content's 1 —
-         since a positioned element paints above static siblings regardless
-         of DOM order otherwise. */
       .chapter-slot[data-kind='cinematic'] .chapter-content {
-        position: relative;
-        z-index: 1;
         max-width: 640px;
       }
+      /* Illustration gets its own dedicated band (fixed height, full width)
+         instead of sitting full-bleed behind the text — the two used to
+         occupy the same space (text z-index:1 over illustration z-index:0),
+         which read as content "hovering over" the artwork rather than
+         living beside it. `meet` (not `slice`) guarantees the whole
+         hand-drawn scene stays visible within that band regardless of
+         viewport aspect, rather than being cropped to fill it. */
+      .chapter-visual {
+        position: relative;
+        width: 100%;
+        max-width: 900px;
+        height: min(42vh, 380px);
+        flex: 0 0 auto;
+      }
       .chapter-illustration {
-        position: absolute;
-        inset: 0;
-        z-index: 0;
         width: 100%;
         height: 100%;
+        display: block;
         pointer-events: none;
       }
       .chapter-index {
@@ -2114,23 +2132,29 @@ c-22 -1 -33 -6 -33 -16 0 -8 -9 -15 -20 -15 -22 0 -26 -20 -8 -38 7 -7 9 -12
                 // centered behind this page's huge centered title — shrunk
                 // here (~0.6x) and grounded lower in the frame (y 440→580) so
                 // it sits as a supporting mark beneath the text, not behind it.
-                <svg class="chapter-illustration" viewBox="0 0 800 800" preserveAspectRatio="xMidYMid slice" aria-hidden="true">
-                  <path class="reveal-track" d="M-40,180 C160,150 300,210 800,170" stroke={accentColor} stroke-width="1" opacity="0.16" fill="none" />
-                  <path class="reveal-track" d="M-40,230 C160,200 320,255 800,220" stroke={accentColor} stroke-width="1" opacity="0.12" fill="none" />
-                  <path class="reveal-track" d="M-40,650 C160,630 320,668 500,645 C620,630 720,650 800,640" stroke={accentColor} stroke-width="1" opacity="0.16" fill="none" />
-                  <path class="reveal-track" d="M-40,690 C160,670 320,708 500,685 C620,670 720,690 800,680" stroke={accentColor} stroke-width="1" opacity="0.1" fill="none" />
-                  <g class="reveal-rig">
-                    <g transform="translate(400,580)">
-                      <line class="reveal-mast" x1="0" y1="-112" x2="0" y2="6" stroke={accentColor} stroke-width="1.6" />
-                      <path d="M0,-109 C33,-89 42,-42 24,0 L0,-6 Z" fill={accentColor} opacity="0.2" />
-                      <path class="reveal-sail" d="M0,-109 C33,-89 42,-42 24,0 L0,-6 Z" stroke={accentColor} stroke-width="1.3" fill="none" />
-                      <path d="M-57,24 L57,24 L33,6 L-33,6 Z" fill="none" stroke={accentColor} stroke-width="1.6" />
-                      <circle class="reveal-wheel reveal-wheel-1" cx="-57" cy="33" r="8" fill="none" stroke={accentColor} stroke-width="1.6" />
-                      <circle class="reveal-wheel reveal-wheel-2" cx="57" cy="33" r="8" fill="none" stroke={accentColor} stroke-width="1.6" />
-                      <circle class="reveal-wheel reveal-wheel-3" cx="0" cy="39" r="7" fill="none" stroke={accentColor} stroke-width="1.6" />
+                // Now lives in its own .chapter-visual band (dedicated,
+                // non-overlapping space below the text) — viewBox tightened
+                // to the actual content area and preserveAspectRatio switched
+                // to "meet" so nothing gets cropped inside that shorter box.
+                <div class="chapter-visual">
+                  <svg class="chapter-illustration" viewBox="-40 140 880 580" preserveAspectRatio="xMidYMid meet" aria-hidden="true">
+                    <path class="reveal-track" d="M-40,180 C160,150 300,210 800,170" stroke={accentColor} stroke-width="1" opacity="0.16" fill="none" />
+                    <path class="reveal-track" d="M-40,230 C160,200 320,255 800,220" stroke={accentColor} stroke-width="1" opacity="0.12" fill="none" />
+                    <path class="reveal-track" d="M-40,650 C160,630 320,668 500,645 C620,630 720,650 800,640" stroke={accentColor} stroke-width="1" opacity="0.16" fill="none" />
+                    <path class="reveal-track" d="M-40,690 C160,670 320,708 500,685 C620,670 720,690 800,680" stroke={accentColor} stroke-width="1" opacity="0.1" fill="none" />
+                    <g class="reveal-rig">
+                      <g transform="translate(400,580)">
+                        <line class="reveal-mast" x1="0" y1="-112" x2="0" y2="6" stroke={accentColor} stroke-width="1.6" />
+                        <path d="M0,-109 C33,-89 42,-42 24,0 L0,-6 Z" fill={accentColor} opacity="0.2" />
+                        <path class="reveal-sail" d="M0,-109 C33,-89 42,-42 24,0 L0,-6 Z" stroke={accentColor} stroke-width="1.3" fill="none" />
+                        <path d="M-57,24 L57,24 L33,6 L-33,6 Z" fill="none" stroke={accentColor} stroke-width="1.6" />
+                        <circle class="reveal-wheel reveal-wheel-1" cx="-57" cy="33" r="8" fill="none" stroke={accentColor} stroke-width="1.6" />
+                        <circle class="reveal-wheel reveal-wheel-2" cx="57" cy="33" r="8" fill="none" stroke={accentColor} stroke-width="1.6" />
+                        <circle class="reveal-wheel reveal-wheel-3" cx="0" cy="39" r="7" fill="none" stroke={accentColor} stroke-width="1.6" />
+                      </g>
                     </g>
-                  </g>
-                </svg>
+                  </svg>
+                </div>
               )}
               {chapter.id === 'brouwerij' && (
                 // Two beer mugs clinking together — replaces an earlier
@@ -2141,48 +2165,53 @@ c-22 -1 -33 -6 -33 -16 0 -8 -9 -15 -20 -15 -22 0 -26 -20 -8 -38 7 -7 9 -12
                 // toward each other is a plain SVG rotate on the wrapping
                 // <g>, not hand-plotted rotated coordinates. A small spark
                 // marks the clink point, with a few rising bubbles for life.
-                <svg class="chapter-illustration" viewBox="0 0 800 800" preserveAspectRatio="xMidYMid slice" aria-hidden="true">
-                  <g class="reveal-mug-left">
-                    <g transform="translate(345,600) rotate(14)">
-                      <path d="M-28,-40 L28,-40 L24,42 Q24,48 18,48 L-18,48 Q-24,48 -24,42 Z" fill={accentColor} opacity="0.1" />
-                      <path d="M-28,-40 L28,-40 L24,42 Q24,48 18,48 L-18,48 Q-24,48 -24,42 Z" stroke={accentColor} stroke-width="1.5" fill="none" />
-                      <path d="M-22,-30 L22,-30 L19,40 L-19,40 Z" fill={accentColor} opacity="0.22" />
-                      <path d="M-24,-30 L24,-30" stroke={accentColor} stroke-width="1" opacity="0.5" />
-                      <path
-                        d="M-30,-40 Q-22,-50 -14,-40 Q-6,-50 2,-40 Q10,-50 18,-40 Q26,-48 30,-40"
-                        stroke={accentColor}
-                        stroke-width="1.3"
-                        fill="none"
-                      />
-                      <path d="M-24,-14 C-50,-14 -50,26 -24,26" stroke={accentColor} stroke-width="1.5" fill="none" />
-                      <circle class="reveal-bubble reveal-bubble-1" cx="-6" cy="10" r="2.2" fill={accentColor} />
-                      <circle class="reveal-bubble reveal-bubble-2" cx="8" cy="-6" r="1.6" fill={accentColor} />
+                // Own .chapter-visual band, viewBox tightened around the two
+                // mugs specifically (they're a compact, off-center group),
+                // preserveAspectRatio "meet" so the clink point never crops.
+                <div class="chapter-visual">
+                  <svg class="chapter-illustration" viewBox="260 500 280 195" preserveAspectRatio="xMidYMid meet" aria-hidden="true">
+                    <g class="reveal-mug-left">
+                      <g transform="translate(345,600) rotate(14)">
+                        <path d="M-28,-40 L28,-40 L24,42 Q24,48 18,48 L-18,48 Q-24,48 -24,42 Z" fill={accentColor} opacity="0.1" />
+                        <path d="M-28,-40 L28,-40 L24,42 Q24,48 18,48 L-18,48 Q-24,48 -24,42 Z" stroke={accentColor} stroke-width="1.5" fill="none" />
+                        <path d="M-22,-30 L22,-30 L19,40 L-19,40 Z" fill={accentColor} opacity="0.22" />
+                        <path d="M-24,-30 L24,-30" stroke={accentColor} stroke-width="1" opacity="0.5" />
+                        <path
+                          d="M-30,-40 Q-22,-50 -14,-40 Q-6,-50 2,-40 Q10,-50 18,-40 Q26,-48 30,-40"
+                          stroke={accentColor}
+                          stroke-width="1.3"
+                          fill="none"
+                        />
+                        <path d="M-24,-14 C-50,-14 -50,26 -24,26" stroke={accentColor} stroke-width="1.5" fill="none" />
+                        <circle class="reveal-bubble reveal-bubble-1" cx="-6" cy="10" r="2.2" fill={accentColor} />
+                        <circle class="reveal-bubble reveal-bubble-2" cx="8" cy="-6" r="1.6" fill={accentColor} />
+                      </g>
                     </g>
-                  </g>
-                  <g class="reveal-mug-right">
-                    <g transform="translate(455,600) rotate(-14)">
-                      <path d="M-28,-40 L28,-40 L24,42 Q24,48 18,48 L-18,48 Q-24,48 -24,42 Z" fill={accentColor} opacity="0.1" />
-                      <path d="M-28,-40 L28,-40 L24,42 Q24,48 18,48 L-18,48 Q-24,48 -24,42 Z" stroke={accentColor} stroke-width="1.5" fill="none" />
-                      <path d="M-22,-30 L22,-30 L19,40 L-19,40 Z" fill={accentColor} opacity="0.22" />
-                      <path d="M-24,-30 L24,-30" stroke={accentColor} stroke-width="1" opacity="0.5" />
-                      <path
-                        d="M-30,-40 Q-22,-50 -14,-40 Q-6,-50 2,-40 Q10,-50 18,-40 Q26,-48 30,-40"
-                        stroke={accentColor}
-                        stroke-width="1.3"
-                        fill="none"
-                      />
-                      <path d="M24,-14 C50,-14 50,26 24,26" stroke={accentColor} stroke-width="1.5" fill="none" />
-                      <circle class="reveal-bubble reveal-bubble-3" cx="6" cy="8" r="2" fill={accentColor} />
+                    <g class="reveal-mug-right">
+                      <g transform="translate(455,600) rotate(-14)">
+                        <path d="M-28,-40 L28,-40 L24,42 Q24,48 18,48 L-18,48 Q-24,48 -24,42 Z" fill={accentColor} opacity="0.1" />
+                        <path d="M-28,-40 L28,-40 L24,42 Q24,48 18,48 L-18,48 Q-24,48 -24,42 Z" stroke={accentColor} stroke-width="1.5" fill="none" />
+                        <path d="M-22,-30 L22,-30 L19,40 L-19,40 Z" fill={accentColor} opacity="0.22" />
+                        <path d="M-24,-30 L24,-30" stroke={accentColor} stroke-width="1" opacity="0.5" />
+                        <path
+                          d="M-30,-40 Q-22,-50 -14,-40 Q-6,-50 2,-40 Q10,-50 18,-40 Q26,-48 30,-40"
+                          stroke={accentColor}
+                          stroke-width="1.3"
+                          fill="none"
+                        />
+                        <path d="M24,-14 C50,-14 50,26 24,26" stroke={accentColor} stroke-width="1.5" fill="none" />
+                        <circle class="reveal-bubble reveal-bubble-3" cx="6" cy="8" r="2" fill={accentColor} />
+                      </g>
                     </g>
-                  </g>
-                  <g class="reveal-clink">
-                    <g transform="translate(400,552)">
-                      <path d="M0,-11 L0,11 M-11,0 L11,0 M-8,-8 L8,8 M-8,8 L8,-8" stroke={accentColor} stroke-width="1.4" />
-                      <circle cx="-16" cy="10" r="2" fill={accentColor} />
-                      <circle cx="17" cy="-6" r="1.6" fill={accentColor} />
+                    <g class="reveal-clink">
+                      <g transform="translate(400,552)">
+                        <path d="M0,-11 L0,11 M-11,0 L11,0 M-8,-8 L8,8 M-8,8 L8,-8" stroke={accentColor} stroke-width="1.4" />
+                        <circle cx="-16" cy="10" r="2" fill={accentColor} />
+                        <circle cx="17" cy="-6" r="1.6" fill={accentColor} />
+                      </g>
                     </g>
-                  </g>
-                </svg>
+                  </svg>
+                </div>
               )}
               {chapter.id === 'zondag' && (
                 // Hand-drawn dune scene — a walked route, not a static
@@ -2202,92 +2231,97 @@ c-22 -1 -33 -6 -33 -16 0 -8 -9 -15 -20 -15 -22 0 -26 -20 -8 -38 7 -7 9 -12
                 // the animated class on the same element silently discards
                 // the position the moment the entrance animation applies.
                 // See the CSS block above for the reveal-* keyframes.
-                <svg class="chapter-illustration" viewBox="0 0 800 800" preserveAspectRatio="xMidYMid slice" aria-hidden="true">
-                  <g class="reveal-bird">
-                    <g transform="translate(200,190)">
-                      <g class="reveal-bird-flap">
+                // Own .chapter-visual band, viewBox tightened to this scene's
+                // actual content (bird near the top, dune/grass/rabbit lower),
+                // preserveAspectRatio "meet" so the ridge is never cropped.
+                <div class="chapter-visual">
+                  <svg class="chapter-illustration" viewBox="-40 150 880 500" preserveAspectRatio="xMidYMid meet" aria-hidden="true">
+                    <g class="reveal-bird">
+                      <g transform="translate(200,190)">
+                        <g class="reveal-bird-flap">
+                          <path
+                            d="M0,0 C-14,-10 -30,-8 -40,0 C-26,-2 -14,2 0,8 C14,2 26,-2 40,0 C30,-8 14,-10 0,0 Z"
+                            fill={accentColor}
+                          />
+                        </g>
+                      </g>
+                    </g>
+                    <path
+                      class="reveal-trail"
+                      d="M-40,470 C120,450 200,500 340,470 C460,445 560,490 680,460 C760,440 800,455 840,450"
+                      stroke={accentColor}
+                      stroke-width="2.4"
+                      stroke-linecap="round"
+                      fill="none"
+                    />
+                    <g class="reveal-dune-back">
+                      <g transform="translate(400,460)">
                         <path
-                          d="M0,0 C-14,-10 -30,-8 -40,0 C-26,-2 -14,2 0,8 C14,2 26,-2 40,0 C30,-8 14,-10 0,0 Z"
+                          d="M-420,160 C-320,10 -220,-10 -100,20 C20,50 120,-10 240,10 C340,26 400,70 420,160 Z"
                           fill={accentColor}
+                          opacity="0.07"
                         />
                       </g>
                     </g>
-                  </g>
-                  <path
-                    class="reveal-trail"
-                    d="M-40,470 C120,450 200,500 340,470 C460,445 560,490 680,460 C760,440 800,455 840,450"
-                    stroke={accentColor}
-                    stroke-width="2.4"
-                    stroke-linecap="round"
-                    fill="none"
-                  />
-                  <g class="reveal-dune-back">
-                    <g transform="translate(400,460)">
-                      <path
-                        d="M-420,160 C-320,10 -220,-10 -100,20 C20,50 120,-10 240,10 C340,26 400,70 420,160 Z"
-                        fill={accentColor}
-                        opacity="0.07"
-                      />
-                    </g>
-                  </g>
-                  <g class="reveal-dune">
-                    <g transform="translate(400,480)">
-                      <path
-                        d="M-400,150 C-320,-20 -260,-70 -180,-70 C-120,-70 -80,-30 -40,-20 C40,-8 100,-55 160,-55 C240,-55 320,20 400,150 Z"
-                        fill={accentColor}
-                        opacity="0.12"
-                      />
-                      <path
-                        d="M-400,150 C-320,-20 -260,-70 -180,-70 C-120,-70 -80,-30 -40,-20 C40,-8 100,-55 160,-55 C240,-55 320,20 400,150 Z"
-                        stroke={accentColor}
-                        stroke-width="1.5"
-                        fill="none"
-                      />
-                    </g>
-                  </g>
-                  <g class="reveal-grass reveal-grass-1">
-                    <g transform="translate(220,410)">
-                      <g class="reveal-grass-sway">
-                        <path d="M-6,0 C-10,-30 -4,-46 2,-58" stroke={accentColor} stroke-width="1.3" fill="none" />
-                        <path d="M0,0 C0,-34 4,-50 8,-64" stroke={accentColor} stroke-width="1.3" fill="none" />
-                        <path d="M6,0 C10,-28 14,-42 18,-52" stroke={accentColor} stroke-width="1.3" fill="none" />
+                    <g class="reveal-dune">
+                      <g transform="translate(400,480)">
+                        <path
+                          d="M-400,150 C-320,-20 -260,-70 -180,-70 C-120,-70 -80,-30 -40,-20 C40,-8 100,-55 160,-55 C240,-55 320,20 400,150 Z"
+                          fill={accentColor}
+                          opacity="0.12"
+                        />
+                        <path
+                          d="M-400,150 C-320,-20 -260,-70 -180,-70 C-120,-70 -80,-30 -40,-20 C40,-8 100,-55 160,-55 C240,-55 320,20 400,150 Z"
+                          stroke={accentColor}
+                          stroke-width="1.5"
+                          fill="none"
+                        />
                       </g>
                     </g>
-                  </g>
-                  <g class="reveal-grass reveal-grass-2">
-                    <g transform="translate(360,460)">
-                      <g class="reveal-grass-sway">
-                        <path d="M-6,0 C-10,-30 -4,-46 2,-58" stroke={accentColor} stroke-width="1.3" fill="none" />
-                        <path d="M0,0 C0,-34 4,-50 8,-64" stroke={accentColor} stroke-width="1.3" fill="none" />
-                        <path d="M6,0 C10,-28 14,-42 18,-52" stroke={accentColor} stroke-width="1.3" fill="none" />
+                    <g class="reveal-grass reveal-grass-1">
+                      <g transform="translate(220,410)">
+                        <g class="reveal-grass-sway">
+                          <path d="M-6,0 C-10,-30 -4,-46 2,-58" stroke={accentColor} stroke-width="1.3" fill="none" />
+                          <path d="M0,0 C0,-34 4,-50 8,-64" stroke={accentColor} stroke-width="1.3" fill="none" />
+                          <path d="M6,0 C10,-28 14,-42 18,-52" stroke={accentColor} stroke-width="1.3" fill="none" />
+                        </g>
                       </g>
                     </g>
-                  </g>
-                  <g class="reveal-grass reveal-grass-3">
-                    <g transform="translate(560,425)">
-                      <g class="reveal-grass-sway">
-                        <path d="M-6,0 C-10,-30 -4,-46 2,-58" stroke={accentColor} stroke-width="1.3" fill="none" />
-                        <path d="M0,0 C0,-34 4,-50 8,-64" stroke={accentColor} stroke-width="1.3" fill="none" />
-                        <path d="M6,0 C10,-28 14,-42 18,-52" stroke={accentColor} stroke-width="1.3" fill="none" />
+                    <g class="reveal-grass reveal-grass-2">
+                      <g transform="translate(360,460)">
+                        <g class="reveal-grass-sway">
+                          <path d="M-6,0 C-10,-30 -4,-46 2,-58" stroke={accentColor} stroke-width="1.3" fill="none" />
+                          <path d="M0,0 C0,-34 4,-50 8,-64" stroke={accentColor} stroke-width="1.3" fill="none" />
+                          <path d="M6,0 C10,-28 14,-42 18,-52" stroke={accentColor} stroke-width="1.3" fill="none" />
+                        </g>
                       </g>
                     </g>
-                  </g>
-                  <g class="reveal-rabbit">
-                    <g transform="translate(400,460)">
-                      <path
-                        d="M-14,10 C-14,-6 -4,-14 6,-12 C10,-20 16,-24 18,-18 C20,-14 16,-10 14,-8 C20,-4 22,4 16,10 C8,16 -8,16 -14,10 Z"
-                        fill={accentColor}
-                        opacity="0.14"
-                      />
-                      <path
-                        d="M-14,10 C-14,-6 -4,-14 6,-12 C10,-20 16,-24 18,-18 C20,-14 16,-10 14,-8 C20,-4 22,4 16,10 C8,16 -8,16 -14,10 Z"
-                        stroke={accentColor}
-                        stroke-width="1.2"
-                        fill="none"
-                      />
+                    <g class="reveal-grass reveal-grass-3">
+                      <g transform="translate(560,425)">
+                        <g class="reveal-grass-sway">
+                          <path d="M-6,0 C-10,-30 -4,-46 2,-58" stroke={accentColor} stroke-width="1.3" fill="none" />
+                          <path d="M0,0 C0,-34 4,-50 8,-64" stroke={accentColor} stroke-width="1.3" fill="none" />
+                          <path d="M6,0 C10,-28 14,-42 18,-52" stroke={accentColor} stroke-width="1.3" fill="none" />
+                        </g>
+                      </g>
                     </g>
-                  </g>
-                </svg>
+                    <g class="reveal-rabbit">
+                      <g transform="translate(400,460)">
+                        <path
+                          d="M-14,10 C-14,-6 -4,-14 6,-12 C10,-20 16,-24 18,-18 C20,-14 16,-10 14,-8 C20,-4 22,4 16,10 C8,16 -8,16 -14,10 Z"
+                          fill={accentColor}
+                          opacity="0.14"
+                        />
+                        <path
+                          d="M-14,10 C-14,-6 -4,-14 6,-12 C10,-20 16,-24 18,-18 C20,-14 16,-10 14,-8 C20,-4 22,4 16,10 C8,16 -8,16 -14,10 Z"
+                          stroke={accentColor}
+                          stroke-width="1.2"
+                          fill="none"
+                        />
+                      </g>
+                    </g>
+                  </svg>
+                </div>
               )}
               {isCinematic ? (
                 <div class="chapter-content">
