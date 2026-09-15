@@ -1,6 +1,8 @@
 ---
 import { getCollection } from 'astro:content';
 import { sortByOrder } from '../../lib/trip-state';
+// Safe to prerender — see the LOD1/2/3 comment further down where it's used.
+import { LOD1_NL_OUTLINE } from '../../lib/reveal/geodata-public';
 
 // Static shell per AD-1: only structure (nav, hero, chapter slot order,
 // ambient viewfinder) is prerendered. A chapter's real content never enters
@@ -219,53 +221,151 @@ const vapidPublicKey = import.meta.env.VAPID_PUBLIC_KEY ?? '';
         white-space: nowrap;
       }
 
-      /* A dramatic hop between a few other countries before finally arriving
-         on Ameland. Stretched from 2150ms to 3300ms (see fixedScanZoomSequence
-         below for why) — same 5 keyframe beats, just given room to breathe. */
-      @keyframes fixedScanLockMove {
-        0%   { transform: translate(311px,230px); }
-        30%  { transform: translate(554px,216px); }
-        60%  { transform: translate(360px,402px); }
-        85%  { transform: translate(393px,392px); }
-        100% { transform: translate(393px,392px); }
-      }
-      @keyframes fixedScanLockScale {
-        0%   { transform: scale(1); }
-        30%  { transform: scale(1.15); }
-        60%  { transform: scale(1.05); }
-        85%  { transform: scale(1.25); }
-        100% { transform: scale(1); }
-      }
-      @keyframes fixedScanLockFlash {
-        0%   { opacity: 0; transform: scale(0.8); }
-        50%  { opacity: 0.7; transform: scale(1.6); }
-        100% { opacity: 0; transform: scale(2.2); }
-      }
-      /* Ameland is the site's single biggest reveal, so this got a full
-         re-pace (was one continuous 3700ms clip, felt rushed): Europe fills
-         the screen (0-15%, ~870ms), holds huge through the country-hopping
-         tease (15-70%, ~3190ms — was ~2150ms), then — new — a genuine pause
-         once it's settled on the Netherlands before diving (70-88%, ~1044ms
-         beat that didn't exist before), then a sharp dive-through (88-98%,
-         ~580ms) and a quick cut, not a lingering fade (98-100%, ~116ms), so
-         nothing is left translucent behind the destination content. Total
-         5800ms, up from 3700ms. */
-      @keyframes fixedScanZoomSequence {
-        0%   { transform: scale(1); opacity: 1; }
-        15%  { transform: scale(7); opacity: 1; }
-        70%  { transform: scale(7); opacity: 1; }
-        88%  { transform: scale(7); opacity: 1; }
-        98%  { transform: scale(28); opacity: 1; }
-        100% { transform: scale(28); opacity: 0; }
-      }
-      @keyframes fixedScanCaptionFade { 0% { opacity:0; } 8% { opacity:1; } 88% { opacity:1; } 100% { opacity:0; } }
+      /* REVEAL.md's camera engine (script below) writes .hero-map-dive-zoom's
+         transform directly every frame via interpolateZoom — replaces the
+         old fixed-duration fixedScan* CSS keyframes entirely, since the new
+         camera path needs to be scroll-scrubbable and driven by real act
+         boundaries, not a single fixed-length CSS animation. */
+      .hero-map-dive-svg.is-impact { filter: invert(1); }
+      .hero-map-dive-svg.is-mismatch { filter: sepia(1) saturate(6) hue-rotate(-40deg); }
+      .hero-map-dive-svg.is-inverted { filter: invert(1) hue-rotate(180deg); transition: filter 700ms ease; }
 
-      /* the instant #bestemming becomes visible, the dive layer plays: Europe fills the screen, the viewfinder hops between countries, holds once it's found the Netherlands, then locks onto Ameland and dives through */
-      body:has(#bestemming.is-visible) .hero-map-dive-zoom { animation: fixedScanZoomSequence 5800ms cubic-bezier(0.65,0,0.35,1) forwards; }
-      body:has(#bestemming.is-visible) .hero-map-dive-motion { animation: fixedScanLockMove 3300ms cubic-bezier(0.45,0,0.55,1) 750ms forwards; }
-      body:has(#bestemming.is-visible) .hero-map-dive-scale { animation: fixedScanLockScale 3300ms cubic-bezier(0.45,0,0.55,1) 750ms forwards; }
-      body:has(#bestemming.is-visible) .hero-map-dive-flash { animation: fixedScanLockFlash 550ms cubic-bezier(0.16,1,0.3,1) 4900ms forwards; }
-      body:has(#bestemming.is-visible) .fixed-scan-caption { animation: fixedScanCaptionFade 4600ms ease 0ms forwards; }
+      #reveal-lod2, #reveal-lod3 {
+        opacity: 0;
+      }
+
+      .reveal-prologue {
+        position: fixed;
+        inset: 0;
+        z-index: 60;
+        background: #050605;
+        color: #f4f1ea;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        gap: 12px;
+        font-family: 'JetBrains Mono', monospace;
+        font-size: 14px;
+        letter-spacing: 0.14em;
+        text-align: center;
+        opacity: 0;
+        pointer-events: none;
+        transition: opacity 400ms ease;
+        padding: 24px;
+      }
+      .reveal-prologue.is-active {
+        opacity: 1;
+        pointer-events: auto;
+      }
+      .reveal-prologue-line1 {
+        color: var(--accent);
+        min-height: 1.4em;
+      }
+      .reveal-prologue-line2,
+      .reveal-prologue-line3 {
+        color: #9a9a91;
+        min-height: 1.4em;
+        font-size: 12px;
+      }
+
+      .reveal-telemetry {
+        position: fixed;
+        right: 20px;
+        bottom: 20px;
+        z-index: 55;
+        font-family: 'JetBrains Mono', monospace;
+        font-size: 12px;
+        letter-spacing: 0.08em;
+        color: var(--accent);
+        font-variant-numeric: tabular-nums;
+        opacity: 0;
+        pointer-events: none;
+        transition: opacity 300ms ease;
+      }
+      .reveal-telemetry.is-active {
+        opacity: 0.75;
+      }
+
+      .reveal-skip {
+        position: fixed;
+        left: 20px;
+        bottom: 20px;
+        z-index: 65;
+        font-family: 'JetBrains Mono', monospace;
+        font-size: 12px;
+        letter-spacing: 0.08em;
+        color: #f4f1ea;
+        background: rgba(244, 241, 234, 0.08);
+        border: 1px solid rgba(244, 241, 234, 0.2);
+        border-radius: 999px;
+        padding: 9px 16px;
+        opacity: 0;
+        pointer-events: none;
+        transition: opacity 300ms ease;
+        cursor: pointer;
+      }
+      .reveal-skip.is-active {
+        opacity: 1;
+        pointer-events: auto;
+      }
+      .reveal-skip:hover {
+        background: rgba(244, 241, 234, 0.14);
+      }
+
+      .reveal-debug {
+        position: fixed;
+        top: 12px;
+        left: 12px;
+        z-index: 90;
+        font-family: 'JetBrains Mono', monospace;
+        font-size: 11px;
+        line-height: 1.5;
+        color: #7CFC00;
+        background: rgba(0, 0, 0, 0.72);
+        padding: 8px 10px;
+        border-radius: 6px;
+        white-space: pre;
+        pointer-events: none;
+        display: none;
+      }
+      .reveal-debug.is-active {
+        display: block;
+      }
+
+      /* bestemming's epilogue text is gated on the new JS-driven
+         .reveal-text-in class (added once the camera sequence's final act
+         completes), not on .is-visible directly like the other three
+         cinematic chapters — the camera/prologue sequence needs to finish
+         first. Higher specificity (#bestemming beats the generic
+         .cinematic-reveal class selector) holds it at opacity:0 despite
+         .is-visible until that class is added. */
+      #bestemming.is-visible .ct-eyebrow,
+      #bestemming.is-visible .ct-title,
+      #bestemming.is-visible .ct-copy,
+      #bestemming.is-visible .ct-cta {
+        opacity: 0;
+      }
+      #bestemming .chapter-content.reveal-text-in .ct-eyebrow {
+        opacity: 1;
+        transform: translateX(0);
+        transition: opacity 700ms cubic-bezier(0.16, 1, 0.3, 1) 100ms, transform 700ms cubic-bezier(0.16, 1, 0.3, 1) 100ms;
+      }
+      #bestemming .chapter-content.reveal-text-in .ct-title {
+        opacity: 1;
+        transform: translateY(0) scale(1);
+        transition: opacity 900ms cubic-bezier(0.16, 1, 0.3, 1) 260ms, transform 900ms cubic-bezier(0.16, 1, 0.3, 1) 260ms;
+      }
+      #bestemming .chapter-content.reveal-text-in .ct-copy {
+        opacity: 1;
+        transform: translateY(0);
+        transition: opacity 800ms cubic-bezier(0.16, 1, 0.3, 1) 520ms, transform 800ms cubic-bezier(0.16, 1, 0.3, 1) 520ms;
+      }
+      #bestemming .chapter-content.reveal-text-in .ct-cta {
+        opacity: 1;
+        transform: translateY(0);
+        transition: opacity 700ms cubic-bezier(0.16, 1, 0.3, 1) 680ms, transform 700ms cubic-bezier(0.16, 1, 0.3, 1) 680ms;
+      }
 
       /* HERO */
       .hero {
@@ -386,11 +486,11 @@ const vapidPublicKey = import.meta.env.VAPID_PUBLIC_KEY ?? '';
         transition: opacity 1100ms cubic-bezier(0.16,1,0.3,1), transform 1300ms cubic-bezier(0.16,1,0.3,1), filter 1100ms cubic-bezier(0.16,1,0.3,1);
       }
       .cinematic-reveal.is-visible { opacity: 1; transform: scale(1); filter: blur(0); }
-      /* bestemming's title/copy/cta arrive after the fixed dive layer (see .hero-map-dive) has filled the screen, hopped between countries, locked and dived through — timings extended alongside fixedScanZoomSequence below (was 3700/3900/4200/4400ms, too rushed for the site's biggest reveal). */
-      #bestemming.is-visible .ct-eyebrow { transition-delay: 5800ms; }
-      #bestemming.is-visible .ct-title { transition-delay: 6000ms; }
-      #bestemming.is-visible .ct-copy { transition-delay: 6300ms; }
-      #bestemming.is-visible .ct-cta { transition-delay: 6500ms; }
+      /* bestemming's ct-eyebrow/title/copy/cta timing is now driven by the
+         reveal engine's .reveal-text-in class (see the #bestemming-scoped
+         rules further down), not a fixed transition-delay — the camera
+         sequence's real length varies with scroll-scrub, so a fixed delay
+         can no longer be correct. */
 
       /* staggered delay modifiers for individually-cascading elements (chips, timeline rows) */
       .reveal-d1 { transition-delay: 90ms; }
@@ -945,12 +1045,14 @@ const vapidPublicKey = import.meta.env.VAPID_PUBLIC_KEY ?? '';
           opacity: 1;
           transform: none;
         }
-        /* Suppresses the dive layer's body:has(#bestemming.is-visible)
-           triggers entirely (not just their animation): a display:none
-           ancestor removes its animated descendants from the render tree,
-           so the fixedScan* keyframes above never run and the layer never
-           becomes visible at any scroll position. */
-        .hero-map-dive {
+        /* The reveal engine (script) also checks prefers-reduced-motion
+           itself and skips straight to the epilogue text without ever
+           starting the camera loop or showing the prologue — this is
+           belt-and-suspenders in case JS is slow to init on first paint. */
+        .hero-map-dive,
+        .reveal-prologue,
+        .reveal-telemetry,
+        .reveal-skip {
           display: none;
         }
         /* Blokarten/brouwerij illustrations settle at their end-state
@@ -2036,6 +2138,17 @@ c-22 -1 -33 -6 -33 -16 0 -8 -9 -15 -20 -15 -22 0 -26 -20 -8 -38 7 -7 9 -12
               <circle cx="455" cy="400" r="195" fill="none" stroke={accentColor} stroke-width="0.7" opacity="0.14"/>
             </g>
             <use href="#europe-coastline" />
+            <!-- LOD1: generic NL outline — safe to prerender, doesn't encode
+                 which Wadden island is the destination (see
+                 src/lib/reveal/geodata-public.ts). -->
+            <path id="reveal-lod1" d={LOD1_NL_OUTLINE} fill={accentColor} fill-opacity="0.14" stroke={accentColor} stroke-width="0.8" vector-effect="non-scaling-stroke" />
+            <!-- LOD2/LOD3: intentionally EMPTY here — island positions,
+                 channel geometry, and the Ameland outline are all
+                 destination-revealing, so they're built client-side only
+                 after the gated fetch confirms bestemming is unlocked (see
+                 initReveal in the script below), never server-rendered. -->
+            <g id="reveal-lod2"></g>
+            <g id="reveal-lod3"></g>
             <g class="hero-map-dive-motion">
               <g class="hero-map-dive-scale">
                 <circle class="hero-map-dive-flash" r="70" fill="none" stroke={accentColor} stroke-width="1"/>
@@ -2052,8 +2165,19 @@ c-22 -1 -33 -6 -33 -16 0 -8 -9 -15 -20 -15 -22 0 -26 -20 -8 -38 7 -7 9 -12
             </g>
           </g>
         </svg>
-        <div class="fixed-scan-caption mono" aria-hidden="true">Locatie zoeken&hellip;</div>
       </div>
+
+      <!-- REVEAL.md Act 0 (Proloog): black screen, three typed lines. The
+           coordinate in line3 is only ever set from the gated revealData
+           payload (initReveal in the script below) — never present here. -->
+      <div class="reveal-prologue" aria-hidden="true">
+        <div class="reveal-prologue-line1 mono" data-prologue="line1"></div>
+        <div class="reveal-prologue-line2 mono" data-prologue="line2"></div>
+        <div class="reveal-prologue-line3 mono" data-prologue="line3"></div>
+      </div>
+      <div class="reveal-telemetry mono" aria-hidden="true" data-reveal-telemetry></div>
+      <button type="button" class="reveal-skip" data-reveal-skip>Overslaan</button>
+      <div class="reveal-debug" data-reveal-debug aria-hidden="true"></div>
     </div>
 
     <!-- INSTALLEREN — ported from Main.dc.html:402-442. No .reveal class:
@@ -2402,6 +2526,14 @@ c-22 -1 -33 -6 -33 -16 0 -8 -9 -15 -20 -15 -22 0 -26 -20 -8 -38 7 -7 9 -12
     </div>
 
     <script>
+      // REVEAL.md's camera math and timeline — both destination-agnostic,
+      // safe for this always-shipped client bundle (see
+      // src/lib/reveal/geodata-secret.ts's header for what is NOT safe to
+      // import here, and why).
+      import { interpolateZoom } from '../../lib/interpolate-zoom';
+      import { getActState, pushScrubOffset, stepScrubSpring } from '../../lib/reveal/timeline';
+      import type { ZoomPoint } from '../../lib/interpolate-zoom';
+
       // daysLeft is always computed fresh, client-side, from the static
       // `data-start` attribute — never baked in once at build time, so a
       // static build never goes stale (mirrors Main.dc.html's formula).
@@ -2565,14 +2697,16 @@ c-22 -1 -33 -6 -33 -16 0 -8 -9 -15 -20 -15 -22 0 -26 -20 -8 -38 7 -7 9 -12
             const descEl = slot.querySelector('[data-field="description"]');
             if (descEl) descEl.textContent = chapter.description ?? '';
 
-            // REVEAL.md's map-dive: the destination coordinate/name only
-            // ever exists in memory here, after this chapter's own unlock
-            // check has already passed — never in the static HTML, never in
-            // a locked API response (see revealData in trip-state.ts). The
-            // actual camera rig (Phase 1) isn't built yet; this just proves
-            // the gated data reaches the client intact.
+            // REVEAL.md's map-dive: the destination coordinate/name/geometry
+            // only ever exists in memory here, after this chapter's own
+            // unlock check has already passed — never in the static HTML,
+            // never in a locked API response (see revealData in
+            // trip-state.ts). Doesn't start the sequence immediately: it
+            // waits for #bestemming to actually scroll into view (see
+            // armReveal below), same trigger the rest of the page already
+            // uses for its own reveal animations.
             if (chapter.id === 'bestemming' && chapter.revealData) {
-              console.debug('[reveal] gated data received', chapter.revealData.placeName);
+              armReveal(chapter.revealData);
             }
           }
         } catch (err) {
@@ -2581,6 +2715,329 @@ c-22 -1 -33 -6 -33 -16 0 -8 -9 -15 -20 -15 -22 0 -26 -20 -8 -38 7 -7 9 -12
       }
 
       loadTripState();
+
+      // --- REVEAL.md camera sequence (Ameland) --------------------------
+      // Armed once (revealData arrives from loadTripState), but only
+      // actually starts once #bestemming scrolls into view — a dedicated
+      // observer, not the shared one below, so this stays fully decoupled
+      // from the other chapters' own reveal timing.
+      type RevealPayload = {
+        coordinate: string;
+        placeName: string;
+        camera?: Record<string, ZoomPoint>;
+        islands?: { cx: number; cy: number; rx: number; ry: number }[];
+        amelandOutline?: string;
+        villages?: { x: number; y: number }[];
+        channels?: { d: string; strokeWidth: number }[];
+      };
+
+      let revealArmed = false;
+
+      function armReveal(revealData: RevealPayload): void {
+        if (revealArmed) return;
+        revealArmed = true;
+        const bestemmingEl = document.getElementById('bestemming');
+        if (!bestemmingEl) return;
+        const trigger = new IntersectionObserver(
+          (entries) => {
+            for (const entry of entries) {
+              if (entry.isIntersecting) {
+                initReveal(revealData);
+                trigger.disconnect();
+              }
+            }
+          },
+          { threshold: 0.2, rootMargin: '0px 0px -10% 0px' },
+        );
+        trigger.observe(bestemmingEl);
+      }
+
+      function initReveal(revealData: RevealPayload): void {
+        if (!revealData.camera || !revealData.islands || !revealData.amelandOutline || !revealData.channels) {
+          console.error('[reveal] unlocked but missing computed geometry — trip-state.ts should always attach this for vizier-europa');
+          return;
+        }
+        const camera = revealData.camera;
+        const diveLayer = document.querySelector<HTMLElement>('.hero-map-dive');
+        const svgEl = document.querySelector<SVGSVGElement>('.hero-map-dive-svg');
+        const zoomG = document.querySelector<SVGGElement>('.hero-map-dive-zoom');
+        const motionG = document.querySelector<SVGGElement>('.hero-map-dive-motion');
+        const scaleG = document.querySelector<SVGGElement>('.hero-map-dive-scale');
+        const lod2Group = document.getElementById('reveal-lod2');
+        const lod3Group = document.getElementById('reveal-lod3');
+        const prologueEl = document.querySelector<HTMLElement>('.reveal-prologue');
+        const telemetryEl = document.querySelector<HTMLElement>('[data-reveal-telemetry]');
+        const skipEl = document.querySelector<HTMLButtonElement>('[data-reveal-skip]');
+        const debugEl = document.querySelector<HTMLElement>('[data-reveal-debug]');
+        const chapterContent = document.querySelector<HTMLElement>('#bestemming .chapter-content');
+        if (!diveLayer || !svgEl || !zoomG || !motionG || !scaleG || !lod2Group || !lod3Group || !prologueEl || !chapterContent) {
+          console.error('[reveal] missing an expected element — see initReveal');
+          return;
+        }
+
+        const SVG_NS = 'http://www.w3.org/2000/svg';
+        const accent = getComputedStyle(document.documentElement).getPropertyValue('--accent') || '#e3a64a';
+
+        // Build LOD2/LOD3 now, from the gated payload only — this is the
+        // one point in the whole page where Ameland's actual geometry ever
+        // touches the DOM.
+        for (const island of revealData.islands) {
+          const el = document.createElementNS(SVG_NS, 'ellipse');
+          el.setAttribute('cx', String(island.cx));
+          el.setAttribute('cy', String(island.cy));
+          el.setAttribute('rx', String(island.rx));
+          el.setAttribute('ry', String(island.ry));
+          el.setAttribute('fill', accent);
+          el.setAttribute('opacity', '0.55');
+          lod2Group.appendChild(el);
+        }
+        for (const seg of revealData.channels) {
+          const el = document.createElementNS(SVG_NS, 'path');
+          el.setAttribute('d', seg.d);
+          el.setAttribute('stroke', accent);
+          el.setAttribute('stroke-width', String(seg.strokeWidth));
+          el.setAttribute('fill', 'none');
+          el.setAttribute('opacity', '0.6');
+          el.setAttribute('vector-effect', 'non-scaling-stroke');
+          lod2Group.appendChild(el);
+        }
+        const outlineEl = document.createElementNS(SVG_NS, 'path');
+        outlineEl.setAttribute('d', revealData.amelandOutline);
+        outlineEl.setAttribute('fill', accent);
+        outlineEl.setAttribute('opacity', '0.7');
+        lod3Group.appendChild(outlineEl);
+        for (const v of revealData.villages ?? []) {
+          const dot = document.createElementNS(SVG_NS, 'circle');
+          dot.setAttribute('cx', String(v.x));
+          dot.setAttribute('cy', String(v.y));
+          dot.setAttribute('r', '1.4');
+          dot.setAttribute('fill', '#0a0d0c');
+          lod3Group.appendChild(dot);
+        }
+
+        const reducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+        let alreadySeen = false;
+        try {
+          alreadySeen = sessionStorage.getItem('reveal-seen') === '1';
+        } catch {
+          // sessionStorage can throw in some private-browsing modes — treat as not-seen.
+        }
+
+        function markTextRevealed(instant: boolean): void {
+          if (instant) {
+            chapterContent!.querySelectorAll<HTMLElement>('.ct-eyebrow, .ct-title, .ct-copy, .ct-cta').forEach((el) => {
+              el.style.transition = 'none';
+              el.style.opacity = '1';
+              el.style.transform = 'none';
+            });
+          } else {
+            chapterContent!.classList.add('reveal-text-in');
+          }
+          try {
+            sessionStorage.setItem('reveal-seen', '1');
+          } catch {
+            // best-effort only
+          }
+        }
+
+        if (reducedMotion || alreadySeen) {
+          markTextRevealed(true);
+          return;
+        }
+
+        let cancelled = false;
+
+        function sleep(ms: number): Promise<void> {
+          return new Promise((resolve) => window.setTimeout(resolve, ms));
+        }
+
+        async function typePrologue(): Promise<void> {
+          const line1 = prologueEl!.querySelector<HTMLElement>('[data-prologue="line1"]');
+          const line2 = prologueEl!.querySelector<HTMLElement>('[data-prologue="line2"]');
+          const line3 = prologueEl!.querySelector<HTMLElement>('[data-prologue="line3"]');
+          if (!line1 || !line2 || !line3) return;
+
+          const LOCK_TEXT = 'BESTEMMING VERGRENDELD';
+          for (let i = 0; i <= LOCK_TEXT.length && !cancelled; i++) {
+            line1.textContent = LOCK_TEXT.slice(0, i);
+            await sleep(35);
+          }
+          await sleep(400);
+          if (cancelled) return;
+
+          // Cycling dots — a slightly irregular interval reads as a machine
+          // working, not a CSS loop (REVEAL.md §3's own framing).
+          const dotIntervals = [390, 410, 380, 420];
+          let dotPhase = 0;
+          const dotTimer = window.setInterval(() => {
+            const dots = ['.', '..', '...', ''][dotPhase % 4];
+            line2.textContent = `ONTSLEUTELEN${dots}`;
+            dotPhase++;
+          }, dotIntervals[dotPhase % dotIntervals.length]);
+
+          // The coordinate resolving digit-by-digit matters more than the
+          // dots (REVEAL.md is explicit about this) — masked with block
+          // characters, progressively revealed left to right.
+          const target = revealData.coordinate;
+          const steps = 6;
+          for (let i = 1; i <= steps && !cancelled; i++) {
+            const revealCount = Math.round((target.length * i) / steps);
+            let masked = '';
+            for (let c = 0; c < target.length; c++) {
+              masked += target[c] === ' ' ? ' ' : c < revealCount ? target[c] : '█';
+            }
+            line3.textContent = masked;
+            await sleep(600);
+          }
+          if (!cancelled) line3.textContent = target;
+          window.clearInterval(dotTimer);
+          if (!cancelled) line2.textContent = 'ONTSLEUTELEN';
+          await sleep(400);
+        }
+
+        type Point3 = ZoomPoint;
+        function point(p: Point3) {
+          return { x: p[0], y: p[1], w: p[2] };
+        }
+        function interpAt(p0: Point3, p1: Point3, t: number) {
+          const i = interpolateZoom(p0, p1);
+          const [x, y, w] = i(Math.max(0, Math.min(1, t)));
+          return { x, y, w };
+        }
+        function alongStops(stops: Point3[], t: number) {
+          const seg = 1 / (stops.length - 1);
+          const idx = Math.min(stops.length - 2, Math.max(0, Math.floor(t / seg)));
+          const localT = (t - idx * seg) / seg;
+          return interpAt(stops[idx], stops[idx + 1], localT);
+        }
+
+        function cameraAt(elapsedS: number): { x: number; y: number; w: number } {
+          const { act, localT } = getActState(elapsedS);
+          switch (act.id) {
+            case 'prologue':
+              return point(camera!.wide);
+            case 'lock':
+              return alongStops([camera!.wide, camera!.hopA, camera!.hopB, camera!.hopC, camera!.lockedCoast], localT);
+            case 'dive1':
+              return interpAt(camera!.lockedCoast, camera!.nlCoast, localT);
+            case 'falseBottom':
+              if (localT < 0.4) return point(camera!.terschelling);
+              return interpAt(camera!.terschelling, camera!.ameland33x, (localT - 0.4) / 0.6);
+            case 'dive2':
+              return interpAt(camera!.ameland33x, camera!.amelandDeep, localT);
+            default:
+              return point(camera!.amelandDeep);
+          }
+        }
+
+        let startTime = 0;
+        let lastFrameTime = 0;
+        let rafId = 0;
+        let scrub = { offsetS: 0, velocity: 0 };
+        let firedImpact = false;
+        let firedMismatch = false;
+        const debugEnabled = new URLSearchParams(window.location.search).has('revealDebug');
+        if (debugEnabled && debugEl) debugEl.classList.add('is-active');
+
+        function onWheel(e: WheelEvent): void {
+          const elapsedS = (performance.now() - startTime) / 1000 + scrub.offsetS;
+          const { act } = getActState(elapsedS);
+          if (!act.scrollScrubbed) return;
+          e.preventDefault();
+          scrub = pushScrubOffset(scrub, e.deltaY, 0.0015);
+        }
+
+        function tick(now: number): void {
+          if (cancelled) return;
+          const dt = Math.min(0.05, (now - lastFrameTime) / 1000);
+          lastFrameTime = now;
+          scrub = stepScrubSpring(scrub, dt);
+
+          const elapsedS = (now - startTime) / 1000 + scrub.offsetS;
+          const { act, localT } = getActState(elapsedS);
+          const { x, y, w } = cameraAt(elapsedS);
+
+          const visualScale = camera!.wide[2] / w;
+          zoomG!.style.transformOrigin = '0 0';
+          zoomG!.style.transform = `scale(${visualScale}) translate(${-x}px, ${-y}px)`;
+          motionG!.style.transform = `translate(${x}px, ${y}px)`;
+          scaleG!.style.transform = `scale(${1 / visualScale})`;
+          motionG!.style.opacity = act.id === 'lock' || (act.id === 'falseBottom' && localT < 0.4) ? '1' : '0';
+
+          if (act.id === 'lock' && localT >= 0.95 && !firedImpact) {
+            firedImpact = true;
+            svgEl!.classList.add('is-impact');
+            window.setTimeout(() => svgEl!.classList.remove('is-impact'), 90);
+            if (navigator.vibrate) navigator.vibrate(15);
+          }
+          if (act.id === 'falseBottom' && localT >= 0.02 && localT <= 0.08 && !firedMismatch) {
+            firedMismatch = true;
+            svgEl!.classList.add('is-mismatch');
+            window.setTimeout(() => svgEl!.classList.remove('is-mismatch'), 120);
+            if (navigator.vibrate) navigator.vibrate([40, 60, 40]);
+          }
+          svgEl!.classList.toggle('is-inverted', act.id === 'inversion' || act.id === 'name');
+
+          if (act.id === 'dive2') {
+            (lod2Group as unknown as HTMLElement).style.opacity = String(Math.min(1, localT * 1.3));
+            (lod3Group as unknown as HTMLElement).style.opacity = localT > 0.6 ? String((localT - 0.6) / 0.4) : '0';
+          } else if (act.id === 'inversion' || act.id === 'name') {
+            (lod2Group as unknown as HTMLElement).style.opacity = '1';
+            (lod3Group as unknown as HTMLElement).style.opacity = '1';
+          }
+
+          if (telemetryEl) {
+            const altKm = Math.max(0, Math.round((w / camera!.wide[2]) * 8042));
+            telemetryEl.textContent = `ALT ${altKm.toLocaleString('nl-NL')} km`;
+          }
+          if (debugEnabled && debugEl) {
+            debugEl.textContent = `t=${elapsedS.toFixed(2)}s  act=${act.id}  localT=${localT.toFixed(2)}  w=${w.toFixed(1)}  scrub=${scrub.offsetS.toFixed(2)}`;
+          }
+
+          if (act.id === 'name' && localT >= 1) {
+            finish();
+            return;
+          }
+          rafId = requestAnimationFrame(tick);
+        }
+
+        function finish(): void {
+          markTextRevealed(false);
+          if (skipEl) skipEl.classList.remove('is-active');
+          if (telemetryEl) telemetryEl.classList.remove('is-active');
+          diveLayer!.style.opacity = '0';
+        }
+
+        function skip(): void {
+          cancelled = true;
+          cancelAnimationFrame(rafId);
+          prologueEl!.classList.remove('is-active');
+          diveLayer!.style.opacity = '0';
+          markTextRevealed(true);
+          if (skipEl) skipEl.classList.remove('is-active');
+          if (telemetryEl) telemetryEl.classList.remove('is-active');
+        }
+
+        if (skipEl) {
+          window.setTimeout(() => {
+            if (!cancelled) skipEl.classList.add('is-active');
+          }, 3000);
+          skipEl.addEventListener('click', skip);
+        }
+        window.addEventListener('wheel', onWheel, { passive: false });
+
+        prologueEl.classList.add('is-active');
+        void typePrologue().then(() => {
+          if (cancelled) return;
+          prologueEl!.classList.remove('is-active');
+          diveLayer!.style.transition = 'opacity 500ms ease';
+          diveLayer!.style.opacity = '0.5';
+          if (telemetryEl) telemetryEl.classList.add('is-active');
+          startTime = performance.now();
+          lastFrameTime = startTime;
+          rafId = requestAnimationFrame(tick);
+        });
+      }
 
       // Installeren toggle (ported from Main.dc.html's pickAndroid/pickIOS
       // setState calls): plain DOM attribute toggling instead of component
