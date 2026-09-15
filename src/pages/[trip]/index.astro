@@ -177,13 +177,17 @@ const vapidPublicKey = import.meta.env.VAPID_PUBLIC_KEY ?? '';
         z-index: 50;
         opacity: 0;
         pointer-events: none;
-        transition: opacity 500ms ease;
+        /* Solid background, not just the SVG floating over transparent —
+         * REVEAL.md wants a real full-screen takeover, not a translucent
+         * blend with whatever's behind (that was the old system's own
+         * design, at a fixed 0.5 opacity; this sequence's own script now
+         * owns opacity entirely, driving it to a full 1 once the prologue
+         * hands off, so nothing bleeds through around/between the map's
+         * own empty space). */
+        background: #0a0d0c;
         display: flex;
         align-items: center;
         justify-content: center;
-      }
-      body:has(#bestemming.is-visible) .hero-map-dive {
-        opacity: 0.5;
       }
       .hero-map-dive-svg {
         width: min(82vw, 640px);
@@ -2966,8 +2970,14 @@ c-22 -1 -33 -6 -33 -16 0 -8 -9 -15 -20 -15 -22 0 -26 -20 -8 -38 7 -7 9 -12
           const { x, y, w } = cameraAt(elapsedS);
 
           const visualScale = camera!.wide[2] / w;
+          // The SVG's own viewBox ("80 0 790 790") doesn't start at (0,0),
+          // so translate(-x,-y) alone maps the target point to the
+          // viewBox's top-left corner, not its center — a bug a screenshot
+          // caught (the map rendering cropped into the top-left quadrant
+          // instead of centered). Recentering to the viewBox's own center
+          // (475, 395) after the scale fixes it.
           zoomG!.style.transformOrigin = '0 0';
-          zoomG!.style.transform = `scale(${visualScale}) translate(${-x}px, ${-y}px)`;
+          zoomG!.style.transform = `translate(475px, 395px) scale(${visualScale}) translate(${-x}px, ${-y}px)`;
           motionG!.style.transform = `translate(${x}px, ${y}px)`;
           scaleG!.style.transform = `scale(${1 / visualScale})`;
           motionG!.style.opacity = act.id === 'lock' || (act.id === 'falseBottom' && localT < 0.4) ? '1' : '0';
@@ -3039,10 +3049,14 @@ c-22 -1 -33 -6 -33 -16 0 -8 -9 -15 -20 -15 -22 0 -26 -20 -8 -38 7 -7 9 -12
           if (cancelled) return;
           prologueEl!.classList.remove('is-active');
           diveLayer!.style.transition = 'opacity 500ms ease';
-          diveLayer!.style.opacity = '0.5';
+          diveLayer!.style.opacity = '1';
           if (telemetryEl) telemetryEl.classList.add('is-active');
-          startTime = performance.now();
-          lastFrameTime = startTime;
+          // typePrologue() above IS this sequence's Act 0 — back-date
+          // startTime so the rAF loop's own elapsedS starts at Act 1
+          // (5.0s) instead of replaying ACTS[0]'s 5-second wide-Europe
+          // hold a second time with nothing happening on screen.
+          startTime = performance.now() - 5000;
+          lastFrameTime = performance.now();
           rafId = requestAnimationFrame(tick);
         });
       }
