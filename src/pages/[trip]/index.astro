@@ -2187,20 +2187,30 @@ c-22 -1 -33 -6 -33 -16 0 -8 -9 -15 -20 -15 -22 0 -26 -20 -8 -38 7 -7 9 -12
               {chapter.id === 'zondag' && (
                 // Hand-drawn dune scene — a walked route, not a static
                 // object. The dune ridge is built from explicit on-curve
-                // peak anchors (-180,-70 and 160,-55, relative to the
-                // group's translate(400,480)) instead of letting bezier
+                // peak anchors (-180,-70 and 160,-55, relative to each
+                // shape's own inner translate) instead of letting bezier
                 // control points imply a peak, specifically so the grass
                 // and rabbit below can sit exactly on the ridge rather than
                 // floating above it. Paint order back-to-front: bird (sky),
                 // footpath, far dune, near dune, grass, rabbit (foreground).
+                // IMPORTANT: every animated reveal-* class here is a bare
+                // outer <g> with NO transform attribute of its own — the
+                // static translate lives on an unclassed inner <g>, same
+                // split as Blokarten's reveal-rig above. A CSS `transform`
+                // on an SVG element replaces its `transform` attribute
+                // instead of composing with it, so putting the position and
+                // the animated class on the same element silently discards
+                // the position the moment the entrance animation applies.
                 // See the CSS block above for the reveal-* keyframes.
                 <svg class="chapter-illustration" viewBox="0 0 800 800" preserveAspectRatio="xMidYMid slice" aria-hidden="true">
-                  <g class="reveal-bird" transform="translate(200,190)">
-                    <g class="reveal-bird-flap">
-                      <path
-                        d="M0,0 C-14,-10 -30,-8 -40,0 C-26,-2 -14,2 0,8 C14,2 26,-2 40,0 C30,-8 14,-10 0,0 Z"
-                        fill={accentColor}
-                      />
+                  <g class="reveal-bird">
+                    <g transform="translate(200,190)">
+                      <g class="reveal-bird-flap">
+                        <path
+                          d="M0,0 C-14,-10 -30,-8 -40,0 C-26,-2 -14,2 0,8 C14,2 26,-2 40,0 C30,-8 14,-10 0,0 Z"
+                          fill={accentColor}
+                        />
+                      </g>
                     </g>
                   </g>
                   <path
@@ -2211,59 +2221,71 @@ c-22 -1 -33 -6 -33 -16 0 -8 -9 -15 -20 -15 -22 0 -26 -20 -8 -38 7 -7 9 -12
                     stroke-linecap="round"
                     fill="none"
                   />
-                  <g class="reveal-dune-back" transform="translate(400,460)">
-                    <path
-                      d="M-420,160 C-320,10 -220,-10 -100,20 C20,50 120,-10 240,10 C340,26 400,70 420,160 Z"
-                      fill={accentColor}
-                      opacity="0.07"
-                    />
-                  </g>
-                  <g class="reveal-dune" transform="translate(400,480)">
-                    <path
-                      d="M-400,150 C-320,-20 -260,-70 -180,-70 C-120,-70 -80,-30 -40,-20 C40,-8 100,-55 160,-55 C240,-55 320,20 400,150 Z"
-                      fill={accentColor}
-                      opacity="0.12"
-                    />
-                    <path
-                      d="M-400,150 C-320,-20 -260,-70 -180,-70 C-120,-70 -80,-30 -40,-20 C40,-8 100,-55 160,-55 C240,-55 320,20 400,150 Z"
-                      stroke={accentColor}
-                      stroke-width="1.5"
-                      fill="none"
-                    />
-                  </g>
-                  <g class="reveal-grass reveal-grass-1" transform="translate(220,410)">
-                    <g class="reveal-grass-sway">
-                      <path d="M-6,0 C-10,-30 -4,-46 2,-58" stroke={accentColor} stroke-width="1.3" fill="none" />
-                      <path d="M0,0 C0,-34 4,-50 8,-64" stroke={accentColor} stroke-width="1.3" fill="none" />
-                      <path d="M6,0 C10,-28 14,-42 18,-52" stroke={accentColor} stroke-width="1.3" fill="none" />
+                  <g class="reveal-dune-back">
+                    <g transform="translate(400,460)">
+                      <path
+                        d="M-420,160 C-320,10 -220,-10 -100,20 C20,50 120,-10 240,10 C340,26 400,70 420,160 Z"
+                        fill={accentColor}
+                        opacity="0.07"
+                      />
                     </g>
                   </g>
-                  <g class="reveal-grass reveal-grass-2" transform="translate(360,460)">
-                    <g class="reveal-grass-sway">
-                      <path d="M-6,0 C-10,-30 -4,-46 2,-58" stroke={accentColor} stroke-width="1.3" fill="none" />
-                      <path d="M0,0 C0,-34 4,-50 8,-64" stroke={accentColor} stroke-width="1.3" fill="none" />
-                      <path d="M6,0 C10,-28 14,-42 18,-52" stroke={accentColor} stroke-width="1.3" fill="none" />
+                  <g class="reveal-dune">
+                    <g transform="translate(400,480)">
+                      <path
+                        d="M-400,150 C-320,-20 -260,-70 -180,-70 C-120,-70 -80,-30 -40,-20 C40,-8 100,-55 160,-55 C240,-55 320,20 400,150 Z"
+                        fill={accentColor}
+                        opacity="0.12"
+                      />
+                      <path
+                        d="M-400,150 C-320,-20 -260,-70 -180,-70 C-120,-70 -80,-30 -40,-20 C40,-8 100,-55 160,-55 C240,-55 320,20 400,150 Z"
+                        stroke={accentColor}
+                        stroke-width="1.5"
+                        fill="none"
+                      />
                     </g>
                   </g>
-                  <g class="reveal-grass reveal-grass-3" transform="translate(560,425)">
-                    <g class="reveal-grass-sway">
-                      <path d="M-6,0 C-10,-30 -4,-46 2,-58" stroke={accentColor} stroke-width="1.3" fill="none" />
-                      <path d="M0,0 C0,-34 4,-50 8,-64" stroke={accentColor} stroke-width="1.3" fill="none" />
-                      <path d="M6,0 C10,-28 14,-42 18,-52" stroke={accentColor} stroke-width="1.3" fill="none" />
+                  <g class="reveal-grass reveal-grass-1">
+                    <g transform="translate(220,410)">
+                      <g class="reveal-grass-sway">
+                        <path d="M-6,0 C-10,-30 -4,-46 2,-58" stroke={accentColor} stroke-width="1.3" fill="none" />
+                        <path d="M0,0 C0,-34 4,-50 8,-64" stroke={accentColor} stroke-width="1.3" fill="none" />
+                        <path d="M6,0 C10,-28 14,-42 18,-52" stroke={accentColor} stroke-width="1.3" fill="none" />
+                      </g>
                     </g>
                   </g>
-                  <g class="reveal-rabbit" transform="translate(400,460)">
-                    <path
-                      d="M-14,10 C-14,-6 -4,-14 6,-12 C10,-20 16,-24 18,-18 C20,-14 16,-10 14,-8 C20,-4 22,4 16,10 C8,16 -8,16 -14,10 Z"
-                      fill={accentColor}
-                      opacity="0.14"
-                    />
-                    <path
-                      d="M-14,10 C-14,-6 -4,-14 6,-12 C10,-20 16,-24 18,-18 C20,-14 16,-10 14,-8 C20,-4 22,4 16,10 C8,16 -8,16 -14,10 Z"
-                      stroke={accentColor}
-                      stroke-width="1.2"
-                      fill="none"
-                    />
+                  <g class="reveal-grass reveal-grass-2">
+                    <g transform="translate(360,460)">
+                      <g class="reveal-grass-sway">
+                        <path d="M-6,0 C-10,-30 -4,-46 2,-58" stroke={accentColor} stroke-width="1.3" fill="none" />
+                        <path d="M0,0 C0,-34 4,-50 8,-64" stroke={accentColor} stroke-width="1.3" fill="none" />
+                        <path d="M6,0 C10,-28 14,-42 18,-52" stroke={accentColor} stroke-width="1.3" fill="none" />
+                      </g>
+                    </g>
+                  </g>
+                  <g class="reveal-grass reveal-grass-3">
+                    <g transform="translate(560,425)">
+                      <g class="reveal-grass-sway">
+                        <path d="M-6,0 C-10,-30 -4,-46 2,-58" stroke={accentColor} stroke-width="1.3" fill="none" />
+                        <path d="M0,0 C0,-34 4,-50 8,-64" stroke={accentColor} stroke-width="1.3" fill="none" />
+                        <path d="M6,0 C10,-28 14,-42 18,-52" stroke={accentColor} stroke-width="1.3" fill="none" />
+                      </g>
+                    </g>
+                  </g>
+                  <g class="reveal-rabbit">
+                    <g transform="translate(400,460)">
+                      <path
+                        d="M-14,10 C-14,-6 -4,-14 6,-12 C10,-20 16,-24 18,-18 C20,-14 16,-10 14,-8 C20,-4 22,4 16,10 C8,16 -8,16 -14,10 Z"
+                        fill={accentColor}
+                        opacity="0.14"
+                      />
+                      <path
+                        d="M-14,10 C-14,-6 -4,-14 6,-12 C10,-20 16,-24 18,-18 C20,-14 16,-10 14,-8 C20,-4 22,4 16,10 C8,16 -8,16 -14,10 Z"
+                        stroke={accentColor}
+                        stroke-width="1.2"
+                        fill="none"
+                      />
+                    </g>
                   </g>
                 </svg>
               )}

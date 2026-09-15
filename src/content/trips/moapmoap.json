@@ -20,7 +20,7 @@
       "kind": "cinematic",
       "title": "Ameland",
       "time": null,
-      "location": null,
+      "location": "Grândyk 2B, 9151 AE Holwert",
       "description": "Drie dagen, zeven man, een boot richting het waddeneiland.",
       "svgVariant": "vizier-europa"
     },
@@ -100,7 +100,7 @@
       "kind": "knap",
       "title": "Onderweg naar het vaste land",
       "time": "Zondag 4 oktober, 16:00",
-      "location": "Bliekeduun 8, Hollum",
+      "location": "Grândyk 2B, 9151 AE Holwert",
       "description": "16:00 — De boot, stipt, overtocht duurt tot 17:15.\n17:15 — Aankomst op het vaste land, einde van de trip.",
       "svgVariant": "knap-zondag"
     }
