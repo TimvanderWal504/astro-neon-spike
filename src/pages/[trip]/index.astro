@@ -2544,6 +2544,7 @@ c-22 -1 -33 -6 -33 -16 0 -8 -9 -15 -20 -15 -22 0 -26 -20 -8 -38 7 -7 9 -12
       // import here, and why).
       import { interpolateZoom } from '../../lib/interpolate-zoom';
       import { getActState, pushScrubOffset, stepScrubSpring } from '../../lib/reveal/timeline';
+      import { ISLAND_SHAPE } from '../../lib/reveal/geodata-public';
       import type { ZoomPoint } from '../../lib/interpolate-zoom';
 
       // daysLeft is always computed fresh, client-side, from the static
@@ -2737,8 +2738,8 @@ c-22 -1 -33 -6 -33 -16 0 -8 -9 -15 -20 -15 -22 0 -26 -20 -8 -38 7 -7 9 -12
         coordinate: string;
         placeName: string;
         camera?: Record<string, ZoomPoint>;
-        islands?: { cx: number; cy: number; rx: number; ry: number }[];
-        amelandOutline?: string;
+        islands?: { cx: number; cy: number; rotation: number; scale: number }[];
+        ameland?: { cx: number; cy: number; rotation: number; scale: number };
         villages?: { x: number; y: number }[];
         channels?: { d: string; strokeWidth: number }[];
       };
@@ -2765,7 +2766,7 @@ c-22 -1 -33 -6 -33 -16 0 -8 -9 -15 -20 -15 -22 0 -26 -20 -8 -38 7 -7 9 -12
       }
 
       function initReveal(revealData: RevealPayload): void {
-        if (!revealData.camera || !revealData.islands || !revealData.amelandOutline || !revealData.channels) {
+        if (!revealData.camera || !revealData.islands || !revealData.ameland || !revealData.channels) {
           console.error('[reveal] unlocked but missing computed geometry — trip-state.ts should always attach this for vizier-europa');
           return;
         }
@@ -2794,15 +2795,16 @@ c-22 -1 -33 -6 -33 -16 0 -8 -9 -15 -20 -15 -22 0 -26 -20 -8 -38 7 -7 9 -12
 
         // Build LOD2/LOD3 now, from the gated payload only — this is the
         // one point in the whole page where Ameland's actual geometry ever
-        // touches the DOM.
+        // touches the DOM. Each island is the same shared ISLAND_SHAPE
+        // (imported below, safe — it's a generic barrier-island silhouette,
+        // not tied to any real position) placed via transform, not a
+        // one-off path per island.
         for (const island of revealData.islands) {
-          const el = document.createElementNS(SVG_NS, 'ellipse');
-          el.setAttribute('cx', String(island.cx));
-          el.setAttribute('cy', String(island.cy));
-          el.setAttribute('rx', String(island.rx));
-          el.setAttribute('ry', String(island.ry));
+          const el = document.createElementNS(SVG_NS, 'path');
+          el.setAttribute('d', ISLAND_SHAPE);
+          el.setAttribute('transform', `translate(${island.cx},${island.cy}) rotate(${island.rotation}) scale(${island.scale})`);
           el.setAttribute('fill', accent);
-          el.setAttribute('opacity', '0.55');
+          el.setAttribute('opacity', '0.6');
           lod2Group.appendChild(el);
         }
         for (const seg of revealData.channels) {
@@ -2816,7 +2818,11 @@ c-22 -1 -33 -6 -33 -16 0 -8 -9 -15 -20 -15 -22 0 -26 -20 -8 -38 7 -7 9 -12
           lod2Group.appendChild(el);
         }
         const outlineEl = document.createElementNS(SVG_NS, 'path');
-        outlineEl.setAttribute('d', revealData.amelandOutline);
+        outlineEl.setAttribute('d', ISLAND_SHAPE);
+        outlineEl.setAttribute(
+          'transform',
+          `translate(${revealData.ameland.cx},${revealData.ameland.cy}) rotate(${revealData.ameland.rotation}) scale(${revealData.ameland.scale})`,
+        );
         outlineEl.setAttribute('fill', accent);
         outlineEl.setAttribute('opacity', '0.7');
         lod3Group.appendChild(outlineEl);

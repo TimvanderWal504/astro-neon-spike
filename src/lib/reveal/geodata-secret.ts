@@ -28,11 +28,13 @@ import type { ZoomPoint } from '../interpolate-zoom';
 // The Ameland anchor (393, 392) is NOT a new guess — it's the exact point
 // index.astro's existing dive sequence already hand-pinpointed against the
 // traced coastline. Reused here rather than re-derived. The Terschelling
-// point is a small westward offset from it (Terschelling sits just west of
-// Ameland in the real Wadden chain) and, like the LOD2/3 placeholders below,
-// needs visual confirmation once seen — it was estimated, not traced.
+// point is a westward offset from it (Terschelling sits just west of
+// Ameland in the real Wadden chain), widened from the original -15 to -33
+// once real island silhouettes (see LOD2_ISLANDS below) replaced the old
+// ellipses — the actual island shapes need more room than two abstract
+// dots did to read as separate islands rather than overlapping.
 const AMELAND_POINT: readonly [number, number] = [393, 392];
-const TERSCHELLING_POINT: readonly [number, number] = [378, 390];
+const TERSCHELLING_POINT: readonly [number, number] = [360, 388];
 
 // Reused verbatim from the existing fixedScanLockMove keyframe (index.astro)
 // — the same "hop between a few other countries" waypoints already tuned
@@ -66,24 +68,36 @@ export const CAMERA_KEYPOINTS = {
   amelandDeep: [AMELAND_POINT[0], AMELAND_POINT[1], W_85X] as ZoomPoint,
 } as const;
 
-/** Five Wadden islands as simple elongated blobs, west to east — Texel,
- * Vlieland, Terschelling, Ameland, Schiermonnikoog. */
-export const LOD2_ISLANDS: readonly { cx: number; cy: number; rx: number; ry: number }[] = [
-  { cx: AMELAND_POINT[0] - 42, cy: AMELAND_POINT[1] + 6, rx: 9, ry: 3.2 },
-  { cx: AMELAND_POINT[0] - 26, cy: AMELAND_POINT[1] + 3, rx: 7, ry: 2.6 },
-  { cx: TERSCHELLING_POINT[0], cy: TERSCHELLING_POINT[1], rx: 10, ry: 3.4 },
-  { cx: AMELAND_POINT[0], cy: AMELAND_POINT[1], rx: 11, ry: 3.6 },
-  { cx: AMELAND_POINT[0] + 24, cy: AMELAND_POINT[1] - 2, rx: 8, ry: 2.8 },
+/** Five Wadden islands, west to east — Texel, Vlieland, Terschelling,
+ * Ameland, Schiermonnikoog — each an instance of geodata-public.ts's
+ * shared ISLAND_SHAPE (rendered client-side as
+ * `translate(cx,cy) rotate(rotation) scale(scale)`), not a one-off path per
+ * island. `rotation` follows the chain's real west-to-east tilt (each
+ * island's head-to-tail axis angled up and to the right, matching the
+ * user-supplied reference); `scale` follows the real islands' relative
+ * sizes (Terschelling and Ameland are the two big ones, Vlieland and
+ * Schiermonnikoog noticeably smaller, Texel the largest of all). */
+export const LOD2_ISLANDS: readonly { cx: number; cy: number; rotation: number; scale: number }[] = [
+  { cx: AMELAND_POINT[0] - 105, cy: AMELAND_POINT[1] + 22, rotation: -18, scale: 1.15 }, // Texel
+  { cx: AMELAND_POINT[0] - 68, cy: AMELAND_POINT[1] + 14, rotation: -16, scale: 0.6 }, // Vlieland
+  { cx: TERSCHELLING_POINT[0], cy: TERSCHELLING_POINT[1], rotation: -14, scale: 1 }, // Terschelling
+  { cx: AMELAND_POINT[0], cy: AMELAND_POINT[1], rotation: -12, scale: 1 }, // Ameland
+  { cx: AMELAND_POINT[0] + 34, cy: AMELAND_POINT[1] - 8, rotation: -10, scale: 0.55 }, // Schiermonnikoog
 ];
 
-/** Ameland close-up (Act 4 deepest point / Act 5): a simple elongated
- * island outline plus three village-position dots (Nes, Ballum, Hollum). */
+/** Ameland close-up (Act 4 deepest point / Act 5): the same ISLAND_SHAPE
+ * family as LOD2's own Ameland entry, just larger and re-centered for a
+ * close-up framing, plus three village-position dots (Nes, Ballum, Hollum,
+ * west to east along the island's inhabited south side). */
 export const LOD3_AMELAND = {
-  outline: `M ${AMELAND_POINT[0] - 12},${AMELAND_POINT[1] + 2} Q ${AMELAND_POINT[0]},${AMELAND_POINT[1] - 4} ${AMELAND_POINT[0] + 13},${AMELAND_POINT[1] + 1} Q ${AMELAND_POINT[0]},${AMELAND_POINT[1] + 5} ${AMELAND_POINT[0] - 12},${AMELAND_POINT[1] + 2} Z`,
+  cx: AMELAND_POINT[0],
+  cy: AMELAND_POINT[1],
+  rotation: -12,
+  scale: 2.4,
   villages: [
-    { x: AMELAND_POINT[0] - 6, y: AMELAND_POINT[1] + 1 },
-    { x: AMELAND_POINT[0], y: AMELAND_POINT[1] },
-    { x: AMELAND_POINT[0] + 6, y: AMELAND_POINT[1] + 1 },
+    { x: AMELAND_POINT[0] - 16, y: AMELAND_POINT[1] + 4 },
+    { x: AMELAND_POINT[0] - 2, y: AMELAND_POINT[1] + 2 },
+    { x: AMELAND_POINT[0] + 14, y: AMELAND_POINT[1] + 3 },
   ] as { x: number; y: number }[],
 };
 

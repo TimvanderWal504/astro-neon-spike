@@ -20,7 +20,7 @@ export type ChapterRevealData = {
   // (checked via svgVariant === 'vizier-europa' in getTripState below).
   camera?: typeof CAMERA_KEYPOINTS;
   islands?: typeof LOD2_ISLANDS;
-  amelandOutline?: string;
+  ameland?: Omit<typeof LOD3_AMELAND, 'villages'>;
   villages?: { x: number; y: number }[];
   channels?: { d: string; strokeWidth: number }[];
 };
@@ -104,7 +104,7 @@ export async function getTripState(slug: string): Promise<TripState | null> {
               ...chapter.revealData,
               camera: CAMERA_KEYPOINTS,
               islands: LOD2_ISLANDS,
-              amelandOutline: LOD3_AMELAND.outline,
+              ameland: { cx: LOD3_AMELAND.cx, cy: LOD3_AMELAND.cy, rotation: LOD3_AMELAND.rotation, scale: LOD3_AMELAND.scale },
               villages: LOD3_AMELAND.villages,
               channels: generateChannels(CHANNEL_ENDPOINTS.origin, CHANNEL_ENDPOINTS.toward, CHANNEL_ENDPOINTS.seed),
             }

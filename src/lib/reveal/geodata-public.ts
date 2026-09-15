@@ -7,13 +7,45 @@
 // response, a client bundle import has no gate at all. See
 // `geodata-secret.ts`'s own header comment for the full reasoning.
 
-/** Generic Netherlands outline (Act 2 backdrop) — doesn't encode which
- * Wadden island is the destination, so it's as safe to ship as the existing
- * #europe-coastline it sits alongside. Coordinates share that same viewBox
- * ("80 0 790 790"). */
+/** Netherlands outline (Act 2 backdrop) — hand-traced from a reference
+ * sketch the user supplied (not the placeholder oval this replaced),
+ * carrying the shape's actual distinguishing features: the wavy Wadden
+ * coast along the north, the IJsselmeer notch cut into the west side, the
+ * crinkly Zeeland island cluster in the southwest, the zigzag eastern
+ * (German) border, and the narrow Zeeuws-Vlaanderen/Limburg tail reaching
+ * south. Doesn't encode which Wadden island is the destination, so it's as
+ * safe to ship as the existing #europe-coastline it sits alongside.
+ * Coordinates share that same viewBox ("80 0 790 790"). */
 export const LOD1_NL_OUTLINE =
-  'M 340,340 C 360,300 420,290 460,310 C 500,300 540,320 550,360 ' +
-  'C 570,390 560,430 520,440 C 480,460 420,455 400,430 C 370,420 330,390 340,340 Z';
+  'M440,317 ' +
+  'Q480,305 520,314 Q545,320 540,343 ' + // north coast, Wadden waviness
+  'Q530,360 540,377 Q532,394 520,411 ' + // eastern (German) border, zigzag
+  'Q508,422 494,436 Q486,456 474,467 ' + // continuing southeast border
+  'L466,460 Q470,450 454,433 ' + // Zeeuws-Vlaanderen/Limburg tail, narrowing south
+  'Q430,428 400,419 Q385,414 390,409 ' + // back up the west side
+  'Q378,405 386,399 Q374,395 394,392 ' + // Zeeland's crinkly island cluster
+  'Q410,388 406,368 Q404,350 414,351 ' + // west coast north of Zeeland
+  'Q426,346 446,354 Q460,348 450,337 ' + // IJsselmeer notch (concave)
+  'Q432,332 420,326 Z';
+
+/**
+ * One barrier-island silhouette — a rounded dune-covered "head" tapering
+ * into a thin curving sand-spit "tail" — traced from the user-supplied
+ * Wadden-chain reference image rather than the plain ellipses this
+ * replaced. Every real Wadden island (Texel through Schiermonnikoog) shares
+ * this same family shape (longshore drift builds them the same way), so
+ * one reusable path, placed/rotated/scaled per island, reads truer than
+ * five hand-drawn one-offs would. Local coordinate space: roughly
+ * -16..16 on x, -5..5 on y, head toward -x, tail curling toward +x — safe
+ * to ship client-side since it says nothing about *where* any island is,
+ * only what one looks like. Actual island positions (which is Ameland,
+ * which is Terschelling) live in geodata-secret.ts. */
+export const ISLAND_SHAPE =
+  'M-16,-1.5 C-16,-4.5 -10,-5.5 -3,-5 ' +
+  'C4,-4.5 10,-3 14,-0.5 ' +
+  'C16,0.7 15,2 11,1.6 ' +
+  'C6,1 1,2.4 -5,2 ' +
+  'C-10,1.6 -14,2.2 -16,0.5 Z';
 
 export type ZoomPoint2D = readonly [x: number, y: number];
 
