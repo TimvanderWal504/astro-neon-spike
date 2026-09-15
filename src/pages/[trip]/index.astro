@@ -3073,8 +3073,15 @@ c-22 -1 -33 -6 -33 -16 0 -8 -9 -15 -20 -15 -22 0 -26 -20 -8 -38 7 -7 9 -12
           // wide; for it to fit within frame (790/Z) with room to spare,
           // full visibility needs to land well before Z≈4.6 (where it
           // would exactly fill the screen), not after.
+          // LOD0's old fade-out (5-9) ended well before LOD2 started fading
+          // in (10-20), leaving a ~zoom 7-10 stretch with almost nothing
+          // visible — a real dead patch, not a rendering bug, caught by
+          // scrubbing through a dense frame-by-frame capture rather than
+          // just the hand-picked "peak" moments. Widened LOD0's fade-out to
+          // overlap LOD2's fade-in start instead of leaving a gap between
+          // them.
           const zoom = camera!.wide[2] / w;
-          if (lod0El) (lod0El as unknown as HTMLElement).style.opacity = String(fadeInOut(zoom, 0, 0, 5, 9));
+          if (lod0El) (lod0El as unknown as HTMLElement).style.opacity = String(fadeInOut(zoom, 0, 0, 5, 12));
           if (lod1El) (lod1El as unknown as HTMLElement).style.opacity = String(fadeInOut(zoom, 1.3, 2.2, 4.5, 7));
           (lod2Group as unknown as HTMLElement).style.opacity = String(fadeInOut(zoom, 10, 20, 55, 75));
           (lod3Group as unknown as HTMLElement).style.opacity = String(ramp(55, 75, zoom));
