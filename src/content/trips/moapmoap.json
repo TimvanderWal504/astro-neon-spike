@@ -51,7 +51,7 @@
       "title": "Blokarten",
       "time": "Zaterdag 3 oktober, 09:15",
       "location": "Het Westerpad 1a, Nes",
-      "description": "Vol over het strand. Stevige schoenen aan.",
+      "description": "Als Max verstappen over het strand!",
       "svgVariant": "blokarten-rig"
     },
     {
@@ -61,7 +61,7 @@
       "title": "De brouwerij",
       "time": "Zaterdag 3 oktober, 12:30",
       "location": "Smitteweg 6, Ballum",
-      "description": "Een rondleiding op één van de mooiste bierbrowerijen van Ameland (en waarschijnlijk de enige) We kunnen hier de hele middag hangen.",
+      "description": "Een rondleiding op één van de mooiste bierbrowerijen van Ameland (en waarschijnlijk de enige). We kunnen hier de hele middag hangen.",
       "svgVariant": "brouwerij-kettle"
     },
     {
@@ -73,13 +73,12 @@
       "location": "NTB",
       "description": "Een dag zoals deze moet natuurlijk goed afgesloten worden met een natje en een droogje. We hebben een tafeltje gereserveerd bij een restaurant op het eiland. Het menu en de locatie worden later bekendgemaakt.",
       "svgVariant": "knap-zaterdag"
-    }
-    ,
+    },
     {
       "id": "uitchecken",
       "order": 8,
       "kind": "knap",
-      "title": "uitchecken",
+      "title": "Uitchecken",
       "time": "Zondag 4 oktober, 11:00",
       "location": null,
       "description": "11:00 — Uitchecken bij het appartement. Wees gerust, we hebben nog een activiteit te gaan. We zijn nog niet klaar.",
@@ -88,22 +87,22 @@
     {
       "id": "zondag",
       "order": 9,
-      "kind": "knap",
+      "kind": "cinematic",
       "title": "De duinexcursie",
       "time": "Zondag 4 oktober, 11:30",
       "location": null,
-      "description": "Zijn we na het uitchecken helemaal klaar\n?  Tuurlijk niet. Nog een verrassing onderweg. Dit hoofdstuk gaat open zodra het rond is.\n16:00 — Boot terug naar het vasteland.",
-      "svgVariant": "knap-zondag"
+      "description": "Onder leiding van een gids gaan we de duinen in en leren over de flora en fauna van Ameland.",
+      "svgVariant": "duinexcursie-dunes"
     },
     {
       "id": "terug",
       "order": 10,
       "kind": "knap",
       "title": "Onderweg naar het vaste land",
-      "time": "Vrijdag 2 oktober, 16:00",
+      "time": "Zondag 4 oktober, 16:00",
       "location": "Bliekeduun 8, Hollum",
       "description": "16:00 — De boot, stipt, overtocht duurt tot 17:15.\n17:15 — Aankomst op het vaste land, einde van de trip.",
-      "svgVariant": "knap-vrijdag"
+      "svgVariant": "knap-zondag"
     }
   ],
   "packingList": [
