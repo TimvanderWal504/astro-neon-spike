@@ -7,55 +7,44 @@
 // response, a client bundle import has no gate at all. See
 // `geodata-secret.ts`'s own header comment for the full reasoning.
 
-/**
- * Netherlands outline (Act 2 backdrop) — this time calibrated against the
- * REAL rendered coastline instead of guessed from an unrelated reference
- * image (twice) or replaced with a glow to dodge the problem (once). The
- * calibration: froze the live camera transform mid-sequence, read its
- * exact applied `scale()`/`translate()` values back out of the DOM (not
- * predicted from timing — actual values), screenshotted the real coastline
- * with the highlight layer hidden, and inverted the same transform formula
- * to convert visually-read pixel coordinates back into this file's world
- * coordinate space. Result: the real Netherlands is only about 75x45
- * units here, not the 170x160 the earlier two attempts used — the country
- * is genuinely much smaller relative to this viewBox than either previous
- * pass assumed, which was as much the problem as the exact border shape.
- * Deliberately modest vertex count (a recognizable silhouette: the
- * southwest river-mouth notch, the west coast, the northern bulge, the
- * eastern border) rather than a highly detailed trace — this is a "sell
- * moment" highlight, not a survey map. Coordinates share
- * #europe-coastline's own viewBox ("80 0 790 790"). Doesn't encode which
- * Wadden island is the destination, so it's as safe to ship as the
- * coastline it sits next to. */
-export const LOD1_NL_OUTLINE =
-  'M356,428 ' +
-  'Q360,412 367,400 ' + // west coast, rising north
-  'Q378,394 394,391 ' + // curving toward the north-central bulge
-  'Q408,389 420,388 ' + // northern coast
-  'Q426,390 428,395 ' + // northeast corner, toward the German border
-  'Q426,408 423,421 ' + // eastern (German) border heading south
-  'Q410,427 394,431 ' + // southern (Belgian) border
-  'Q380,430 367,429 ' + // back along the south
-  'Q358,429 356,428 Z';
+export type TracePath = { d: string; tx: number; ty: number };
+export type TracedShape = { width: number; height: number; paths: TracePath[] };
 
 /**
- * One barrier-island silhouette — a rounded dune-covered "head" tapering
- * into a thin curving sand-spit "tail" — traced from the user-supplied
- * Wadden-chain reference image rather than the plain ellipses this
- * replaced. Every real Wadden island (Texel through Schiermonnikoog) shares
- * this same family shape (longshore drift builds them the same way), so
- * one reusable path, placed/rotated/scaled per island, reads truer than
- * five hand-drawn one-offs would. Local coordinate space: roughly
- * -16..16 on x, -5..5 on y, head toward -x, tail curling toward +x — safe
- * to ship client-side since it says nothing about *where* any island is,
- * only what one looks like. Actual island positions (which is Ameland,
- * which is Terschelling) live in geodata-secret.ts. */
-export const ISLAND_SHAPE =
-  'M-16,-1.5 C-16,-4.5 -10,-5.5 -3,-5 ' +
-  'C4,-4.5 10,-3 14,-0.5 ' +
-  'C16,0.7 15,2 11,1.6 ' +
-  'C6,1 1,2.4 -5,2 ' +
-  'C-10,1.6 -14,2.2 -16,0.5 Z';
+ * The Netherlands outline (Act 2 backdrop) — three earlier attempts guessed
+ * at this (a hand-traced path from an unrelated reference image, twice,
+ * then a soft glow to dodge the alignment problem entirely) before the user
+ * supplied their own hand-drawn NL outline directly and asked for it to be
+ * used. This is that drawing: vtracer-traced from a screenshot of the
+ * sketch, background rect dropped, each remaining fragment's real position
+ * read via a live browser's `getBBox()` (not hand-parsed bezier math), then
+ * recentered around the combined shape's own center — see nl-trace.ts's
+ * header for the exact process.
+ *
+ * Rendered as many small same-color filled fragments rather than one
+ * outline path, because that's what the source actually is: vtracer
+ * reconstructs a pen stroke as overlapping filled regions, not a stroke
+ * path, so a uniform fill across all of them reproduces the original line
+ * art. Doesn't encode which Wadden island is the destination, so it's as
+ * safe to ship as the coastline it sits next to. */
+export { NL_TRACE_WIDTH, NL_TRACE_HEIGHT, NL_TRACE_PATHS } from './nl-trace';
+
+/**
+ * Four real Wadden-island silhouettes, west to east, from the user's own
+ * hand-drawn reference (same vtracer/getBBox/recenter process as the NL
+ * trace above — see wadden-trace.ts's header). The source sketch draws 4
+ * distinct islands, not the 5 real Wadden islands (Texel, Vlieland,
+ * Terschelling, Ameland, Schiermonnikoog) — geodata-secret.ts's
+ * LOD2_ISLANDS assigns one of these 4 shapes to each of the 5 real
+ * islands, reusing one shape for two of them. Says nothing about *where*
+ * any island is, only what they look like — actual positions stay in
+ * geodata-secret.ts. */
+export {
+  WADDEN_CLUSTER_0,
+  WADDEN_CLUSTER_1,
+  WADDEN_CLUSTER_2,
+  WADDEN_CLUSTER_3,
+} from './wadden-trace';
 
 export type ZoomPoint2D = readonly [x: number, y: number];
 

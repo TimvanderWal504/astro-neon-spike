@@ -2,7 +2,18 @@
 import { getCollection } from 'astro:content';
 import { sortByOrder } from '../../lib/trip-state';
 // Safe to prerender — see the LOD1/2/3 comment further down where it's used.
-import { LOD1_NL_OUTLINE } from '../../lib/reveal/geodata-public';
+import { NL_TRACE_WIDTH, NL_TRACE_PATHS } from '../../lib/reveal/geodata-public';
+
+// LOD1 placement: NL_TRACE_PATHS is pre-centered around its own local
+// (0,0) (see nl-trace.ts) — this just picks a target on-screen footprint
+// and center to scale/translate it to. Width capped at 70 viewBox units
+// (uniform scale, so height follows the source drawing's own proportions
+// rather than being independently squashed); center reuses the same spot
+// earlier calibration (screenshot-verified against the real coastline)
+// found the real Netherlands sits at.
+const NL_TARGET_WIDTH = 70;
+const NL_SCALE = NL_TARGET_WIDTH / NL_TRACE_WIDTH;
+const NL_CENTER = { x: 391, y: 410 };
 
 // Static shell per AD-1: only structure (nav, hero, chapter slot order,
 // ambient viewfinder) is prerendered. A chapter's real content never enters
@@ -2151,13 +2162,16 @@ c-22 -1 -33 -6 -33 -16 0 -8 -9 -15 -20 -15 -22 0 -26 -20 -8 -38 7 -7 9 -12
             <circle cx="455" cy="400" r="195" fill="none" stroke={accentColor} stroke-width="0.7" opacity="0.14"/>
           </g>
           <use id="reveal-lod0" href="#europe-coastline" />
-          <!-- LOD1: the Netherlands outline, calibrated against the real
-               rendered coastline this time (see LOD1_NL_OUTLINE's own
-               comment for how) — doesn't encode which Wadden island is the
-               destination either way. Bold stroke, low fill: an outline
-               reading as "there's a border here" matters more than the
-               fill's own color. -->
-          <path id="reveal-lod1" d={LOD1_NL_OUTLINE} fill={accentColor} fill-opacity="0.12" stroke={accentColor} stroke-width="2.2" vector-effect="non-scaling-stroke" />
+          <!-- LOD1: the user's own hand-drawn Netherlands outline (see
+               NL_TRACE_PATHS's comment in geodata-public.ts) — many small
+               same-color fragments, because that's what a vtraced pen
+               stroke actually is, not one outline path. Doesn't encode
+               which Wadden island is the destination either way. -->
+          <g id="reveal-lod1" transform={`translate(${NL_CENTER.x},${NL_CENTER.y}) scale(${NL_SCALE})`} fill={accentColor} fill-opacity="0.8" stroke="none">
+            {NL_TRACE_PATHS.map((p) => (
+              <path d={p.d} transform={`translate(${p.tx},${p.ty})`} />
+            ))}
+          </g>
           <!-- LOD2/LOD3: intentionally EMPTY here — island positions,
                channel geometry, and the Ameland outline are all
                destination-revealing, so they're built client-side only
@@ -2547,7 +2561,8 @@ c-22 -1 -33 -6 -33 -16 0 -8 -9 -15 -20 -15 -22 0 -26 -20 -8 -38 7 -7 9 -12
       // import here, and why).
       import { interpolateZoom } from '../../lib/interpolate-zoom';
       import { getActState, pushScrubOffset, stepScrubSpring } from '../../lib/reveal/timeline';
-      import { ISLAND_SHAPE } from '../../lib/reveal/geodata-public';
+      import { WADDEN_CLUSTER_0, WADDEN_CLUSTER_1, WADDEN_CLUSTER_2, WADDEN_CLUSTER_3 } from '../../lib/reveal/geodata-public';
+      const WADDEN_CLUSTERS = [WADDEN_CLUSTER_0, WADDEN_CLUSTER_1, WADDEN_CLUSTER_2, WADDEN_CLUSTER_3] as const;
       import type { ZoomPoint } from '../../lib/interpolate-zoom';
 
       // daysLeft is always computed fresh, client-side, from the static
@@ -2741,8 +2756,8 @@ c-22 -1 -33 -6 -33 -16 0 -8 -9 -15 -20 -15 -22 0 -26 -20 -8 -38 7 -7 9 -12
         coordinate: string;
         placeName: string;
         camera?: Record<string, ZoomPoint>;
-        islands?: { cx: number; cy: number; rotation: number; scale: number }[];
-        ameland?: { cx: number; cy: number; rotation: number; scale: number };
+        islands?: { cx: number; cy: number; rotation: number; scale: number; traceIndex: 0 | 1 | 2 | 3 }[];
+        ameland?: { cx: number; cy: number; rotation: number; scale: number; traceIndex: 0 | 1 | 2 | 3 };
         villages?: { x: number; y: number }[];
         channels?: { d: string; strokeWidth: number }[];
       };
@@ -2798,26 +2813,38 @@ c-22 -1 -33 -6 -33 -16 0 -8 -9 -15 -20 -15 -22 0 -26 -20 -8 -38 7 -7 9 -12
 
         // Build LOD2/LOD3 now, from the gated payload only — this is the
         // one point in the whole page where Ameland's actual geometry ever
-        // touches the DOM. Each island is the same shared ISLAND_SHAPE
-        // (imported below, safe — it's a generic barrier-island silhouette,
-        // not tied to any real position) placed via transform, not a
-        // one-off path per island.
+        // touches the DOM. Each island picks one of the 4 real traced
+        // Wadden shapes (WADDEN_CLUSTERS, from the user's own hand-drawn
+        // reference — see geodata-public.ts) via `traceIndex`, rendered as
+        // a <g> of its own small fragments (a vtraced pen stroke reproduces
+        // as many overlapping filled shapes, not one outline path — same
+        // reasoning as NL_TRACE_PATHS), positioned via transform, not a
+        // one-off hand-drawn path per island.
+        function appendTracedShape(
+          parent: SVGGElement,
+          cluster: (typeof WADDEN_CLUSTERS)[number],
+          cx: number,
+          cy: number,
+          rotation: number,
+          scale: number,
+        ): SVGGElement {
+          const g = document.createElementNS(SVG_NS, 'g');
+          g.setAttribute('transform', `translate(${cx},${cy}) rotate(${rotation}) scale(${scale})`);
+          for (const frag of cluster.paths) {
+            const el = document.createElementNS(SVG_NS, 'path');
+            el.setAttribute('d', frag.d);
+            el.setAttribute('transform', `translate(${frag.tx},${frag.ty})`);
+            g.appendChild(el);
+          }
+          parent.appendChild(g);
+          return g;
+        }
+
         for (const island of revealData.islands) {
-          const el = document.createElementNS(SVG_NS, 'path');
-          el.setAttribute('d', ISLAND_SHAPE);
-          el.setAttribute('transform', `translate(${island.cx},${island.cy}) rotate(${island.rotation}) scale(${island.scale})`);
-          el.setAttribute('fill', accent);
-          el.setAttribute('fill-opacity', '0.16');
-          // Still read as soft blobs even with a 1.4 stroke — the fill was
-          // still doing too much of the visual work. Pushed further: a
-          // much bolder stroke, a much fainter fill, so the outline is
-          // unmistakably the dominant feature, not a border on a blob.
-          // non-scaling-stroke keeps that outline a constant width
-          // regardless of the scale() above.
-          el.setAttribute('stroke', accent);
-          el.setAttribute('stroke-width', '2.6');
-          el.setAttribute('vector-effect', 'non-scaling-stroke');
-          lod2Group.appendChild(el);
+          const g = appendTracedShape(lod2Group, WADDEN_CLUSTERS[island.traceIndex], island.cx, island.cy, island.rotation, island.scale);
+          g.setAttribute('fill', accent);
+          g.setAttribute('fill-opacity', '0.8');
+          g.setAttribute('stroke', 'none');
         }
         for (const seg of revealData.channels) {
           const el = document.createElementNS(SVG_NS, 'path');
@@ -2829,18 +2856,17 @@ c-22 -1 -33 -6 -33 -16 0 -8 -9 -15 -20 -15 -22 0 -26 -20 -8 -38 7 -7 9 -12
           el.setAttribute('vector-effect', 'non-scaling-stroke');
           lod2Group.appendChild(el);
         }
-        const outlineEl = document.createElementNS(SVG_NS, 'path');
-        outlineEl.setAttribute('d', ISLAND_SHAPE);
-        outlineEl.setAttribute(
-          'transform',
-          `translate(${revealData.ameland.cx},${revealData.ameland.cy}) rotate(${revealData.ameland.rotation}) scale(${revealData.ameland.scale})`,
+        const amelandG = appendTracedShape(
+          lod3Group,
+          WADDEN_CLUSTERS[revealData.ameland.traceIndex],
+          revealData.ameland.cx,
+          revealData.ameland.cy,
+          revealData.ameland.rotation,
+          revealData.ameland.scale,
         );
-        outlineEl.setAttribute('fill', accent);
-        outlineEl.setAttribute('fill-opacity', '0.18');
-        outlineEl.setAttribute('stroke', accent);
-        outlineEl.setAttribute('stroke-width', '2.8');
-        outlineEl.setAttribute('vector-effect', 'non-scaling-stroke');
-        lod3Group.appendChild(outlineEl);
+        amelandG.setAttribute('fill', accent);
+        amelandG.setAttribute('fill-opacity', '0.8');
+        amelandG.setAttribute('stroke', 'none');
         for (const v of revealData.villages ?? []) {
           const dot = document.createElementNS(SVG_NS, 'circle');
           dot.setAttribute('cx', String(v.x));

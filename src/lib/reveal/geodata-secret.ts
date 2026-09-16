@@ -74,52 +74,48 @@ export const CAMERA_KEYPOINTS = {
   amelandDeep: [AMELAND_POINT[0], AMELAND_POINT[1], W_85X] as ZoomPoint,
 } as const;
 
-// Scale values below are computed, not guessed — the earlier ones (Ameland
-// at scale 1) were sized as if the camera would eventually zoom in ~6-7x
-// further than it actually does, so by the time LOD2 reached full opacity
-// the island was already bigger than the screen: pure fill with no
-// visible edge, reported back as "still blobs, I cannot see the outlines."
-//
-// ISLAND_SHAPE spans about 30 local units wide (x: -16..14). The screen's
-// visible width in viewBox units at zoom Z is `790 / Z` (790 = the shared
-// viewBox's own width, "1x"). Solving `30 * scale = targetFraction *
-// (790 / Z)` for scale, at the zoom level each layer is actually visible:
-// LOD2 (island-chain overview) targets ~55% of frame width at zoom ~30
-// (roughly where it now fades in, see the fadeInOut thresholds in
-// index.astro's tick()): scale = 0.55 * 790 / (30 * 30) ≈ 0.48.
+// Scale values below are computed against each real traced shape's own
+// actual width (geodata-public.ts's WADDEN_CLUSTER_0..3, from the user's
+// own hand-drawn reference — see that file's header), not guessed. Same
+// target-fraction-of-frame math as before (`shapeWidth * scale ≈
+// targetFraction * (790 / zoom)`), just solved per real cluster width
+// instead of one generic 30-unit placeholder shape, since the four real
+// shapes aren't all the same size to begin with:
+//   Texel      (cluster 0, w≈74.5): target ~55% @ zoom 30 → scale ≈ 0.2216
+//   Terschelling/Ameland (cluster 1, w≈76.0): same target → scale ≈ 0.1895
+//   Schiermonnikoog (cluster 2, w≈69.0): target ~26% @ zoom 30 → scale ≈ 0.1130
+//   Vlieland   (cluster 3, w≈48.2): target ~34% @ zoom 30 → scale ≈ 0.1742
 /** Five Wadden islands, west to east — Texel, Vlieland, Terschelling,
- * Ameland, Schiermonnikoog — each an instance of geodata-public.ts's
- * shared ISLAND_SHAPE (rendered client-side as
- * `translate(cx,cy) rotate(rotation) scale(scale)`), not a one-off path per
- * island. `rotation` follows the chain's real west-to-east tilt (each
- * island's head-to-tail axis angled up and to the right, matching the
- * user-supplied reference); `scale` follows the real islands' relative
- * sizes (Terschelling and Ameland are the two big ones, Vlieland and
- * Schiermonnikoog noticeably smaller, Texel the largest of all) around
- * that computed 0.48 baseline for Ameland. */
-export const LOD2_ISLANDS: readonly { cx: number; cy: number; rotation: number; scale: number }[] = [
-  { cx: AMELAND_POINT[0] - 105, cy: AMELAND_POINT[1] + 22, rotation: -18, scale: 0.55 }, // Texel
-  { cx: AMELAND_POINT[0] - 68, cy: AMELAND_POINT[1] + 14, rotation: -16, scale: 0.28 }, // Vlieland
-  { cx: TERSCHELLING_POINT[0], cy: TERSCHELLING_POINT[1], rotation: -14, scale: 0.48 }, // Terschelling
-  { cx: AMELAND_POINT[0], cy: AMELAND_POINT[1], rotation: -12, scale: 0.48 }, // Ameland
-  { cx: AMELAND_POINT[0] + 34, cy: AMELAND_POINT[1] - 8, rotation: -10, scale: 0.26 }, // Schiermonnikoog
+ * Ameland, Schiermonnikoog. `traceIndex` selects which of
+ * geodata-public.ts's 4 real traced shapes (WADDEN_CLUSTER_0..3) to
+ * render — the source drawing only has 4 distinct islands, so Terschelling
+ * and Ameland (the two real "big" islands) share cluster 1. `rotation` is
+ * mostly redundant now (the traced shapes already carry the sketch's own
+ * west-to-east tilt) but kept as a small per-island nudge; `scale` is the
+ * per-cluster value computed above. */
+export const LOD2_ISLANDS: readonly { cx: number; cy: number; rotation: number; scale: number; traceIndex: 0 | 1 | 2 | 3 }[] = [
+  { cx: AMELAND_POINT[0] - 105, cy: AMELAND_POINT[1] + 22, rotation: -6, scale: 0.2216, traceIndex: 0 }, // Texel
+  { cx: AMELAND_POINT[0] - 68, cy: AMELAND_POINT[1] + 14, rotation: -4, scale: 0.1742, traceIndex: 3 }, // Vlieland
+  { cx: TERSCHELLING_POINT[0], cy: TERSCHELLING_POINT[1], rotation: -4, scale: 0.1895, traceIndex: 1 }, // Terschelling
+  { cx: AMELAND_POINT[0], cy: AMELAND_POINT[1], rotation: -4, scale: 0.1895, traceIndex: 1 }, // Ameland
+  { cx: AMELAND_POINT[0] + 34, cy: AMELAND_POINT[1] - 8, rotation: -2, scale: 0.1130, traceIndex: 2 }, // Schiermonnikoog
 ];
 
 // LOD3 (the Ameland close-up) targets ~75% of frame width at zoom ~78
-// (near the deepest point the camera actually reaches, 85x):
-// scale = 0.75 * 790 / (30 * 78) ≈ 0.25.
-/** Ameland close-up (Act 4 deepest point / Act 5): the same ISLAND_SHAPE
- * family as LOD2's own Ameland entry, just larger and re-centered for a
- * close-up framing, plus three village-position dots (Nes, Ballum, Hollum,
- * west to east along the island's inhabited south side) — offsets scaled
- * down to match this shape's actual footprint at 0.25 (the old ±14..16
- * offsets were sized for the old scale-2.4 version and would have placed
- * every village dot well outside the new, correctly-sized outline). */
+// (near the deepest point the camera actually reaches, 85x), against
+// cluster 1's real width (w≈76.0, same shape as LOD2's Ameland entry):
+// scale = 0.75 * 790 / (76 * 78) ≈ 0.0987.
+/** Ameland close-up (Act 4 deepest point / Act 5): the same traced shape
+ * (WADDEN_CLUSTER_1, `traceIndex`) as LOD2's own Ameland entry, just
+ * larger, plus three village-position dots (Nes, Ballum, Hollum, west to
+ * east along the island's inhabited south side) sized to this shape's
+ * actual footprint at scale 0.0987. */
 export const LOD3_AMELAND = {
   cx: AMELAND_POINT[0],
   cy: AMELAND_POINT[1],
-  rotation: -12,
-  scale: 0.25,
+  rotation: -4,
+  scale: 0.0987,
+  traceIndex: 1 as const,
   villages: [
     { x: AMELAND_POINT[0] - 3.5, y: AMELAND_POINT[1] + 0.5 },
     { x: AMELAND_POINT[0] - 0.5, y: AMELAND_POINT[1] + 0.2 },

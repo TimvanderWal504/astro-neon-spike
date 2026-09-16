@@ -104,7 +104,13 @@ export async function getTripState(slug: string): Promise<TripState | null> {
               ...chapter.revealData,
               camera: CAMERA_KEYPOINTS,
               islands: LOD2_ISLANDS,
-              ameland: { cx: LOD3_AMELAND.cx, cy: LOD3_AMELAND.cy, rotation: LOD3_AMELAND.rotation, scale: LOD3_AMELAND.scale },
+              ameland: {
+                cx: LOD3_AMELAND.cx,
+                cy: LOD3_AMELAND.cy,
+                rotation: LOD3_AMELAND.rotation,
+                scale: LOD3_AMELAND.scale,
+                traceIndex: LOD3_AMELAND.traceIndex,
+              },
               villages: LOD3_AMELAND.villages,
               channels: generateChannels(CHANNEL_ENDPOINTS.origin, CHANNEL_ENDPOINTS.toward, CHANNEL_ENDPOINTS.seed),
             }
