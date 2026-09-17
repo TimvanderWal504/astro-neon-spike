@@ -81,17 +81,34 @@ export function generateChannels(
   const rand = mulberry32(seed);
   const segments: ChannelSegment[] = [];
 
+  // Segment length used to be a flat 18-32 units regardless of how far
+  // apart origin/toward actually are — fine if they happened to be ~40+
+  // units apart, but Terschelling/Ameland are only ~12.4 apart, so even
+  // the FIRST segment alone overshot the entire gap by 1.5-2.5x before any
+  // recursion, then kept wandering on jittered headings — reported back as
+  // "the lines aren't connected to each other, but to another, not
+  // visible island." Scaled relative to the real origin-to-toward
+  // distance instead, tapering by depth, so the branching network stays
+  // visually contained between the two points it's meant to connect
+  // regardless of their actual real-world spacing.
+  const totalDist = Math.hypot(toward[0] - origin[0], toward[1] - origin[1]) || 1;
+  const baseLen = totalDist * 0.4;
+
   function branch(x: number, y: number, dx: number, dy: number, width: number, depth: number): void {
     if (width < 0.4 || depth > 4) return;
-    const len = 18 + rand() * 14;
+    const len = baseLen * Math.pow(0.75, depth) * (0.7 + rand() * 0.6);
     const jitter = (rand() - 0.5) * 0.6;
     const ndx = dx + jitter;
     const ndy = dy + jitter * 0.4;
     const mag = Math.hypot(ndx, ndy) || 1;
     const ux = ndx / mag;
     const uy = ndy / mag;
-    const midX = x + ux * len * 0.5 + (rand() - 0.5) * 6;
-    const midY = y + uy * len * 0.5 + (rand() - 0.5) * 6;
+    // Same fix as len above: this used to be a flat ±3 units, which at the
+    // old 18-32-unit segment length was a mild curve but at the new
+    // distance-scaled (often much shorter) length would dominate the
+    // segment and zigzag wildly. Scaled to the segment's own length instead.
+    const midX = x + ux * len * 0.5 + (rand() - 0.5) * len * 0.3;
+    const midY = y + uy * len * 0.5 + (rand() - 0.5) * len * 0.3;
     const endX = x + ux * len;
     const endY = y + uy * len;
     segments.push({ d: `M${x.toFixed(1)},${y.toFixed(1)} Q${midX.toFixed(1)},${midY.toFixed(1)} ${endX.toFixed(1)},${endY.toFixed(1)}`, strokeWidth: width });
