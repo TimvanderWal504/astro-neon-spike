@@ -27,49 +27,34 @@ import type { ZoomPoint } from '../interpolate-zoom';
 
 // The Ameland anchor (393, 392) is NOT a new guess — it's the exact point
 // index.astro's existing dive sequence already hand-pinpointed against the
-// traced coastline. Reused here rather than re-derived.
+// traced coastline. Reused here rather than re-derived, and it's now also
+// the anchor the public DECOY_STOPS' own projection was fitted against.
 //
-// The Terschelling point was widened from the original -15 offset to -33
-// at one point (to give real island silhouettes more room than two
-// abstract dots needed), but that moved the camera's Act-3 settle target
-// off the actual traced coastline — confirmed via screenshot: the reticle
-// ended up centered over open water, with the coastline itself sitting in
-// a corner of the frame instead of under it. Reverted to a small offset
-// close to the original, still-unverified-but-at-least-coastline-adjacent
-// value. Island spacing is instead handled by LOD2_ISLANDS' own offsets
-// below (which don't move the camera, only where islands are drawn), not
-// by relocating the one point the camera actually settles on.
+// Terschelling used to live here too, as the false bottom's settle target.
+// It's gone entirely: it never stopped reading as "Ameland shown twice"
+// (it shared Ameland's traced silhouette, sat 12 units away, and the
+// channel ran between them), and the job it did — "so close, still wrong"
+// — is now done by Zwolle in the search phase, which can't be mistaken for
+// an island because it isn't one.
 const AMELAND_POINT: readonly [number, number] = [393, 392];
-const TERSCHELLING_POINT: readonly [number, number] = [381, 389];
-
-// Reused verbatim from the existing fixedScanLockMove keyframe (index.astro)
-// — the same "hop between a few other countries" waypoints already tuned
-// and shipped in the CSS-only version this replaces.
-const HOP_A: readonly [number, number] = [311, 230];
-const HOP_B: readonly [number, number] = [554, 216];
-const HOP_C: readonly [number, number] = [360, 402];
 
 // Viewport "width" (w) at each stage, derived from REVEAL.md §3's own stated
 // zoom multiples relative to the wide Europe frame's width (790, matching
 // the shared viewBox) as 1x: 18x at the end of Duik I, 85x at the end of
 // Duik II.
 const W_1X = 790;
-const W_18X = W_1X / 18;
-// REVEAL.md doesn't give an explicit end-zoom for Act 3's swing (§3 only
-// says "snel, laag" — fast, low), so 33x is this implementation's own
-// interpretation: partway between Duik I's 18x and Duik II's 85x. Needs
-// confirming once seen, same as the Terschelling point above.
 const W_33X = W_1X / 33;
 const W_85X = W_1X / 85;
 
+// Only the destination's own camera targets are secret now. The search
+// phase's stops are public (geodata-public.ts's DECOY_STOPS) — they're the
+// wrong answers, so gating them bought nothing. The hop waypoints and the
+// Terschelling/nlCoast targets that used to sit here are gone with the
+// acts that used them.
 export const CAMERA_KEYPOINTS = {
   wide: [475, 395, W_1X] as ZoomPoint,
-  hopA: [HOP_A[0], HOP_A[1], W_1X * 0.9] as ZoomPoint,
-  hopB: [HOP_B[0], HOP_B[1], W_1X * 0.85] as ZoomPoint,
-  hopC: [HOP_C[0], HOP_C[1], W_1X * 0.9] as ZoomPoint,
-  lockedCoast: [400, 380, W_1X * 0.6] as ZoomPoint,
-  nlCoast: [TERSCHELLING_POINT[0] - 6, TERSCHELLING_POINT[1] - 4, W_18X] as ZoomPoint,
-  terschelling: [TERSCHELLING_POINT[0], TERSCHELLING_POINT[1], W_18X] as ZoomPoint,
+  /** Where the dive settles before the final push — the island fills the
+   * frame but the villages aren't readable yet. */
   ameland33x: [AMELAND_POINT[0], AMELAND_POINT[1], W_33X] as ZoomPoint,
   amelandDeep: [AMELAND_POINT[0], AMELAND_POINT[1], W_85X] as ZoomPoint,
 } as const;
@@ -82,21 +67,25 @@ export const CAMERA_KEYPOINTS = {
 // instead of one generic 30-unit placeholder shape, since the four real
 // shapes aren't all the same size to begin with:
 //   Texel      (cluster 0, w≈74.5): target ~55% @ zoom 30 → scale ≈ 0.2216
-//   Terschelling/Ameland (cluster 1, w≈76.0): same target → scale ≈ 0.1895
+//   Ameland    (cluster 1, w≈76.0): same target → scale ≈ 0.1895
 //   Schiermonnikoog (cluster 2, w≈69.0): target ~26% @ zoom 30 → scale ≈ 0.1130
 //   Vlieland   (cluster 3, w≈48.2): target ~34% @ zoom 30 → scale ≈ 0.1742
-/** Five Wadden islands, west to east — Texel, Vlieland, Terschelling,
- * Ameland, Schiermonnikoog. `traceIndex` selects which of
- * geodata-public.ts's 4 real traced shapes (WADDEN_CLUSTER_0..3) to
- * render — the source drawing only has 4 distinct islands, so Terschelling
- * and Ameland (the two real "big" islands) share cluster 1. `rotation` is
- * mostly redundant now (the traced shapes already carry the sketch's own
- * west-to-east tilt) but kept as a small per-island nudge; `scale` is the
- * per-cluster value computed above. */
+/** The Wadden chain as context around the destination, west to east —
+ * Texel, Vlieland, Ameland, Schiermonnikoog. `traceIndex` selects which of
+ * geodata-public.ts's 4 real traced shapes (WADDEN_CLUSTER_0..3) to render.
+ *
+ * Terschelling is deliberately absent. It really does sit between Vlieland
+ * and Ameland, but the source drawing only has 4 distinct island shapes, so
+ * it had to reuse Ameland's silhouette — two identical shapes, 12 units
+ * apart, which read as the destination rendered twice no matter what else
+ * was tuned. Cluster 1 is now used exactly once, by Ameland itself, so
+ * nothing on screen can be mistaken for it.
+ *
+ * `rotation` is mostly redundant (the traced shapes already carry the
+ * sketch's own west-to-east tilt) but kept as a small per-island nudge. */
 export const LOD2_ISLANDS: readonly { cx: number; cy: number; rotation: number; scale: number; traceIndex: 0 | 1 | 2 | 3 }[] = [
   { cx: AMELAND_POINT[0] - 105, cy: AMELAND_POINT[1] + 22, rotation: -6, scale: 0.2216, traceIndex: 0 }, // Texel
   { cx: AMELAND_POINT[0] - 68, cy: AMELAND_POINT[1] + 14, rotation: -4, scale: 0.1742, traceIndex: 3 }, // Vlieland
-  { cx: TERSCHELLING_POINT[0], cy: TERSCHELLING_POINT[1], rotation: -4, scale: 0.1895, traceIndex: 1 }, // Terschelling
   { cx: AMELAND_POINT[0], cy: AMELAND_POINT[1], rotation: -4, scale: 0.1895, traceIndex: 1 }, // Ameland
   { cx: AMELAND_POINT[0] + 34, cy: AMELAND_POINT[1] - 8, rotation: -2, scale: 0.1130, traceIndex: 2 }, // Schiermonnikoog
 ];
@@ -123,11 +112,18 @@ export const LOD3_AMELAND = {
   ] as { x: number; y: number }[],
 };
 
-/** Origin/target for the Act-4 channel generator (geodata-public.ts's
+/** Origin/target for the channel generator (geodata-public.ts's
  * `generateChannels`) — kept here, not in the public module, since these
- * two points alone are enough to place the channels at the real location. */
+ * two points alone are enough to place the channels at the real location.
+ *
+ * Used to run Terschelling -> Ameland, which put the tidal channels in the
+ * water *between* two islands and left them pointing away from the one that
+ * matters ("de vaargeul is onduidelijk en niet op Ameland gezet"). Now it
+ * runs from the sea gap just west of Ameland toward the island itself, so
+ * the channels fan out against Ameland's own coast rather than bridging to
+ * somewhere else. */
 export const CHANNEL_ENDPOINTS = {
-  origin: TERSCHELLING_POINT,
+  origin: [AMELAND_POINT[0] - 9, AMELAND_POINT[1] - 3] as readonly [number, number],
   toward: AMELAND_POINT,
   seed: 7,
 };

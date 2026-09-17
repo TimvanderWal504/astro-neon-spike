@@ -302,6 +302,62 @@ const vapidPublicKey = import.meta.env.VAPID_PUBLIC_KEY ?? '';
         opacity: 0.75;
       }
 
+      /* Search-phase candidate card: city, country, coordinate, and the
+         reason it gets thrown out. Sits opposite the telemetry readout so
+         the two never collide. */
+      .reveal-stop {
+        position: fixed;
+        left: 20px;
+        bottom: 20px;
+        z-index: 55;
+        max-width: min(72vw, 420px);
+        opacity: 0;
+        pointer-events: none;
+        transition: opacity 260ms ease;
+      }
+      .reveal-stop.is-active {
+        opacity: 1;
+      }
+      .reveal-stop-name {
+        font-size: clamp(28px, 7vw, 46px);
+        line-height: 1.05;
+        color: var(--accent);
+        letter-spacing: -0.01em;
+      }
+      .reveal-stop-sub {
+        margin-top: 4px;
+        font-family: 'JetBrains Mono', monospace;
+        font-size: 12px;
+        letter-spacing: 0.08em;
+        color: var(--accent);
+        opacity: 0.65;
+        font-variant-numeric: tabular-nums;
+      }
+      /* The rejection lands late in each stop, after the name has had a
+         beat to register on its own. */
+      .reveal-stop-reason {
+        margin-top: 12px;
+        font-family: 'JetBrains Mono', monospace;
+        font-size: clamp(12px, 3.2vw, 14px);
+        letter-spacing: 0.06em;
+        text-transform: uppercase;
+        color: #e5533d;
+        opacity: 0;
+        transform: translateY(4px);
+        transition: opacity 200ms ease, transform 200ms ease;
+      }
+      .reveal-stop.is-rejected .reveal-stop-reason {
+        opacity: 1;
+        transform: none;
+      }
+      /* Struck through only once the reason is up, so the beat reads as
+         "found it... no." */
+      .reveal-stop.is-rejected .reveal-stop-name {
+        text-decoration: line-through;
+        text-decoration-thickness: 2px;
+        opacity: 0.7;
+      }
+
       .reveal-skip {
         position: fixed;
         left: 20px;
@@ -1067,6 +1123,7 @@ const vapidPublicKey = import.meta.env.VAPID_PUBLIC_KEY ?? '';
         .hero-map-dive,
         .reveal-prologue,
         .reveal-telemetry,
+        .reveal-stop,
         .reveal-skip {
           display: none;
         }
@@ -2206,6 +2263,11 @@ c-22 -1 -33 -6 -33 -16 0 -8 -9 -15 -20 -15 -22 0 -26 -20 -8 -38 7 -7 9 -12
       <div class="reveal-prologue-line3 mono" data-prologue="line3"></div>
     </div>
     <div class="reveal-telemetry mono" aria-hidden="true" data-reveal-telemetry></div>
+    <div class="reveal-stop" aria-hidden="true" data-reveal-stop>
+      <div class="reveal-stop-name" data-reveal-stop-name></div>
+      <div class="reveal-stop-sub mono" data-reveal-stop-sub></div>
+      <div class="reveal-stop-reason" data-reveal-stop-reason></div>
+    </div>
     <button type="button" class="reveal-skip" data-reveal-skip>Overslaan</button>
     <div class="reveal-debug" data-reveal-debug aria-hidden="true"></div>
 
@@ -2561,7 +2623,7 @@ c-22 -1 -33 -6 -33 -16 0 -8 -9 -15 -20 -15 -22 0 -26 -20 -8 -38 7 -7 9 -12
       // import here, and why).
       import { interpolateZoom } from '../../lib/interpolate-zoom';
       import { getActState, pushScrubOffset, stepScrubSpring } from '../../lib/reveal/timeline';
-      import { WADDEN_CLUSTER_0, WADDEN_CLUSTER_1, WADDEN_CLUSTER_2, WADDEN_CLUSTER_3 } from '../../lib/reveal/geodata-public';
+      import { DECOY_STOPS, WADDEN_CLUSTER_0, WADDEN_CLUSTER_1, WADDEN_CLUSTER_2, WADDEN_CLUSTER_3 } from '../../lib/reveal/geodata-public';
       const WADDEN_CLUSTERS = [WADDEN_CLUSTER_0, WADDEN_CLUSTER_1, WADDEN_CLUSTER_2, WADDEN_CLUSTER_3] as const;
       import type { ZoomPoint } from '../../lib/interpolate-zoom';
 
@@ -2800,6 +2862,10 @@ c-22 -1 -33 -6 -33 -16 0 -8 -9 -15 -20 -15 -22 0 -26 -20 -8 -38 7 -7 9 -12
         const lod3Group = document.getElementById('reveal-lod3');
         const prologueEl = document.querySelector<HTMLElement>('.reveal-prologue');
         const telemetryEl = document.querySelector<HTMLElement>('[data-reveal-telemetry]');
+        const stopEl = document.querySelector<HTMLElement>('[data-reveal-stop]');
+        const stopNameEl = document.querySelector<HTMLElement>('[data-reveal-stop-name]');
+        const stopSubEl = document.querySelector<HTMLElement>('[data-reveal-stop-sub]');
+        const stopReasonEl = document.querySelector<HTMLElement>('[data-reveal-stop-reason]');
         const skipEl = document.querySelector<HTMLButtonElement>('[data-reveal-skip]');
         const debugEl = document.querySelector<HTMLElement>('[data-reveal-debug]');
         const chapterContent = document.querySelector<HTMLElement>('#bestemming .chapter-content');
@@ -2968,12 +3034,6 @@ c-22 -1 -33 -6 -33 -16 0 -8 -9 -15 -20 -15 -22 0 -26 -20 -8 -38 7 -7 9 -12
           const [x, y, w] = i(Math.max(0, Math.min(1, t)));
           return { x, y, w };
         }
-        function alongStops(stops: Point3[], t: number) {
-          const seg = 1 / (stops.length - 1);
-          const idx = Math.min(stops.length - 2, Math.max(0, Math.floor(t / seg)));
-          const localT = (t - idx * seg) / seg;
-          return interpAt(stops[idx], stops[idx + 1], localT);
-        }
 
         // Linear ramp from 0 at `edge0` to 1 at `edge1`, clamped — used to
         // crossfade LOD layers by current zoom level (see fadeInRange
@@ -2987,20 +3047,41 @@ c-22 -1 -33 -6 -33 -16 0 -8 -9 -15 -20 -15 -22 0 -26 -20 -8 -38 7 -7 9 -12
           return Math.min(ramp(inStart, inEnd, x), 1 - ramp(outStart, outEnd, x));
         }
 
+        // Which rejected candidate the search is on, and how far into its own
+        // 5 seconds. Each stop spends its first 40% travelling and the rest
+        // held still — the hold is where the name, the coordinate and the
+        // rejection get to land, so it has to be the longer half.
+        const STOP_TRAVEL_FRACTION = 0.4;
+        function stopStateAt(localT: number): { index: number; t: number } {
+          const n = DECOY_STOPS.length;
+          const scaled = Math.min(n - 0.0001, Math.max(0, localT * n));
+          const index = Math.floor(scaled);
+          return { index, t: scaled - index };
+        }
+        function stopPoint(stop: (typeof DECOY_STOPS)[number]): ZoomPoint {
+          return [stop.x, stop.y, stop.w] as ZoomPoint;
+        }
+
         function cameraAt(elapsedS: number): { x: number; y: number; w: number } {
           const { act, localT } = getActState(elapsedS);
           switch (act.id) {
             case 'prologue':
               return point(camera!.wide);
-            case 'lock':
-              return alongStops([camera!.wide, camera!.hopA, camera!.hopB, camera!.hopC, camera!.lockedCoast], localT);
-            case 'dive1':
-              return interpAt(camera!.lockedCoast, camera!.nlCoast, localT);
-            case 'falseBottom':
-              if (localT < 0.4) return point(camera!.terschelling);
-              return interpAt(camera!.terschelling, camera!.ameland33x, (localT - 0.4) / 0.6);
-            case 'dive2':
-              return interpAt(camera!.ameland33x, camera!.amelandDeep, localT);
+            case 'search': {
+              const { index, t } = stopStateAt(localT);
+              const from = index === 0 ? camera!.wide : stopPoint(DECOY_STOPS[index - 1]);
+              const to = stopPoint(DECOY_STOPS[index]);
+              const travel = Math.min(1, t / STOP_TRAVEL_FRACTION);
+              return interpAt(from, to, travel);
+            }
+            case 'dive': {
+              // Zwolle (the last rejection, already in the right country)
+              // straight down onto Ameland, in two stages so the island has
+              // a beat at readable size before the final push.
+              const from = stopPoint(DECOY_STOPS[DECOY_STOPS.length - 1]);
+              if (localT < 0.5) return interpAt(from, camera!.ameland33x, localT / 0.5);
+              return interpAt(camera!.ameland33x, camera!.amelandDeep, (localT - 0.5) / 0.5);
+            }
             default:
               return point(camera!.amelandDeep);
           }
@@ -3011,7 +3092,11 @@ c-22 -1 -33 -6 -33 -16 0 -8 -9 -15 -20 -15 -22 0 -26 -20 -8 -38 7 -7 9 -12
         let rafId = 0;
         let scrub = { offsetS: 0, velocity: 0 };
         let firedImpact = false;
-        let firedMismatch = false;
+        // Which candidate's card is currently rendered, and which one has
+        // already had its rejection fired — tracked separately so scrubbing
+        // back and forth doesn't re-trigger the flash on every frame.
+        let shownStopIndex = -1;
+        let rejectedStopIndex = -1;
         const debugEnabled = new URLSearchParams(window.location.search).has('revealDebug');
         if (debugEnabled && debugEl) debugEl.classList.add('is-active');
 
@@ -3044,19 +3129,47 @@ c-22 -1 -33 -6 -33 -16 0 -8 -9 -15 -20 -15 -22 0 -26 -20 -8 -38 7 -7 9 -12
           zoomG!.style.transform = `translate(475px, 395px) scale(${visualScale}) translate(${-x}px, ${-y}px)`;
           motionG!.style.transform = `translate(${x}px, ${y}px)`;
           scaleG!.style.transform = `scale(${1 / visualScale})`;
-          motionG!.style.opacity = act.id === 'lock' || (act.id === 'falseBottom' && localT < 0.4) ? '1' : '0';
+          // The reticle is up for the whole hunt, and for the first half of
+          // the dive while the camera is still committing to a target.
+          motionG!.style.opacity = act.id === 'search' || (act.id === 'dive' && localT < 0.5) ? '1' : '0';
 
-          if (act.id === 'lock' && localT >= 0.95 && !firedImpact) {
+          if (act.id === 'search') {
+            const { index, t } = stopStateAt(localT);
+            const stop = DECOY_STOPS[index];
+            // Name/coordinate appear as the camera arrives; the rejection
+            // lands at 70% so it reads as a verdict on something you've
+            // already had a moment to hope about.
+            const arrived = t >= STOP_TRAVEL_FRACTION;
+            const rejected = t >= 0.7;
+
+            if (index !== shownStopIndex) {
+              shownStopIndex = index;
+              rejectedStopIndex = -1;
+              if (stopNameEl) stopNameEl.textContent = stop.name;
+              if (stopSubEl) stopSubEl.textContent = `${stop.country} · ${stop.coord}`;
+              if (stopReasonEl) stopReasonEl.textContent = stop.reason;
+              stopEl?.classList.remove('is-rejected');
+            }
+            stopEl?.classList.toggle('is-active', arrived);
+            if (rejected && rejectedStopIndex !== index) {
+              rejectedStopIndex = index;
+              stopEl?.classList.add('is-rejected');
+              svgEl!.classList.add('is-mismatch');
+              window.setTimeout(() => svgEl!.classList.remove('is-mismatch'), 120);
+              if (navigator.vibrate) navigator.vibrate([30, 50, 30]);
+            }
+          } else {
+            stopEl?.classList.remove('is-active', 'is-rejected');
+            shownStopIndex = -1;
+            rejectedStopIndex = -1;
+          }
+
+          // The one real lock-on: the moment the dive commits to Ameland.
+          if (act.id === 'dive' && localT >= 0.45 && !firedImpact) {
             firedImpact = true;
             svgEl!.classList.add('is-impact');
             window.setTimeout(() => svgEl!.classList.remove('is-impact'), 90);
             if (navigator.vibrate) navigator.vibrate(15);
-          }
-          if (act.id === 'falseBottom' && localT >= 0.02 && localT <= 0.08 && !firedMismatch) {
-            firedMismatch = true;
-            svgEl!.classList.add('is-mismatch');
-            window.setTimeout(() => svgEl!.classList.remove('is-mismatch'), 120);
-            if (navigator.vibrate) navigator.vibrate([40, 60, 40]);
           }
           svgEl!.classList.toggle('is-inverted', act.id === 'inversion' || act.id === 'name');
 

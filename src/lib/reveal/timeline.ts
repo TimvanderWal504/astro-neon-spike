@@ -2,7 +2,7 @@
 // functions so it's testable without a DOM (see scratch tests run during
 // development). All times are seconds, matching the doc's own table.
 
-export type ActId = 'prologue' | 'lock' | 'dive1' | 'falseBottom' | 'dive2' | 'inversion' | 'name';
+export type ActId = 'prologue' | 'search' | 'dive' | 'inversion' | 'name';
 
 export type Act = {
   id: ActId;
@@ -12,16 +12,29 @@ export type Act = {
   scrollScrubbed: boolean;
 };
 
-export const TOTAL_DURATION_S = 36.0;
+export const TOTAL_DURATION_S = 45.0;
 
+/** How long each rejected candidate holds the screen, in seconds. Six of
+ * them fill `search`'s 30s — change one and the other must follow. */
+export const SECONDS_PER_STOP = 5.0;
+
+// Restructured from the original 7 acts (REVEAL.md §3) after the search
+// phase turned out to be the part that worked and the Terschelling false
+// bottom the part that didn't: the old `lock` hopped between three unnamed
+// waypoints that meant nothing, then `falseBottom` dived onto Terschelling
+// and corrected to Ameland — which rendered two near-identical islands and
+// read as the same island twice.
+//
+// Now the hunt IS the sequence: six named, rejected candidates at 5s each
+// (geodata-public.ts's DECOY_STOPS), ending on Zwolle — right country,
+// still wrong — which does the false bottom's job without needing a second
+// island on screen at all. Only then does the camera dive to Ameland.
 export const ACTS: readonly Act[] = [
   { id: 'prologue', start: 0.0, duration: 5.0, scrollScrubbed: false },
-  { id: 'lock', start: 5.0, duration: 6.0, scrollScrubbed: false },
-  { id: 'dive1', start: 11.0, duration: 7.0, scrollScrubbed: true },
-  { id: 'falseBottom', start: 18.0, duration: 5.0, scrollScrubbed: false },
-  { id: 'dive2', start: 23.0, duration: 8.0, scrollScrubbed: true },
-  { id: 'inversion', start: 31.0, duration: 2.5, scrollScrubbed: false },
-  { id: 'name', start: 33.5, duration: 2.5, scrollScrubbed: false },
+  { id: 'search', start: 5.0, duration: 30.0, scrollScrubbed: false },
+  { id: 'dive', start: 35.0, duration: 5.0, scrollScrubbed: true },
+  { id: 'inversion', start: 40.0, duration: 2.5, scrollScrubbed: false },
+  { id: 'name', start: 42.5, duration: 2.5, scrollScrubbed: false },
 ];
 
 export type ActState = {
