@@ -246,6 +246,29 @@ Astro.response.headers.set('Cache-Control', 'private, no-store');
       .chapter-row-error[hidden] {
         display: none;
       }
+      .notify-section {
+        margin-top: 28px;
+        padding-top: 24px;
+        border-top: 1px solid rgba(244, 241, 234, 0.1);
+      }
+      .notify-form-field {
+        margin-top: 14px;
+      }
+      .notify-form-field:first-child {
+        margin-top: 0;
+      }
+      textarea.admin-input {
+        resize: vertical;
+        min-height: 88px;
+      }
+      .admin-success {
+        margin: 12px 0 0;
+        font-size: 13px;
+        color: var(--accent, #e3a64a);
+      }
+      .admin-success[hidden] {
+        display: none;
+      }
     </style>
   </head>
   <body>
@@ -260,6 +283,7 @@ Astro.response.headers.set('Cache-Control', 'private, no-store');
             <p class="admin-label mono">Admin — {trip}</p>
             <h1 class="admin-title">Ingelogd.</h1>
             {tripState ? (
+              <>
               <ul class="chapter-list" aria-label="Hoofdstukken">
                 {tripState.chapters.map((chapter) => (
                   <li class="chapter-row" data-chapter-row>
@@ -325,6 +349,53 @@ Astro.response.headers.set('Cache-Control', 'private, no-store');
                   </div>
                 </li>
               </ul>
+              <div class="notify-section" data-notify-section>
+                <p class="admin-label mono">Melding versturen</p>
+                <form data-notify-form data-trip-slug={tripState.slug}>
+                  <div class="notify-form-field">
+                    <label class="admin-field-label" for="notify-title">Titel</label>
+                    <input
+                      class="admin-input"
+                      type="text"
+                      id="notify-title"
+                      name="title"
+                      maxlength="100"
+                      required
+                      data-notify-title
+                    />
+                  </div>
+                  <div class="notify-form-field">
+                    <label class="admin-field-label" for="notify-body">Bericht</label>
+                    <textarea
+                      class="admin-input"
+                      id="notify-body"
+                      name="body"
+                      rows="4"
+                      maxlength="500"
+                      required
+                      data-notify-body
+                    />
+                  </div>
+                  <button class="admin-submit" type="submit" data-notify-submit>
+                    Versturen
+                  </button>
+                  <p
+                    class="admin-error mono"
+                    hidden
+                    role="alert"
+                    aria-live="polite"
+                    data-notify-error
+                  />
+                  <p
+                    class="admin-success mono"
+                    hidden
+                    role="status"
+                    aria-live="polite"
+                    data-notify-success
+                  />
+                </form>
+              </div>
+              </>
             ) : tripLoadFailed ? (
               <p class="admin-placeholder-copy">
                 Er ging iets mis bij het laden. Probeer de pagina te vernieuwen.
@@ -512,6 +583,83 @@ Astro.response.headers.set('Cache-Control', 'private, no-store');
             el.disabled = false;
           }
         });
+      });
+    </script>
+
+    <script>
+      const notifyForm = document.querySelector('[data-notify-form]');
+      const notifyTitleInput = document.querySelector('[data-notify-title]');
+      const notifyBodyInput = document.querySelector('[data-notify-body]');
+      const notifySubmitBtn = document.querySelector('[data-notify-submit]');
+      const notifyErrorEl = document.querySelector('[data-notify-error]');
+      const notifySuccessEl = document.querySelector('[data-notify-success]');
+
+      function hideNotifyMessages(): void {
+        if (notifyErrorEl instanceof HTMLElement) {
+          notifyErrorEl.hidden = true;
+          notifyErrorEl.textContent = '';
+        }
+        if (notifySuccessEl instanceof HTMLElement) {
+          notifySuccessEl.hidden = true;
+          notifySuccessEl.textContent = '';
+        }
+      }
+
+      function showNotifyError(message: string): void {
+        if (!(notifyErrorEl instanceof HTMLElement)) return;
+        notifyErrorEl.textContent = message;
+        notifyErrorEl.hidden = false;
+      }
+
+      function showNotifySuccess(message: string): void {
+        if (!(notifySuccessEl instanceof HTMLElement)) return;
+        notifySuccessEl.textContent = message;
+        notifySuccessEl.hidden = false;
+      }
+
+      notifyForm?.addEventListener('submit', async (event) => {
+        event.preventDefault();
+        hideNotifyMessages();
+
+        const tripSlug =
+          notifyForm instanceof HTMLFormElement ? notifyForm.dataset.tripSlug : undefined;
+        const title = notifyTitleInput instanceof HTMLInputElement ? notifyTitleInput.value.trim() : '';
+        const body =
+          notifyBodyInput instanceof HTMLTextAreaElement ? notifyBodyInput.value.trim() : '';
+
+        if (!tripSlug || !title || !body) return;
+
+        if (notifySubmitBtn instanceof HTMLButtonElement) notifySubmitBtn.disabled = true;
+
+        try {
+          const res = await fetch('/api/admin/notify', {
+            method: 'POST',
+            headers: { 'content-type': 'application/json' },
+            body: JSON.stringify({ tripSlug, title, body }),
+          });
+
+          const payload = await res.json().catch(() => null);
+
+          if (res.status === 200 && payload && payload.ok === true) {
+            const sent = typeof payload.data?.sent === 'number' ? payload.data.sent : 0;
+            showNotifySuccess(
+              sent === 1
+                ? 'Melding verstuurd naar 1 abonnee.'
+                : `Melding verstuurd naar ${sent} abonnees.`,
+            );
+            if (notifyForm instanceof HTMLFormElement) notifyForm.reset();
+          } else {
+            showNotifyError(
+              (payload && typeof payload.error === 'string' && payload.error) ||
+                'Er ging iets mis. Probeer het opnieuw.',
+            );
+          }
+        } catch (err) {
+          console.error(err);
+          showNotifyError('Er ging iets mis. Probeer het opnieuw.');
+        } finally {
+          if (notifySubmitBtn instanceof HTMLButtonElement) notifySubmitBtn.disabled = false;
+        }
       });
     </script>
   </body>
