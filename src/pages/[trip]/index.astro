@@ -308,7 +308,10 @@ const vapidPublicKey = import.meta.env.VAPID_PUBLIC_KEY ?? '';
       .reveal-stop {
         position: fixed;
         left: 20px;
-        bottom: 20px;
+        /* Clears .reveal-skip, which is pinned to the same corner at
+           bottom:20px — they overlapped and the coordinate line was
+           rendering straight through the Overslaan pill. */
+        bottom: 84px;
         z-index: 55;
         max-width: min(72vw, 420px);
         opacity: 0;
