@@ -1,7 +1,7 @@
 import { getCollection } from 'astro:content';
 import { getSql } from './db';
 import { generateChannels } from './reveal/geodata-public';
-import { CAMERA_KEYPOINTS, CHANNEL_ENDPOINTS, LOD2_ISLANDS, LOD3_AMELAND } from './reveal/geodata-secret';
+import { CAMERA_KEYPOINTS, CHANNEL_ENDPOINTS, LOD3_AMELAND } from './reveal/geodata-secret';
 
 // TripState (AD-7, computed): TripContent merged with live chapter_unlocks
 // state from Neon. This module's read (`getTripState`) is deliberately
@@ -19,7 +19,6 @@ export type ChapterRevealData = {
   // for any chapter whose content doesn't opt into the camera reveal
   // (checked via svgVariant === 'vizier-europa' in getTripState below).
   camera?: typeof CAMERA_KEYPOINTS;
-  islands?: typeof LOD2_ISLANDS;
   ameland?: Omit<typeof LOD3_AMELAND, 'villages'>;
   villages?: { x: number; y: number }[];
   channels?: { d: string; strokeWidth: number }[];
@@ -103,7 +102,6 @@ export async function getTripState(slug: string): Promise<TripState | null> {
           ? {
               ...chapter.revealData,
               camera: CAMERA_KEYPOINTS,
-              islands: LOD2_ISLANDS,
               ameland: {
                 cx: LOD3_AMELAND.cx,
                 cy: LOD3_AMELAND.cy,

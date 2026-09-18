@@ -724,6 +724,7 @@ const vapidPublicKey = import.meta.env.VAPID_PUBLIC_KEY ?? '';
       .installeren {
         position: relative;
         z-index: 3;
+        width: 100%;
         padding: 0px 24px 96px;
         max-width: 640px;
         margin: 0 auto;
@@ -848,6 +849,12 @@ const vapidPublicKey = import.meta.env.VAPID_PUBLIC_KEY ?? '';
         display: flex;
         flex-direction: column;
         gap: 24px;
+        /* width:100% is load-bearing once body becomes flex (post-reveal
+           layout below): a flex item with auto cross-axis margins and no
+           explicit width sizes to shrink-to-fit instead of filling the
+           line, so max-width:640px + margin:0 auto collapsed this to its
+           narrowest content width instead of centering a 640px column. */
+        width: 100%;
         padding: 0 24px 96px;
         max-width: 640px;
         margin: 0 auto;
@@ -2658,8 +2665,11 @@ c-22 -1 -33 -6 -33 -16 0 -8 -9 -15 -20 -15 -22 0 -26 -20 -8 -38 7 -7 9 -12
       // import here, and why).
       import { interpolateZoom } from '../../lib/interpolate-zoom';
       import { getActState, pushScrubOffset, stepScrubSpring } from '../../lib/reveal/timeline';
-      import { DECOY_STOPS, WADDEN_CLUSTER_0, WADDEN_CLUSTER_1, WADDEN_CLUSTER_2, WADDEN_CLUSTER_3 } from '../../lib/reveal/geodata-public';
-      const WADDEN_CLUSTERS = [WADDEN_CLUSTER_0, WADDEN_CLUSTER_1, WADDEN_CLUSTER_2, WADDEN_CLUSTER_3] as const;
+      // Only cluster 1 is used now — the separate 4-island chain
+      // (clusters 0/2/3: Texel/Vlieland/Schiermonnikoog) is gone, replaced
+      // by zooming in over the NL sketch's own hand-drawn dash. See
+      // geodata-secret.ts's AMELAND_POINT comment for why.
+      import { DECOY_STOPS, WADDEN_CLUSTER_1 } from '../../lib/reveal/geodata-public';
       import type { ZoomPoint } from '../../lib/interpolate-zoom';
 
       // daysLeft is always computed fresh, client-side, from the static
@@ -2852,7 +2862,6 @@ c-22 -1 -33 -6 -33 -16 0 -8 -9 -15 -20 -15 -22 0 -26 -20 -8 -38 7 -7 9 -12
         coordinate: string;
         placeName: string;
         camera?: Record<string, ZoomPoint>;
-        islands?: { cx: number; cy: number; rotation: number; scale: number; traceIndex: 0 | 1 | 2 | 3 }[];
         ameland?: { cx: number; cy: number; rotation: number; scale: number; traceIndex: 0 | 1 | 2 | 3 };
         villages?: { x: number; y: number }[];
         channels?: { d: string; strokeWidth: number }[];
@@ -2880,7 +2889,7 @@ c-22 -1 -33 -6 -33 -16 0 -8 -9 -15 -20 -15 -22 0 -26 -20 -8 -38 7 -7 9 -12
       }
 
       function initReveal(revealData: RevealPayload): void {
-        if (!revealData.camera || !revealData.islands || !revealData.ameland || !revealData.channels) {
+        if (!revealData.camera || !revealData.ameland || !revealData.channels) {
           console.error('[reveal] unlocked but missing computed geometry — trip-state.ts should always attach this for vizier-europa');
           return;
         }
@@ -2913,16 +2922,18 @@ c-22 -1 -33 -6 -33 -16 0 -8 -9 -15 -20 -15 -22 0 -26 -20 -8 -38 7 -7 9 -12
 
         // Build LOD2/LOD3 now, from the gated payload only — this is the
         // one point in the whole page where Ameland's actual geometry ever
-        // touches the DOM. Each island picks one of the 4 real traced
-        // Wadden shapes (WADDEN_CLUSTERS, from the user's own hand-drawn
-        // reference — see geodata-public.ts) via `traceIndex`, rendered as
-        // a <g> of its own small fragments (a vtraced pen stroke reproduces
-        // as many overlapping filled shapes, not one outline path — same
-        // reasoning as NL_TRACE_PATHS), positioned via transform, not a
-        // one-off hand-drawn path per island.
+        // touches the DOM.
+        //
+        // LOD2 used to hold a 4-island chain (Texel/Vlieland/Ameland/
+        // Schiermonnikoog) plus the tidal channels. The chain is gone: the
+        // approach now happens over NL_TRACE_PATHS' own hand-drawn dash
+        // (see geodata-secret.ts's AMELAND_POINT comment), so LOD2 holds
+        // only the channels now, fading in alongside that approach. LOD3
+        // still holds the one remaining traced shape — the Ameland
+        // close-up itself, WADDEN_CLUSTER_1 — plus the village dots.
         function appendTracedShape(
           parent: SVGGElement,
-          cluster: (typeof WADDEN_CLUSTERS)[number],
+          cluster: typeof WADDEN_CLUSTER_1,
           cx: number,
           cy: number,
           rotation: number,
@@ -2940,12 +2951,6 @@ c-22 -1 -33 -6 -33 -16 0 -8 -9 -15 -20 -15 -22 0 -26 -20 -8 -38 7 -7 9 -12
           return g;
         }
 
-        for (const island of revealData.islands) {
-          const g = appendTracedShape(lod2Group, WADDEN_CLUSTERS[island.traceIndex], island.cx, island.cy, island.rotation, island.scale);
-          g.setAttribute('fill', accent);
-          g.setAttribute('fill-opacity', '0.8');
-          g.setAttribute('stroke', 'none');
-        }
         for (const seg of revealData.channels) {
           const el = document.createElementNS(SVG_NS, 'path');
           el.setAttribute('d', seg.d);
@@ -2958,7 +2963,7 @@ c-22 -1 -33 -6 -33 -16 0 -8 -9 -15 -20 -15 -22 0 -26 -20 -8 -38 7 -7 9 -12
         }
         const amelandG = appendTracedShape(
           lod3Group,
-          WADDEN_CLUSTERS[revealData.ameland.traceIndex],
+          WADDEN_CLUSTER_1,
           revealData.ameland.cx,
           revealData.ameland.cy,
           revealData.ameland.rotation,
@@ -2971,10 +2976,12 @@ c-22 -1 -33 -6 -33 -16 0 -8 -9 -15 -20 -15 -22 0 -26 -20 -8 -38 7 -7 9 -12
           const dot = document.createElementNS(SVG_NS, 'circle');
           dot.setAttribute('cx', String(v.x));
           dot.setAttribute('cy', String(v.y));
-          // Sized for LOD3's new 0.25 scale (was 1.4, sized for the old 2.4
-          // scale) — a village dot should read as a small marker on the
-          // island, not dominate it.
-          dot.setAttribute('r', '0.4');
+          // Radius scaled by the same ~1.581 factor as LOD3_AMELAND's own
+          // scale grew by (0.0987 -> 0.156, see that constant's comment) —
+          // the dots sit in absolute viewBox units as siblings of the
+          // shape's own transform, not inside it, so they don't
+          // automatically grow when the shape's scale does.
+          dot.setAttribute('r', '0.63');
           dot.setAttribute('fill', '#0a0d0c');
           lod3Group.appendChild(dot);
         }
@@ -3249,11 +3256,29 @@ c-22 -1 -33 -6 -33 -16 0 -8 -9 -15 -20 -15 -22 0 -26 -20 -8 -38 7 -7 9 -12
           // LOD0's fade-out (5-12) overlaps LOD1 and gives LOD2 a smooth
           // handoff instead of the dead patch a dense frame capture caught
           // earlier — kept as-is, still correct for the new LOD1 timing.
+          //
+          // LOD1's fade-out moved from 10-14 to 18-24. The island-chain
+          // approach it used to hand off to is gone — the camera now
+          // approaches over NL_TRACE_PATHS' OWN small hand-drawn Wadden
+          // dash (see geodata-secret.ts's AMELAND_POINT comment for how
+          // that point was found), which stays legible to about 20-25x
+          // before reading as abstract fragments rather than an island —
+          // confirmed by rendering it in isolation at 20x/50x/85x. LOD1
+          // needs to stay up through that whole window, not fade out
+          // while it's still the only thing showing where Ameland is.
+          //
+          // LOD2 (channels only now, the island chain that used to share
+          // this layer is gone) fades in as LOD1's dash is still legible
+          // and out as LOD3 takes over. LOD3 (the Ameland close-up, the
+          // one traced shape left) fades in starting 16 — overlapping
+          // LOD1's fade-out — and reaches full opacity by 28, comfortably
+          // before the dive's 40x final target (geodata-secret.ts's
+          // W_40X), so nothing is still fading when the camera arrives.
           const zoom = camera!.wide[2] / w;
           if (lod0El) (lod0El as unknown as HTMLElement).style.opacity = String(fadeInOut(zoom, 0, 0, 5, 12));
-          if (lod1El) (lod1El as unknown as HTMLElement).style.opacity = String(fadeInOut(zoom, 3, 5, 10, 14));
-          (lod2Group as unknown as HTMLElement).style.opacity = String(fadeInOut(zoom, 10, 20, 55, 75));
-          (lod3Group as unknown as HTMLElement).style.opacity = String(ramp(55, 75, zoom));
+          if (lod1El) (lod1El as unknown as HTMLElement).style.opacity = String(fadeInOut(zoom, 3, 5, 18, 24));
+          (lod2Group as unknown as HTMLElement).style.opacity = String(fadeInOut(zoom, 10, 16, 26, 34));
+          (lod3Group as unknown as HTMLElement).style.opacity = String(ramp(16, 28, zoom));
 
           if (telemetryEl) {
             const altKm = Math.max(0, Math.round((w / camera!.wide[2]) * 8042));

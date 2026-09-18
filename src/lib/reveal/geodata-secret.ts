@@ -25,119 +25,100 @@ import type { ZoomPoint } from '../interpolate-zoom';
 //
 // All coordinates share the existing hero-map-svg viewBox ("80 0 790 790").
 
-// The Ameland anchor (393, 392) is NOT a new guess — it's the exact point
-// index.astro's existing dive sequence already hand-pinpointed against the
-// traced coastline. Reused here rather than re-derived, and it's now also
-// the anchor the public DECOY_STOPS' own projection was fitted against.
+// AMELAND_POINT changed meaning entirely in this revision. It used to be
+// (393, 392) — a point pinpointed against the REAL traced coastline
+// (#europe-coastline), used to position a separately-drawn island chain
+// next to it. That approach is gone: the request was to remove the
+// separate island-chain SVG and zoom in on Ameland using the NL sketch
+// itself (nl-trace.ts) as the approach.
 //
-// Terschelling used to live here too, as the false bottom's settle target.
-// It's gone entirely: it never stopped reading as "Ameland shown twice"
-// (it shared Ameland's traced silhouette, sat 12 units away, and the
-// channel ran between them), and the job it did — "so close, still wrong"
-// — is now done by Zwolle in the search phase, which can't be mistaken for
-// an island because it isn't one.
-const AMELAND_POINT: readonly [number, number] = [393, 392];
+// The NL sketch has its OWN internal geography, independent of the real
+// coastline's — confirmed by rendering the old (393,392) on top of the NL
+// trace, which landed inside the IJsselmeer's solid-shaded area, nowhere
+// near the actual hand-drawn Wadden dashes along the sketch's north coast.
+// The two datasets don't share a coordinate mapping just because they
+// share a viewBox.
+//
+// (405, 372) is a NEW point, measured directly against nl-trace.ts: its
+// 120 ink fragments cluster into 5 separately-drawn dashes along the north
+// coast, west to east, matching the real Wadden chain's own order (Texel,
+// Vlieland, Terschelling, Ameland, Schiermonnikoog) — confirmed by
+// isolating the northern small fragments (height < 15, y < 380) and
+// grouping them by x-position. This is the 4th cluster's fragment-weighted
+// center. Checked at 20x/50x/85x zoom: recognizable as a small distinct
+// shape through about 20-25x, reading as abstract ribbon fragments beyond
+// that — which is why the final zoom target below stops at 40x rather
+// than pushing to the old 85x, and why a separately-illustrated close-up
+// (LOD3 below) still exists for the arrival itself.
+const AMELAND_POINT: readonly [number, number] = [405, 372];
 
-// Viewport "width" (w) at each stage, derived from REVEAL.md §3's own stated
-// zoom multiples relative to the wide Europe frame's width (790, matching
-// the shared viewBox) as 1x: 18x at the end of Duik I, 85x at the end of
-// Duik II.
+// Viewport "width" (w) at each stage, relative to the wide Europe frame's
+// width (790, matching the shared viewBox) as 1x.
 const W_1X = 790;
-const W_85X = W_1X / 85;
+// The dive's final target. Was 85x (W_1X/85) when a separate, purpose-
+// traced island chain carried the deepest zoom; now that the approach
+// itself is the NL sketch's own small hand-drawn dash (only legible to
+// about 20-25x, see AMELAND_POINT's comment), pushing to 85x would zoom
+// far past what anything on screen was drawn to support. 40x is chosen to
+// match LOD3_AMELAND's own scale below — see that constant's comment.
+const W_40X = W_1X / 40;
 
-// Only the destination's own camera targets are secret now. The search
+// Only the destination's own camera target is secret now. The search
 // phase's stops are public (geodata-public.ts's DECOY_STOPS) — they're the
 // wrong answers, so gating them bought nothing. The hop waypoints and the
-// Terschelling/nlCoast targets that used to sit here are gone with the
-// acts that used them.
+// old Terschelling/nlCoast/33x-settle targets that used to sit here are
+// gone with the acts and the island-chain approach that used them.
 export const CAMERA_KEYPOINTS = {
   wide: [475, 395, W_1X] as ZoomPoint,
-  /** The dive's single target. An intermediate 33x settle used to sit
-   * between Zwolle and here; it was cut so the dive arrives in one move. */
-  amelandDeep: [AMELAND_POINT[0], AMELAND_POINT[1], W_85X] as ZoomPoint,
+  /** The dive's single target — one continuous move from the last search
+   * stop straight here, no intermediate settle. */
+  amelandDeep: [AMELAND_POINT[0], AMELAND_POINT[1], W_40X] as ZoomPoint,
 } as const;
 
-// Scale values below are computed against each real traced shape's own
-// actual width (geodata-public.ts's WADDEN_CLUSTER_0..3, from the user's
-// own hand-drawn reference — see that file's header), not guessed. Same
-// target-fraction-of-frame math as before (`shapeWidth * scale ≈
-// targetFraction * (790 / zoom)`), just solved per real cluster width
-// instead of one generic 30-unit placeholder shape, since the four real
-// shapes aren't all the same size to begin with:
-//   Texel      (cluster 0, w≈74.5): target ~55% @ zoom 30 → scale ≈ 0.2216
-//   Ameland    (cluster 1, w≈76.0): same target → scale ≈ 0.1895
-//   Schiermonnikoog (cluster 2, w≈69.0): target ~26% @ zoom 30 → scale ≈ 0.1130
-//   Vlieland   (cluster 3, w≈48.2): target ~34% @ zoom 30 → scale ≈ 0.1742
-/** The Wadden chain as context around the destination, west to east —
- * Texel, Vlieland, Ameland, Schiermonnikoog. `traceIndex` selects which of
- * geodata-public.ts's 4 real traced shapes (WADDEN_CLUSTER_0..3) to render.
+// LOD3 (the Ameland close-up, the only traced island shape left — see its
+// own comment) targets ~60% of frame width at zoom 40 (the dive's final
+// target, see W_40X above), against cluster 1's real traced width
+// (w≈76.0, geodata-public.ts's WADDEN_CLUSTER_1, from the user's own
+// hand-drawn reference): scale = 0.6 * (790/40) / 76 ≈ 0.156.
+/** Ameland close-up: the ONLY traced island shape now (WADDEN_CLUSTER_1),
+ * replacing what used to be a 4-island chain (Texel/Vlieland/Ameland/
+ * Schiermonnikoog) shown at wide zoom. That chain is gone entirely — the
+ * camera now approaches over the NL sketch's own small hand-drawn dash
+ * (see AMELAND_POINT) instead of a separately-illustrated overview, and
+ * this shape only takes over for the close-up itself, once the sketch's
+ * own dash is too small to read. `traceIndex` still selects
+ * WADDEN_CLUSTER_1 the same way the old chain's Ameland entry did.
  *
- * Terschelling is deliberately absent. It really does sit between Vlieland
- * and Ameland, but the source drawing only has 4 distinct island shapes, so
- * it had to reuse Ameland's silhouette — two identical shapes, 12 units
- * apart, which read as the destination rendered twice no matter what else
- * was tuned. Cluster 1 is now used exactly once, by Ameland itself, so
- * nothing on screen can be mistaken for it.
- *
- * `rotation` is mostly redundant (the traced shapes already carry the
- * sketch's own west-to-east tilt) but kept as a small per-island nudge. */
-export const LOD2_ISLANDS: readonly { cx: number; cy: number; rotation: number; scale: number; traceIndex: 0 | 1 | 2 | 3 }[] = [
-  { cx: AMELAND_POINT[0] - 105, cy: AMELAND_POINT[1] + 22, rotation: -6, scale: 0.2216, traceIndex: 0 }, // Texel
-  { cx: AMELAND_POINT[0] - 68, cy: AMELAND_POINT[1] + 14, rotation: -4, scale: 0.1742, traceIndex: 3 }, // Vlieland
-  { cx: AMELAND_POINT[0], cy: AMELAND_POINT[1], rotation: -4, scale: 0.1895, traceIndex: 1 }, // Ameland
-  { cx: AMELAND_POINT[0] + 34, cy: AMELAND_POINT[1] - 8, rotation: -2, scale: 0.1130, traceIndex: 2 }, // Schiermonnikoog
-];
-
-// LOD3 (the Ameland close-up) targets ~75% of frame width at zoom ~78
-// (near the deepest point the camera actually reaches, 85x), against
-// cluster 1's real width (w≈76.0, same shape as LOD2's Ameland entry):
-// scale = 0.75 * 790 / (76 * 78) ≈ 0.0987.
-/** Ameland close-up: the same traced shape (WADDEN_CLUSTER_1,
- * `traceIndex`) as LOD2's own Ameland entry, just larger, plus three
- * village dots (Hollum, Ballum, Nes — west to east along the island's
- * inhabited south side) sized to this shape's footprint at scale 0.0987.
- *
- * The village y-offsets follow the silhouette's own diagonal rather than
- * sitting on one flat line. They used to be near-level (+0.5/+0.2/+0.4),
- * which only looked right while the `inversion` act rendered them as light
- * dots on a dark ground — off-island dots were still visible there. With
- * the inversion gone they're dark-on-amber, so a dot that misses the
- * island now vanishes into the background instead, and two of the three
- * did exactly that. */
+ * Village dots (Hollum, Ballum, Nes — west to east along the island's
+ * inhabited south side): the previous scale (0.0987, calibrated for a
+ * since-removed 85x arrival) had these hand-measured via isPointInFill
+ * against the real silhouette at that exact scale. Scaling the shape up
+ * to 0.156 (a factor of ~1.581) without touching the offsets would put
+ * every dot at the wrong fraction of the now-bigger silhouette, so they're
+ * scaled by that same factor to preserve where they landed. */
+const VILLAGE_RESCALE = 0.156 / 0.0987;
 export const LOD3_AMELAND = {
   cx: AMELAND_POINT[0],
   cy: AMELAND_POINT[1],
   rotation: -4,
-  scale: 0.0987,
+  scale: 0.156,
   traceIndex: 1 as const,
-  // Each y is the measured vertical midpoint of the silhouette at that x,
-  // not an estimate: the shape was rendered under this exact transform and
-  // probed with isPointInFill to find where the island actually starts and
-  // stops at each offset. Eyeballing the diagonal twice put Nes in open
-  // water — at x+2.5 the island only spans y-1.78..-0.96, and the guess
-  // was -0.6.
-  //   x-2.8 -> island y  0.10..1.50 (mid  0.80)
-  //   x-0.5 -> island y -0.56..0.64 (mid  0.04)
-  //   x+2.0 -> island y -1.58..-0.68 (mid -1.13)
   villages: [
-    { x: AMELAND_POINT[0] - 2.8, y: AMELAND_POINT[1] + 0.8 }, // Hollum
-    { x: AMELAND_POINT[0] - 0.5, y: AMELAND_POINT[1] + 0.04 }, // Ballum
-    { x: AMELAND_POINT[0] + 2.0, y: AMELAND_POINT[1] - 1.13 }, // Nes
+    { x: AMELAND_POINT[0] - 2.8 * VILLAGE_RESCALE, y: AMELAND_POINT[1] + 0.8 * VILLAGE_RESCALE }, // Hollum
+    { x: AMELAND_POINT[0] - 0.5 * VILLAGE_RESCALE, y: AMELAND_POINT[1] + 0.04 * VILLAGE_RESCALE }, // Ballum
+    { x: AMELAND_POINT[0] + 2.0 * VILLAGE_RESCALE, y: AMELAND_POINT[1] - 1.13 * VILLAGE_RESCALE }, // Nes
   ] as { x: number; y: number }[],
 };
 
 /** Origin/target for the channel generator (geodata-public.ts's
  * `generateChannels`) — kept here, not in the public module, since these
  * two points alone are enough to place the channels at the real location.
- *
- * Used to run Terschelling -> Ameland, which put the tidal channels in the
- * water *between* two islands and left them pointing away from the one that
- * matters ("de vaargeul is onduidelijk en niet op Ameland gezet"). Now it
- * runs from the sea gap just west of Ameland toward the island itself, so
- * the channels fan out against Ameland's own coast rather than bridging to
- * somewhere else. */
+ * Narrowed from a -9/-3 offset to -4/-2: that wider offset was tuned
+ * against the old (393,392) point's own surroundings and, measured
+ * against the new (405,372), would land inside the neighbouring
+ * Terschelling dash rather than open water next to Ameland's own. */
 export const CHANNEL_ENDPOINTS = {
-  origin: [AMELAND_POINT[0] - 9, AMELAND_POINT[1] - 3] as readonly [number, number],
+  origin: [AMELAND_POINT[0] - 4, AMELAND_POINT[1] - 2] as readonly [number, number],
   toward: AMELAND_POINT,
   seed: 7,
 };

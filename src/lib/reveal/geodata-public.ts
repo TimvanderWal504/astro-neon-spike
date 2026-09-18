@@ -79,13 +79,15 @@ export { NL_TRACE_WIDTH, NL_TRACE_HEIGHT, NL_TRACE_PATHS } from './nl-trace';
 /**
  * Four real Wadden-island silhouettes, west to east, from the user's own
  * hand-drawn reference (same vtracer/getBBox/recenter process as the NL
- * trace above — see wadden-trace.ts's header). The source sketch draws 4
- * distinct islands, not the 5 real Wadden islands (Texel, Vlieland,
- * Terschelling, Ameland, Schiermonnikoog) — geodata-secret.ts's
- * LOD2_ISLANDS assigns one of these 4 shapes to each of the 5 real
- * islands, reusing one shape for two of them. Says nothing about *where*
- * any island is, only what they look like — actual positions stay in
- * geodata-secret.ts. */
+ * trace above — see wadden-trace.ts's header). Only cluster 1 (Ameland) is
+ * actually used now — the separate 4-island chain this set used to supply
+ * (Texel/Vlieland/Ameland/Schiermonnikoog, shown at wide zoom before the
+ * close-up) was removed in favour of zooming in over NL_TRACE_PATHS' own
+ * hand-drawn dash for the approach; see geodata-secret.ts's AMELAND_POINT
+ * comment. Clusters 0/2/3 stay exported (and this file's header comment
+ * intact) rather than deleted, in case a future pass wants that chain
+ * back. Says nothing about *where* any island is, only what they look
+ * like — actual positions stay in geodata-secret.ts. */
 export {
   WADDEN_CLUSTER_0,
   WADDEN_CLUSTER_1,

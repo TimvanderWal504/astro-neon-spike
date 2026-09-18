@@ -1,14 +1,15 @@
-// Generated data — see geodata-public.ts's WADDEN_CLUSTERS comment for
-// what this is and how it was produced. Not hand-edited.
+// Generated data — see geodata-public.ts's own comment above these
+// exports for what this is and how it was produced. Not hand-edited.
 //
 // Source: the user's own hand-drawn Wadden-chain silhouette (vtracer-
 // traced from a screenshot), clustered by x-position gaps into separate
-// islands. The source drawing has 4 distinct island shapes, not 5 — real
-// Wadden geography has 5 (Texel, Vlieland, Terschelling, Ameland,
-// Schiermonnikoog) — so one shape gets reused for two of the real
-// islands when these are assigned to positions in geodata-secret.ts.
-// Each cluster is pre-recentered (like NL_TRACE_PATHS) so it can be
-// placed with a plain translate/scale.
+// islands. The source drawing has 4 distinct island shapes, not the 5 real
+// Wadden islands (Texel, Vlieland, Terschelling, Ameland, Schiermonnikoog).
+// Only cluster 1 (Ameland) is used in the current reveal, for the final
+// close-up — the wider 4-island chain this set used to supply was removed;
+// see geodata-secret.ts's AMELAND_POINT comment. Each cluster is
+// pre-recentered (like NL_TRACE_PATHS) so it can be placed with a plain
+// translate/scale.
 export const WADDEN_CLUSTER_0: { width: number; height: number; paths: { d: string; tx: number; ty: number }[] } = {
   width: 74.46,
   height: 99.13,
