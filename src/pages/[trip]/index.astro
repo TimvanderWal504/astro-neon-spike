@@ -2573,9 +2573,16 @@ c-22 -1 -33 -6 -33 -16 0 -8 -9 -15 -20 -15 -22 0 -26 -20 -8 -38 7 -7 9 -12
                   </p>
                   <h2 class="chapter-title ct-title" data-field="title" />
                   <p class="chapter-description ct-copy" data-field="description" />
-                  <button type="button" class="chapter-replay ct-cta" data-replay-target={chapter.id}>
-                    Bekijk opnieuw
-                  </button>
+                  {/* Every cinematic chapter gets a replay except the
+                      destination: once it's unlocked this chapter heads the
+                      page, so the button would sit under the trip's own
+                      title offering to play the 45-second hunt for an
+                      answer the reader is currently looking at. */}
+                  {chapter.id !== 'bestemming' && (
+                    <button type="button" class="chapter-replay ct-cta" data-replay-target={chapter.id}>
+                      Bekijk opnieuw
+                    </button>
+                  )}
                 </div>
               ) : (
                 <div class="chapter-content">
@@ -2773,15 +2780,14 @@ c-22 -1 -33 -6 -33 -16 0 -8 -9 -15 -20 -15 -22 0 -26 -20 -8 -38 7 -7 9 -12
 
       // Replay ("Bekijk opnieuw"): remove then re-add .is-visible on the
       // chapter's own reveal/cinematic-reveal element so its CSS
-      // transitions retrigger from the start (and, for Bestemming, the dive
-      // layer along with it, since both key off the same
-      // body:has(#bestemming.is-visible) trigger).
+      // transitions retrigger from the start. Bestemming no longer renders
+      // this button (see its markup), so only the activity chapters and
+      // their own illustrations come through here.
       document.querySelectorAll<HTMLButtonElement>('[data-replay-target]').forEach((button) => {
         button.addEventListener('click', () => {
           const targetId = button.dataset.replayTarget;
           const target = targetId ? document.getElementById(targetId) : null;
           if (!target) return;
-          if (targetId === 'bestemming') wanderStopped = true;
           target.classList.remove('is-visible');
           void target.offsetWidth;
           requestAnimationFrame(() => target.classList.add('is-visible'));
