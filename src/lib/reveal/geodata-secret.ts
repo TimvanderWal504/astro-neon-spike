@@ -1,4 +1,5 @@
 import type { ZoomPoint } from '../interpolate-zoom';
+import { ISLAND_SHAPE } from './island-trace';
 
 // SECRET reveal geodata — SERVER-SIDE ONLY. Never import this from
 // index.astro's client `<script>` block, or anywhere else that ends up in a
@@ -14,7 +15,11 @@ import type { ZoomPoint } from '../interpolate-zoom';
 // The only legitimate way these values reach a browser is inside
 // `revealData` in the gated API response, exactly like coordinate/placeName
 // already do — see `trip-state.ts`, which is the one place allowed to
-// import this module.
+// import this module. Exported/property names in here avoid the real
+// destination name too (ISLAND_POINT, not AMELAND_POINT; islandDeep, not
+// amelandDeep) — not because this file ships anywhere, but because
+// trip-state.ts and index.astro's client script mirror these exact names,
+// and THAT file's identifiers do compile into the public bundle.
 //
 // REVEAL.md §4 amendment, 2026-09-15 (continued from geodata-public.ts): no
 // mapshaper/topojson/real geodata source is available in this environment,
@@ -25,60 +30,50 @@ import type { ZoomPoint } from '../interpolate-zoom';
 //
 // All coordinates share the existing hero-map-svg viewBox ("80 0 790 790").
 
-// AMELAND_POINT changed meaning entirely in this revision. It used to be
-// (393, 392) — a point pinpointed against the REAL traced coastline
-// (#europe-coastline), used to position a separately-drawn island chain
-// next to it. That approach is gone: the request was to remove the
-// separate island-chain SVG and zoom in on Ameland using the NL sketch
-// itself (nl-trace.ts) as the approach.
+// ISLAND_POINT is now derived, not measured. Both nl-trace.ts (the
+// mainland) and island-trace.ts (Ameland's own traced shape) come from the
+// SAME real provinces-map SVG the user supplied, recentered around the
+// SAME mainland-origin point — so Ameland's true real-world position
+// relative to the Netherlands falls straight out of that shared coordinate
+// space instead of needing a separate calibration pass. This replaces two
+// earlier approaches that both needed hand-measurement: positioning
+// against the real traced coastline (#europe-coastline) while showing a
+// separately-drawn, mismatched island chain, and later fragment-clustering
+// a hand-drawn sketch's own ink dashes.
 //
-// The NL sketch has its OWN internal geography, independent of the real
-// coastline's — confirmed by rendering the old (393,392) on top of the NL
-// trace, which landed inside the IJsselmeer's solid-shaded area, nowhere
-// near the actual hand-drawn Wadden dashes along the sketch's north coast.
-// The two datasets don't share a coordinate mapping just because they
-// share a viewBox.
-//
-// (405, 372) is measured directly against nl-trace.ts: its 120 ink
-// fragments cluster into 5 separately-drawn dashes along the north coast,
-// west to east, matching the real Wadden chain's own order (Texel,
-// Vlieland, Terschelling, Ameland, Schiermonnikoog) — confirmed by
-// isolating the northern small fragments (height < 15, y < 380) and
-// grouping them by x-position. This is the 4th cluster's fragment-weighted
-// center.
-const AMELAND_POINT: readonly [number, number] = [405, 372];
+// Computed as NL_CENTER + NL_SCALE * islandPointInTraceSpace, mirroring
+// the same NL_CENTER={391,410}/NL_SCALE=70/NL_TRACE_WIDTH transform
+// index.astro applies to nl-trace.ts's own fragment — see
+// island-trace.ts's header for where the trace-space point comes from.
+// Lands at (399.58, 370.39), a couple of units from the earlier
+// hand-measured (405, 372), which was a reasonable independent check that
+// NL_CENTER's own calibration was sound.
+const ISLAND_POINT: readonly [number, number] = [399.5804943219773, 370.3941215764863];
 
 // Viewport "width" (w) at each stage, relative to the wide Europe frame's
 // width (790, matching the shared viewBox) as 1x.
 const W_1X = 790;
-// The dive's final target. A separate, purpose-traced close-up shape
-// (WADDEN_CLUSTER_1) used to carry the deepest zoom, reaching 85x — that
-// shape is gone entirely now ("Je hebt nog steeds de eilanden svg staan.
-// Ik vroeg of je deze weg wilde halen"), so the reveal is only ever the NL
-// sketch's own small hand-drawn dash. Checked at 20x/50x/85x zoom: that
-// dash reads as a small distinct shape through about 20-25x and as
-// abstract ribbon fragments beyond that, so the dive stops at 22x —
-// comfortably inside the legible range — rather than zooming past
-// anything the sketch was actually drawn to support.
-const W_22X = W_1X / 22;
+// The dive's final target. Checked at 10x/22x/45x/60x/90x against the new
+// real Ameland trace (island-trace.ts): holds up as crisp, recognizable
+// coastline through 45x — meaningfully deeper than the old hand-drawn
+// dash's 22x cap, since this trace has real coastal detail instead of a
+// pencil wobble. By 60x it's still readable but starting to soften; by 90x
+// the underlying 1-unit trace grid shows through as visible pixel-stepping
+// (not blur — a vector line's own point density, not a raster/GPU-scaling
+// artifact). 45x stays comfortably short of that.
+const W_45X = W_1X / 45;
 
-// Only the destination's own camera target is secret now. The search
-// phase's stops are public (geodata-public.ts's DECOY_STOPS) — they're the
-// wrong answers, so gating them bought nothing. The hop waypoints and the
-// old Terschelling/nlCoast/33x-settle targets that used to sit here are
-// gone with the acts and the island-chain approach that used them.
+// Only the destination's own camera target and shape are secret now. The
+// search phase's stops are public (geodata-public.ts's DECOY_STOPS) —
+// they're the wrong answers, so gating them bought nothing. The hop
+// waypoints and the old Terschelling/nlCoast/33x-settle targets that used
+// to sit here are gone with the acts and the island-chain approach that
+// used them.
 export const CAMERA_KEYPOINTS = {
   wide: [475, 395, W_1X] as ZoomPoint,
   /** The dive's single target — one continuous move from the last search
    * stop straight here, no intermediate settle. */
-  amelandDeep: [AMELAND_POINT[0], AMELAND_POINT[1], W_22X] as ZoomPoint,
+  islandDeep: [ISLAND_POINT[0], ISLAND_POINT[1], W_45X] as ZoomPoint,
 } as const;
 
-/** Origin/target for the channel generator (geodata-public.ts's
- * `generateChannels`) — kept here, not in the public module, since these
- * two points alone are enough to place the channels at the real location. */
-export const CHANNEL_ENDPOINTS = {
-  origin: [AMELAND_POINT[0] - 4, AMELAND_POINT[1] - 2] as readonly [number, number],
-  toward: AMELAND_POINT,
-  seed: 7,
-};
+export { ISLAND_SHAPE };

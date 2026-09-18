@@ -1,7 +1,6 @@
 import { getCollection } from 'astro:content';
 import { getSql } from './db';
-import { generateChannels } from './reveal/geodata-public';
-import { CAMERA_KEYPOINTS, CHANNEL_ENDPOINTS } from './reveal/geodata-secret';
+import { CAMERA_KEYPOINTS, ISLAND_SHAPE } from './reveal/geodata-secret';
 
 // TripState (AD-7, computed): TripContent merged with live chapter_unlocks
 // state from Neon. This module's read (`getTripState`) is deliberately
@@ -19,7 +18,7 @@ export type ChapterRevealData = {
   // for any chapter whose content doesn't opt into the camera reveal
   // (checked via svgVariant === 'vizier-europa' in getTripState below).
   camera?: typeof CAMERA_KEYPOINTS;
-  channels?: { d: string; strokeWidth: number }[];
+  islandShape?: typeof ISLAND_SHAPE;
 };
 
 export type TripChapterState = {
@@ -100,7 +99,7 @@ export async function getTripState(slug: string): Promise<TripState | null> {
           ? {
               ...chapter.revealData,
               camera: CAMERA_KEYPOINTS,
-              channels: generateChannels(CHANNEL_ENDPOINTS.origin, CHANNEL_ENDPOINTS.toward, CHANNEL_ENDPOINTS.seed),
+              islandShape: ISLAND_SHAPE,
             }
           : chapter.revealData,
       // An alwaysUnlocked chapter never consults chapter_unlocks — it's not

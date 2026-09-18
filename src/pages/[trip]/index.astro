@@ -170,16 +170,15 @@ const vapidPublicKey = import.meta.env.VAPID_PUBLIC_KEY ?? '';
         overflow: visible;
         opacity: 0.3;
       }
-      /* transform-origin is 39.620% 49.620% of the viewBox (see
-         .hero-map-svg's viewBox="80 0 790 790" below, matched to the real
-         Europe vector map's own coordinate space) — the point that maps
-         back to absolute (393,392), the Ameland anchor (pinpointed by hand
-         against the traced coastline) used by the wander default position
-         and fixedScanLockMove/-Scale keyframes. */
-      .hero-map-zoom {
-        transform-origin: 39.620% 49.620%;
-      }
-      /* Movement/scale are driven client-side (random walk, see script)
+      /* .hero-map-zoom (the wrapper group) never receives a transform of its
+         own — the wander below animates its .hero-map-motion/.hero-map-scale
+         children instead, each with their own transform-origin — so a
+         transform-origin rule here has no visual effect. Removed rather than
+         left at its old fixed viewBox percentage (39.620% 49.620% = absolute
+         (393,392), Ameland's old anchor point): dead weight that happened to
+         also be a leak, baked into every visitor's static, ungated CSS
+         regardless of unlock state.
+         Movement/scale are driven client-side (random walk, see script)
          rather than a fixed CSS keyframe loop, so the viewfinder wanders
          to a new point each cycle instead of repeating one fixed path. */
       .hero-map-motion {
@@ -239,7 +238,14 @@ const vapidPublicKey = import.meta.env.VAPID_PUBLIC_KEY ?? '';
         overflow: visible;
       }
       .hero-map-dive-zoom {
-        transform-origin: 39.620% 49.620%;
+        /* Overridden every frame by initReveal's camera engine
+           (zoomG.style.transformOrigin = '0 0') the instant the dive starts
+           — this static value is dead before it's ever seen, but still used
+           to sit at the real destination's own coordinates (39.620% 49.620%
+           = absolute (393,392)), baked into every visitor's public CSS
+           regardless of unlock state. Set to match the runtime value instead
+           of left stale. */
+        transform-origin: 0 0;
       }
       .hero-map-dive-scale {
         transform-box: fill-box;
@@ -275,10 +281,6 @@ const vapidPublicKey = import.meta.env.VAPID_PUBLIC_KEY ?? '';
          boundaries, not a single fixed-length CSS animation. */
       .hero-map-dive-svg.is-impact { filter: invert(1); }
       .hero-map-dive-svg.is-mismatch { filter: sepia(1) saturate(6) hue-rotate(-40deg); }
-
-      #reveal-lod2 {
-        opacity: 0;
-      }
 
       .reveal-prologue {
         position: fixed;
@@ -2265,11 +2267,6 @@ c-22 -1 -33 -6 -33 -16 0 -8 -9 -15 -20 -15 -22 0 -26 -20 -8 -38 7 -7 9 -12
               <path d={p.d} transform={`translate(${p.tx},${p.ty})`} />
             ))}
           </g>
-          <!-- LOD2: intentionally EMPTY here — the tidal channel geometry
-               is destination-revealing, so it's built client-side only
-               after the gated fetch confirms bestemming is unlocked (see
-               initReveal in the script below), never server-rendered. -->
-          <g id="reveal-lod2"></g>
           <g class="hero-map-dive-motion">
             <g class="hero-map-dive-scale">
               <circle class="hero-map-dive-flash" r="70" fill="none" stroke={accentColor} stroke-width="1"/>
@@ -2694,18 +2691,24 @@ c-22 -1 -33 -6 -33 -16 0 -8 -9 -15 -20 -15 -22 0 -26 -20 -8 -38 7 -7 9 -12
 
       renderDaysLeft();
 
-      // Viewfinder wander: a random walk over the landmass area of the
-      // real Europe vector map (roughly Western/Central Europe, anchored
-      // near Ameland) instead of a fixed CSS keyframe loop, so the
-      // motion never repeats the same path twice. Skipped entirely under
-      // prefers-reduced-motion, settling on the Ameland anchor point instead.
+      // Viewfinder wander: a random walk over the landmass area of the real
+      // Europe vector map (roughly Western/Central Europe) instead of a
+      // fixed CSS keyframe loop, so the motion never repeats the same path
+      // twice. Skipped entirely under prefers-reduced-motion, settling on a
+      // neutral wide-Europe point instead — the SAME (475,395) point
+      // geodata-secret.ts's CAMERA_KEYPOINTS.wide already uses to open the
+      // search sequence, not anything correlated with the real destination.
+      // This used to be the real destination's own coordinates (393,392),
+      // hardcoded here as both the reduced-motion position AND the wander's
+      // very first frame before randomization — shipped in the public JS
+      // bundle every visitor downloads, regardless of unlock state.
       function startViewfinderWander(): void {
         const motionEl = document.querySelector<SVGGElement>('.hero-map-motion');
         const scaleEl = document.querySelector<SVGGElement>('.hero-map-scale');
         if (!motionEl || !scaleEl) return;
 
         if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
-          motionEl.style.transform = 'translate(393px, 392px)';
+          motionEl.style.transform = 'translate(475px, 395px)';
           scaleEl.style.transform = 'scale(1.08)';
           return;
         }
@@ -2743,7 +2746,7 @@ c-22 -1 -33 -6 -33 -16 0 -8 -9 -15 -20 -15 -22 0 -26 -20 -8 -38 7 -7 9 -12
         // glide in from the SVG origin on page load.
         motionEl.style.transitionDuration = '0s';
         scaleEl.style.transitionDuration = '0s';
-        motionEl.style.transform = 'translate(393px, 392px)';
+        motionEl.style.transform = 'translate(475px, 395px)';
         scaleEl.style.transform = 'scale(1.08)';
         requestAnimationFrame(step);
       }
@@ -2856,7 +2859,7 @@ c-22 -1 -33 -6 -33 -16 0 -8 -9 -15 -20 -15 -22 0 -26 -20 -8 -38 7 -7 9 -12
         coordinate: string;
         placeName: string;
         camera?: Record<string, ZoomPoint>;
-        channels?: { d: string; strokeWidth: number }[];
+        islandShape?: { d: string; tx: number; ty: number };
       };
 
       let revealArmed = false;
@@ -2881,7 +2884,7 @@ c-22 -1 -33 -6 -33 -16 0 -8 -9 -15 -20 -15 -22 0 -26 -20 -8 -38 7 -7 9 -12
       }
 
       function initReveal(revealData: RevealPayload): void {
-        if (!revealData.camera || !revealData.channels) {
+        if (!revealData.camera || !revealData.islandShape) {
           console.error('[reveal] unlocked but missing computed geometry — trip-state.ts should always attach this for vizier-europa');
           return;
         }
@@ -2893,7 +2896,6 @@ c-22 -1 -33 -6 -33 -16 0 -8 -9 -15 -20 -15 -22 0 -26 -20 -8 -38 7 -7 9 -12
         const scaleG = document.querySelector<SVGGElement>('.hero-map-dive-scale');
         const lod0El = document.getElementById('reveal-lod0');
         const lod1El = document.getElementById('reveal-lod1');
-        const lod2Group = document.getElementById('reveal-lod2');
         const prologueEl = document.querySelector<HTMLElement>('.reveal-prologue');
         const telemetryEl = document.querySelector<HTMLElement>('[data-reveal-telemetry]');
         const stopEl = document.querySelector<HTMLElement>('[data-reveal-stop]');
@@ -2903,32 +2905,35 @@ c-22 -1 -33 -6 -33 -16 0 -8 -9 -15 -20 -15 -22 0 -26 -20 -8 -38 7 -7 9 -12
         const skipEl = document.querySelector<HTMLButtonElement>('[data-reveal-skip]');
         const debugEl = document.querySelector<HTMLElement>('[data-reveal-debug]');
         const chapterContent = document.querySelector<HTMLElement>('#bestemming .chapter-content');
-        if (!diveLayer || !svgEl || !zoomG || !motionG || !scaleG || !lod2Group || !prologueEl || !chapterContent) {
+        if (!diveLayer || !svgEl || !zoomG || !motionG || !scaleG || !prologueEl || !chapterContent) {
           console.error('[reveal] missing an expected element — see initReveal');
           return;
         }
 
-        const SVG_NS = 'http://www.w3.org/2000/svg';
-        const accent = getComputedStyle(document.documentElement).getPropertyValue('--accent') || '#e3a64a';
-
-        // Build LOD2 now, from the gated payload only — this is the one
-        // point in the whole page where Ameland's actual geometry ever
-        // touches the DOM. No traced island shape is built anymore: the
-        // separately-illustrated Ameland close-up (WADDEN_CLUSTER_1, plus
-        // the LOD3 layer it lived in) that used to sit here is removed
-        // entirely — "Je hebt nog steeds de eilanden svg staan. Ik vroeg
-        // of je deze weg wilde halen" — so the reveal is only ever the NL
-        // sketch's own hand-drawn dash (LOD1, already built at prerender
-        // time from public data) plus these channels for texture.
-        for (const seg of revealData.channels) {
-          const el = document.createElementNS(SVG_NS, 'path');
-          el.setAttribute('d', seg.d);
-          el.setAttribute('stroke', accent);
-          el.setAttribute('stroke-width', String(seg.strokeWidth));
-          el.setAttribute('fill', 'none');
-          el.setAttribute('opacity', '0.6');
-          el.setAttribute('vector-effect', 'non-scaling-stroke');
-          lod2Group.appendChild(el);
+        // The one point in the whole page where the destination island's
+        // actual shape touches the DOM — built here, from the gated
+        // payload only, once bestemming is confirmed unlocked. Appended
+        // straight into lod1El (the same group nl-trace.ts's mainland
+        // fragment renders in) rather than a separate group:
+        // islandShape.tx/ty were recentered against that exact same
+        // mainland origin (see island-trace.ts's header), so inheriting
+        // lod1El's own translate(NL_CENTER) scale(NL_SCALE) transform is
+        // what makes the island land at its true real-world position
+        // relative to the coastline, with no separate fade timing needed
+        // either — it's part of the same map, it just becomes visually
+        // distinct as the camera dives toward it.
+        //
+        // Property/variable names avoid the destination's real name on
+        // purpose, even here in a gated code path: this client `<script>`
+        // block compiles into the page's JS bundle, which every visitor
+        // downloads regardless of unlock state — an identifier literally
+        // named after the destination would leak its name in that bundle's
+        // source even while the actual geometry stays safely gated.
+        if (lod1El) {
+          const el = document.createElementNS('http://www.w3.org/2000/svg', 'path');
+          el.setAttribute('d', revealData.islandShape.d);
+          el.setAttribute('transform', `translate(${revealData.islandShape.tx},${revealData.islandShape.ty})`);
+          lod1El.appendChild(el);
         }
 
         const reducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
@@ -3069,15 +3074,15 @@ c-22 -1 -33 -6 -33 -16 0 -8 -9 -15 -20 -15 -22 0 -26 -20 -8 -38 7 -7 9 -12
             }
             case 'dive': {
               // Zwolle (the last rejection, already in the right country)
-              // straight down onto Ameland — one move, no intermediate
-              // settle. It used to stage through 33x at the halfway point,
-              // which put a pause in exactly the moment that should just
-              // arrive somewhere.
+              // straight down onto the destination — one move, no
+              // intermediate settle. It used to stage through 33x at the
+              // halfway point, which put a pause in exactly the moment
+              // that should just arrive somewhere.
               const from = stopPoint(DECOY_STOPS[DECOY_STOPS.length - 1]);
-              return interpAt(from, camera!.amelandDeep, localT);
+              return interpAt(from, camera!.islandDeep, localT);
             }
             default:
-              return point(camera!.amelandDeep);
+              return point(camera!.islandDeep);
           }
         }
 
@@ -3191,33 +3196,27 @@ c-22 -1 -33 -6 -33 -16 0 -8 -9 -15 -20 -15 -22 0 -26 -20 -8 -38 7 -7 9 -12
           // Europe coastline still visible, unrelated coastline well
           // outside the Netherlands, behind an already-formed NL outline
           // ("Kan je [...] de europa SVG weghalen. Deze is nog steeds
-          // zichtbaar"). Same problem hit LOD2: its fade-in (8-14)
-          // overlapped LOD0's tail (still fading out until 12), so the
-          // channels ("vaargeulen") appeared while the coastline was still
-          // half-visible too.
+          // zichtbaar").
           //
-          // Rebuilt as a strict sequential handoff instead — each layer's
-          // window starts exactly where the previous one's ends, zero
-          // overlap, computed against the actual dive zoom curve (Zwolle's
-          // 2.82x to amelandDeep's 22x over 8s):
+          // Rebuilt as a strict sequential handoff instead — LOD1's window
+          // starts exactly where LOD0's ends, zero overlap, computed
+          // against the actual dive zoom curve (Zwolle's 2.82x to
+          // islandDeep's 45x over 8s):
           //   LOD0 (Europe coastline): full until 3x, fades out 3->4x,
           //     gone by 4x (~1.6s into the dive — search itself never
           //     exceeds 2.82x, so this never clips the hunt).
           //   LOD1 (NL sketch): starts fading in at 4x, the instant LOD0
-          //     hits zero, full by 5x (~2.4s). No fadeout afterward — the
-          //     previous close-up SVG (WADDEN_CLUSTER_1 / LOD3) is gone, so
-          //     this NL sketch's own hand-drawn Wadden dash (see
-          //     geodata-secret.ts's AMELAND_POINT comment) IS the reveal
-          //     all the way to the dive's 22x end, chosen because that's
-          //     where the dash stays legible.
-          //   LOD2 (tidal channels): held back until 16x, well after LOD1
-          //     is settled and the view has narrowed down near the dash
-          //     itself, full by 20x (~7.9s) — right at the very end of the
-          //     dive rather than dueling the coastline for the same frames.
+          //     hits zero, full by 5x (~2.4s). No fadeout afterward — this
+          //     is where the destination island's own traced shape gets
+          //     appended too (see initReveal above), so LOD1 stays the
+          //     reveal all the way to the dive's 45x end. The procedural
+          //     tidal-channel network (LOD2) that used to fade in alongside
+          //     it is gone entirely — it read as meaningless random
+          //     squiggles, not real geography ("De random streepjes [...]
+          //     slaat nergens op").
           const zoom = camera!.wide[2] / w;
           if (lod0El) (lod0El as unknown as HTMLElement).style.opacity = String(fadeInOut(zoom, 0, 0, 3, 4));
           if (lod1El) (lod1El as unknown as HTMLElement).style.opacity = String(ramp(4, 5, zoom));
-          (lod2Group as unknown as HTMLElement).style.opacity = String(ramp(16, 20, zoom));
 
           if (telemetryEl) {
             const altKm = Math.max(0, Math.round((w / camera!.wide[2]) * 8042));
