@@ -99,15 +99,15 @@ for (const [label, ms] of prologueBeats) {
 // rejection lands at 70%.
 const beats = [
   ['03-zoek-1-berlijn', 9.0],
-  ['04-zoek-2-basel', 14.0],
-  ['05-zoek-3-luxemburg', 19.0],
-  ['06-zoek-4-calais', 24.0],
-  ['07-zoek-5-londen', 29.0],
-  ['08-zoek-6-zwolle', 34.0],
-  ['09-duik-inzet', 36.0],
-  ['10-duik-lock', 38.0],
-  ['11-naam', 41.0],
-  ['12-eind', 43.0],
+  ['04-zoek-2-basel', 15.0],
+  ['05-zoek-3-luxemburg', 21.0],
+  ['06-zoek-4-calais', 27.0],
+  ['07-zoek-5-londen', 33.0],
+  ['08-zoek-6-zwolle', 39.0],
+  ['09-duik-inzet', 44.0],
+  ['10-duik-lock', 48.0],
+  ['11-naam', 51.0],
+  ['12-eind', 53.0],
 ];
 for (const [label, targetS] of beats) {
   await waitForClock(targetS);
