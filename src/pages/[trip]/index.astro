@@ -911,12 +911,6 @@ const vapidPublicKey = import.meta.env.VAPID_PUBLIC_KEY ?? '';
         display: block;
         pointer-events: none;
       }
-      .chapter-index {
-        font-family: 'JetBrains Mono', monospace;
-        font-size: 12px;
-        letter-spacing: 0.14em;
-        color: var(--accent);
-      }
       .chapter-title {
         font-family: 'Bodoni Moda', Georgia, serif;
         font-size: 22px;
@@ -2227,7 +2221,7 @@ c-22 -1 -33 -6 -33 -16 0 -8 -9 -15 -20 -15 -22 0 -26 -20 -8 -38 7 -7 9 -12
          .chapters also sits at z-index:3 and comes later in DOM order, it
          painted OVER this entire overlay regardless of the overlay's own
          z-index:50/60/etc, which is exactly what a screenshot caught
-         (bestemming's own chapter-index number visible through a
+         (bestemming's own index number, since removed, visible through a
          supposedly-opaque, higher-z-index prologue). Moving these here, as
          true siblings of .hero/.chapters in the root stacking context, is
          the fix — confirmed by re-screenshotting after. -->
@@ -2373,7 +2367,6 @@ c-22 -1 -33 -6 -33 -16 0 -8 -9 -15 -20 -15 -22 0 -26 -20 -8 -38 7 -7 9 -12
               data-order={chapter.order}
               data-kind={chapter.kind}
             >
-              <div class="chapter-index mono">{String(chapter.order).padStart(2, '0')}</div>
               {chapter.id === 'blokarten' && (
                 // Hand-drawn land-sailing rig, redrawn from Main.dc.html:507-517.
                 // The mockup's own numbers (mast to y=-190, ~255 units tall,
