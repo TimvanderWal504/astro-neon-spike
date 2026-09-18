@@ -9,7 +9,10 @@ page.on('pageerror', (err) => consoleErrors.push(String(err)));
 await page.goto(url, { waitUntil: 'load' });
 await page.waitForSelector('#bestemming.is-unlocked', { timeout: 10000 });
 await page.evaluate(() => document.getElementById('bestemming')?.scrollIntoView({ block: 'center' }));
-const totalMs = 40000;
+// The prologue runs on wall time before the 45s camera sequence starts, so
+// a full sweep needs both plus a margin — 40000 used to stop partway
+// through the old 36s cut and now misses the whole ending.
+const totalMs = 56000;
 let elapsed = 0; let i = 0;
 while (elapsed < totalMs) {
   await page.waitForTimeout(step);

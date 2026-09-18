@@ -1,5 +1,22 @@
-// Dev-only: scroll to #bestemming to trigger the reveal sequence, then
-// capture screenshots at several points along it. Not part of the app.
+// Dev-only: scroll to #bestemming to trigger the reveal sequence and
+// capture one frame per meaningful beat, labelled after the acts that
+// actually exist. Not part of the app.
+//
+// Usage: node scripts/reveal-sequence-check.mjs <url> <out-dir>
+//
+// Two things this gets right that the earlier version didn't:
+//
+// 1. The labels match the current 5-act, 45s timeline (prologue, search,
+//    dive, inversion, name). They used to name `lock`, `dive1`,
+//    `terschelling`, `mismatch` and `dive2` — acts that no longer exist —
+//    at timings from the old 36s cut, so the output read as a sequence
+//    that hadn't been built for some time.
+// 2. Everything after the prologue is timed off the camera clock's own
+//    elapsedS (published by the ?revealDebug readout) rather than a
+//    guessed wall-clock offset. The typed prologue's real duration varies,
+//    and guessing it once put the last search stop's frame past the end of
+//    the act entirely — which looks exactly like a missing label rather
+//    than a mistimed screenshot.
 import { chromium } from 'playwright';
 
 const [, , url, outDir] = process.argv;
@@ -16,7 +33,12 @@ page.on('console', (msg) => {
 });
 page.on('pageerror', (err) => consoleErrors.push(String(err)));
 
-await page.goto(url, { waitUntil: 'load' });
+// revealDebug publishes the camera clock; the readout itself is hidden
+// below so it stays out of the screenshots.
+const debugUrl = url + (url.includes('?') ? '&' : '?') + 'revealDebug=1';
+await page.goto(debugUrl, { waitUntil: 'load' });
+await page.addStyleTag({ content: '[data-reveal-debug]{opacity:0 !important;}' });
+
 // #bestemming is display:none until loadTripState()'s async fetch marks it
 // .is-unlocked — scrollIntoView on a display:none element is a no-op, so
 // wait for the class before scrolling.
@@ -26,28 +48,72 @@ await page.evaluate(() => {
   el?.scrollIntoView({ block: 'center' });
 });
 
-// t=0 is roughly "just scrolled in" — the prologue should be starting.
-const checkpoints = [
-  { label: '00-scrolled-in', waitMs: 400 },
-  { label: '01-prologue-mid', waitMs: 2500 },
-  { label: '02-prologue-coord', waitMs: 4500 },
-  { label: '03-lock-hop', waitMs: 8000 },
-  { label: '04-lock-impact', waitMs: 10800 },
-  { label: '05-dive1', waitMs: 15000 },
-  { label: '06-terschelling', waitMs: 19000 },
-  { label: '07-mismatch', waitMs: 19300 },
-  { label: '08-dive2-mid', waitMs: 27000 },
-  { label: '09-inversion', waitMs: 32500 },
-  { label: '10-name', waitMs: 35500 },
-];
+async function snap(label) {
+  await page.screenshot({ path: `${outDir}/${label}.png` });
+  const state = await page.evaluate(() => {
+    const debug = document.querySelector('[data-reveal-debug]')?.textContent || '';
+    const stop = document.querySelector('[data-reveal-stop]');
+    return {
+      clock: /t=([\d.]+)s/.exec(debug)?.[1] ?? null,
+      act: /act=(\w+)/.exec(debug)?.[1] ?? null,
+      stop: document.querySelector('[data-reveal-stop-name]')?.textContent || null,
+      shown: stop?.classList.contains('is-active') ?? false,
+      rejected: stop?.classList.contains('is-rejected') ?? false,
+    };
+  });
+  const bits = [`act=${state.act ?? 'pre-roll'}`, `t=${state.clock ?? '-'}`];
+  if (state.shown) bits.push(`stop=${state.stop}${state.rejected ? ' [afgewezen]' : ''}`);
+  console.log(label.padEnd(22), bits.join('  '));
+}
 
-let elapsed = 0;
-for (const cp of checkpoints) {
-  const delta = cp.waitMs - elapsed;
-  if (delta > 0) await page.waitForTimeout(delta);
-  elapsed = cp.waitMs;
-  await page.screenshot({ path: `${outDir}/${cp.label}.png` });
-  console.log('captured', cp.label, 'at', cp.waitMs, 'ms');
+/** Waits for the camera clock to reach `targetS` (seconds of elapsedS). */
+async function waitForClock(targetS) {
+  for (let i = 0; i < 3000; i++) {
+    const t = await page.evaluate(() => {
+      const txt = document.querySelector('[data-reveal-debug]')?.textContent || '';
+      const m = /t=([\d.]+)s/.exec(txt);
+      return m ? parseFloat(m[1]) : null;
+    });
+    if (t !== null && t >= targetS) return;
+    await page.waitForTimeout(50);
+  }
+  console.warn(`  (clock never reached ${targetS}s)`);
+}
+
+// The typed prologue runs on wall time before the camera clock starts, so
+// these three are the only wall-clock-timed frames in the run.
+const prologueBeats = [
+  ['00-prologue-scrolled-in', 400],
+  ['01-prologue-typing', 1600],
+  ['02-prologue-coordinaat', 4000],
+];
+let waited = 0;
+for (const [label, ms] of prologueBeats) {
+  if (ms > waited) await page.waitForTimeout(ms - waited);
+  waited = ms;
+  await snap(label);
+}
+
+// Everything below is keyed to elapsedS. Search runs 5-35s as six 5s
+// stops; each is sampled at +4.0s into its own slot, which is after the
+// rejection lands at 70%.
+const beats = [
+  ['03-zoek-1-berlijn', 9.0],
+  ['04-zoek-2-basel', 14.0],
+  ['05-zoek-3-luxemburg', 19.0],
+  ['06-zoek-4-calais', 24.0],
+  ['07-zoek-5-londen', 29.0],
+  ['08-zoek-6-zwolle', 34.0],
+  ['09-duik-inzet', 35.8],
+  ['10-duik-lock', 37.5],
+  ['11-duik-diep', 39.5],
+  ['12-inversie', 41.0],
+  ['13-naam', 43.5],
+  ['14-eind', 45.0],
+];
+for (const [label, targetS] of beats) {
+  await waitForClock(targetS);
+  await snap(label);
 }
 
 console.log('\nConsole errors:', consoleErrors.length ? JSON.stringify(consoleErrors, null, 2) : 'none');
