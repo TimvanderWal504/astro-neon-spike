@@ -657,6 +657,19 @@ const vapidPublicKey = import.meta.env.VAPID_PUBLIC_KEY ?? '';
       #blokarten.is-visible .reveal-wheel-3 { animation: revealWheelIn 480ms cubic-bezier(0.34,1.56,0.64,1) 1160ms forwards; }
       #blokarten .reveal-track { stroke-dasharray: 1000; stroke-dashoffset: 1000; }
       #blokarten.is-visible .reveal-track { animation: revealRouteDraw 1500ms cubic-bezier(0.16,1,0.3,1) 100ms forwards; }
+      /* Beach-vibe pass: kicked-up sand behind the wheels, reusing the
+         same dashoffset draw-in as the ambient route/horizon lines. */
+      #blokarten .reveal-wake { stroke-dasharray: 46; stroke-dashoffset: 46; opacity: 0.75; }
+      #blokarten.is-visible .reveal-wake-1 { animation: revealRouteDraw 450ms cubic-bezier(0.16,1,0.3,1) 1400ms forwards; }
+      #blokarten.is-visible .reveal-wake-2 { animation: revealRouteDraw 450ms cubic-bezier(0.16,1,0.3,1) 1470ms forwards; }
+      #blokarten.is-visible .reveal-wake-3 { animation: revealRouteDraw 450ms cubic-bezier(0.16,1,0.3,1) 1540ms forwards; }
+      /* Two distant gulls; shared entrance keyframe (only the delay
+         differs per instance), same birdFlap loop Zondag's bird uses. */
+      #blokarten .reveal-bird { opacity: 0; transform: translateY(10px); transform-box: fill-box; transform-origin: center; }
+      @keyframes revealGullIn { to { opacity: 0.45; transform: translateY(0); } }
+      #blokarten.is-visible .reveal-bird-1 { animation: revealGullIn 1200ms cubic-bezier(0.16,1,0.3,1) 250ms forwards; }
+      #blokarten.is-visible .reveal-bird-2 { animation: revealGullIn 1200ms cubic-bezier(0.16,1,0.3,1) 420ms forwards; }
+      #blokarten .reveal-bird-flap { transform-box: fill-box; transform-origin: center; animation: birdFlap 480ms ease-in-out infinite; }
 
       /* Two mugs swing in from opposite sides and meet in the middle. */
       @keyframes revealMugLeftIn { to { opacity: 0.7; transform: rotate(14deg) translateX(0); } }
@@ -1172,6 +1185,9 @@ const vapidPublicKey = import.meta.env.VAPID_PUBLIC_KEY ?? '';
         #blokarten.is-visible .reveal-sail, #blokarten .reveal-sail { animation: none; stroke-dashoffset: 0; }
         #blokarten.is-visible .reveal-wheel, #blokarten .reveal-wheel { animation: none; opacity: 1; transform: none; }
         #blokarten.is-visible .reveal-track, #blokarten .reveal-track { animation: none; stroke-dashoffset: 0; }
+        #blokarten.is-visible .reveal-wake, #blokarten .reveal-wake { animation: none; stroke-dashoffset: 0; }
+        #blokarten.is-visible .reveal-bird, #blokarten .reveal-bird { animation: none; opacity: 0.42; transform: none; }
+        #blokarten .reveal-bird-flap, #blokarten.is-visible .reveal-bird-flap { animation: none; transform: none; }
         #brouwerij.is-visible .reveal-mug-left, #brouwerij .reveal-mug-left { animation: none; opacity: 0.7; transform: rotate(14deg); }
         #brouwerij.is-visible .reveal-mug-right, #brouwerij .reveal-mug-right { animation: none; opacity: 0.7; transform: rotate(-14deg); }
         #brouwerij.is-visible .reveal-clink, #brouwerij .reveal-clink { animation: none; opacity: 0.8; transform: none; }
@@ -2381,21 +2397,56 @@ c-22 -1 -33 -6 -33 -16 0 -8 -9 -15 -20 -15 -22 0 -26 -20 -8 -38 7 -7 9 -12
                 // non-overlapping space below the text) — viewBox tightened
                 // to the actual content area and preserveAspectRatio switched
                 // to "meet" so nothing gets cropped inside that shorter box.
+                // Beach-vibe pass: horizon line (5th reveal-track), sand wake
+                // behind the wheels, and two gulls give it ground + motion +
+                // air, which the bare rig had none of. Only the mast+sail
+                // sub-group rotates (rigged around its own base at 0,6) to
+                // rake back under wind load — the frame/wheels stay level,
+                // since rotating the whole chassis put the wide-set wheels
+                // at different ground heights and read as tipping over.
                 <div class="chapter-visual">
                   <svg class="chapter-illustration" viewBox="-40 140 880 580" preserveAspectRatio="xMidYMid meet" aria-hidden="true">
                     <path class="reveal-track" d="M-40,180 C160,150 300,210 800,170" stroke={accentColor} stroke-width="1" opacity="0.16" fill="none" />
                     <path class="reveal-track" d="M-40,230 C160,200 320,255 800,220" stroke={accentColor} stroke-width="1" opacity="0.12" fill="none" />
+                    <path class="reveal-track" d="M-40,606 C160,596 300,614 460,604 C580,596 700,612 800,602" stroke={accentColor} stroke-width="1.4" opacity="0.22" fill="none" />
                     <path class="reveal-track" d="M-40,650 C160,630 320,668 500,645 C620,630 720,650 800,640" stroke={accentColor} stroke-width="1" opacity="0.16" fill="none" />
                     <path class="reveal-track" d="M-40,690 C160,670 320,708 500,685 C620,670 720,690 800,680" stroke={accentColor} stroke-width="1" opacity="0.1" fill="none" />
+                    <g transform="translate(250,220)">
+                      <g class="reveal-bird reveal-bird-1">
+                        <g class="reveal-bird-flap">
+                          <path d="M0,0 C-10,-7 -21,-6 -28,0 C-18,-1 -10,1 0,6 C10,1 18,-1 28,0 C21,-6 10,-7 0,0 Z" fill={accentColor} />
+                        </g>
+                      </g>
+                    </g>
+                    <g transform="translate(560,180)">
+                      <g class="reveal-bird reveal-bird-2">
+                        <g class="reveal-bird-flap">
+                          <path d="M0,0 C-9,-6 -18,-5 -24,0 C-15,-1 -9,1 0,5 C9,1 15,-1 24,0 C18,-5 9,-6 0,0 Z" fill={accentColor} />
+                        </g>
+                      </g>
+                    </g>
                     <g class="reveal-rig">
-                      <g transform="translate(400,580)">
-                        <line class="reveal-mast" x1="0" y1="-112" x2="0" y2="6" stroke={accentColor} stroke-width="1.6" />
-                        <path d="M0,-109 C33,-89 42,-42 24,0 L0,-6 Z" fill={accentColor} opacity="0.2" />
-                        <path class="reveal-sail" d="M0,-109 C33,-89 42,-42 24,0 L0,-6 Z" stroke={accentColor} stroke-width="1.3" fill="none" />
-                        <path d="M-57,24 L57,24 L33,6 L-33,6 Z" fill="none" stroke={accentColor} stroke-width="1.6" />
+                      <g transform="translate(400,553) scale(1.2)">
+                        <path class="reveal-wake reveal-wake-1" d="M-60,42 C-76,46 -90,50 -104,52" stroke={accentColor} stroke-width="2" stroke-linecap="round" fill="none" />
+                        <path class="reveal-wake reveal-wake-2" d="M54,42 C40,48 26,50 14,54" stroke={accentColor} stroke-width="2" stroke-linecap="round" fill="none" />
+                        <path class="reveal-wake reveal-wake-3" d="M-4,48 C-18,54 -30,56 -42,58" stroke={accentColor} stroke-width="2" stroke-linecap="round" fill="none" />
+                        {/* Straight axle + boom, no arcs — the closed
+                            trapezoid (then the strutted version after that)
+                            both still traced a fender-like curve over the
+                            wheels once sand/wake lines sat nearby, reading
+                            as a car body. Two straight bars crossing in a
+                            plain "+" reads as bare structural frame instead,
+                            and keeps the wake marks clear of the linework. */}
+                        <path d="M-57,33 L57,33" fill="none" stroke={accentColor} stroke-width="1.6" />
+                        <path d="M0,39 L0,6" fill="none" stroke={accentColor} stroke-width="1.6" />
                         <circle class="reveal-wheel reveal-wheel-1" cx="-57" cy="33" r="8" fill="none" stroke={accentColor} stroke-width="1.6" />
                         <circle class="reveal-wheel reveal-wheel-2" cx="57" cy="33" r="8" fill="none" stroke={accentColor} stroke-width="1.6" />
                         <circle class="reveal-wheel reveal-wheel-3" cx="0" cy="39" r="7" fill="none" stroke={accentColor} stroke-width="1.6" />
+                        <g transform="rotate(7,0,6)">
+                          <line class="reveal-mast" x1="0" y1="-112" x2="0" y2="6" stroke={accentColor} stroke-width="1.6" />
+                          <path d="M0,-109 C33,-89 42,-42 24,0 L0,-6 Z" fill={accentColor} opacity="0.2" />
+                          <path class="reveal-sail" d="M0,-109 C33,-89 42,-42 24,0 L0,-6 Z" stroke={accentColor} stroke-width="1.3" fill="none" />
+                        </g>
                       </g>
                     </g>
                   </svg>
