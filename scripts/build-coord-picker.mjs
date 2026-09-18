@@ -50,6 +50,10 @@ const html = `<!DOCTYPE html>
   li.moved .co { color:#7ddc8f; }
   textarea { width:100%; height:190px; background:#111412; color:#f4f1ea; border:1px solid #2a2f2d; border-radius:6px; font-family:monospace; font-size:11px; padding:8px; }
   button { background:#c98a3a; color:#0a0d0c; border:0; border-radius:999px; padding:8px 14px; font-weight:600; cursor:pointer; margin-top:8px; }
+  #warn { display:none; background:#3a1f1f; border:1px solid #7a3a3a; color:#ffb3b3; border-radius:6px; padding:10px 12px; font-size:13px; margin:0 0 14px; }
+  #warn.show { display:block; }
+  #reminder { background:#1f2f22; border:1px solid #3a7a4a; color:#a3e0b3; border-radius:6px; padding:10px 12px; font-size:13px; margin-top:8px; display:none; }
+  #reminder.show { display:block; }
 </style></head>
 <body>
 <svg id="map" viewBox="80 0 790 790" width="820" height="820" xmlns="http://www.w3.org/2000/svg">
@@ -60,21 +64,56 @@ const html = `<!DOCTYPE html>
 </svg>
 <aside>
   <h1>Coördinaten prikken</h1>
-  <p class="hint">Klik links een plaats aan, klik daarna op de kaart waar het vizier moet landen. Groen = verplaatst. Onderaan staat de regel die ik één-op-één kan overnemen.</p>
+  <p class="hint">Klik links een plaats aan, klik daarna op de kaart waar het vizier moet landen. Groen = verplaatst. Onderaan staat de regel die ik één-op-één kan overnemen. Dit bestand heeft geen server en geen koppeling met Claude — de <strong>enige</strong> manier waarop een verplaatste pin bij Claude terechtkomt, is door het tekstvak te kopiëren en in de chat te plakken. Sluit je het tabblad zonder dat, dan blijft je werk hier bewaard (dit tabblad onthoudt het) maar heeft Claude het nooit gezien.</p>
+  <p id="warn"></p>
   <ol id="list"></ol>
   <textarea id="out" readonly></textarea>
   <button id="copy">Kopieer</button>
+  <p id="reminder">✓ Gekopieerd. <strong>Dit bestand verandert nu niets vanzelf</strong> — plak dit blok in de chat tegen Claude, anders gaat het verloren zodra je dit tabblad sluit.</p>
 </aside>
 <script>
-const stops = ${JSON.stringify(rows, null, 2)};
+// Nothing here reaches Claude on its own — this file has no server, no
+// build step, nothing but this one browser tab. Everything below exists
+// only to make that limit hard to miss, after a first round where the
+// picker's whole point (the clicked coordinates) silently never left the
+// tab: the "Kopieer" click looked like a completed action, so the paste
+// step that actually mattered got skipped.
+const BASELINE = ${JSON.stringify(rows)};
+const STORAGE_KEY = 'reveal-coord-picker-v1';
+
+let stops = BASELINE;
+let moved = new Set();
+try {
+  const saved = JSON.parse(localStorage.getItem(STORAGE_KEY) || 'null');
+  // Only restore if it's the same stop list this was generated for —
+  // if geodata-public.ts changed (new/renamed/reordered stops) since the
+  // save, the indices in a saved 'moved' set would point at the wrong city.
+  if (saved && saved.names && saved.names.join('|') === BASELINE.map((s) => s.name).join('|')) {
+    stops = saved.stops;
+    moved = new Set(saved.moved);
+  }
+} catch {
+  // localStorage can be unavailable (e.g. file:// in some browsers); the
+  // picker still works, it just won't survive a closed tab.
+}
+
 const svg = document.getElementById('map');
 const pins = document.getElementById('pins');
 const list = document.getElementById('list');
 const out = document.getElementById('out');
+const warn = document.getElementById('warn');
+const reminder = document.getElementById('reminder');
 let sel = 0;
-const moved = new Set();
 
 function esc(s){ return String(s).replace(/'/g, "\\\\'"); }
+
+function persist() {
+  try {
+    localStorage.setItem(STORAGE_KEY, JSON.stringify({ names: stops.map((s) => s.name), stops, moved: [...moved] }));
+  } catch {
+    // best-effort; the in-memory state still works for this tab session.
+  }
+}
 
 function render() {
   pins.innerHTML = stops.map((s, i) => \`
@@ -93,6 +132,13 @@ function render() {
   out.value = stops.map((s) =>
     \`  { name: '\${esc(s.name)}', country: '\${esc(s.country)}', coord: '\${esc(s.coord)}', x: \${s.x}, y: \${s.y}, w: \${s.w}, reason: '\${esc(s.reason)}' },\`
   ).join('\\n');
+
+  if (moved.size > 0) {
+    warn.className = 'show';
+    warn.textContent = moved.size + ' van de ' + stops.length + ' plekken verplaatst, nog niet naar Claude geplakt. Klik Kopieer en plak het blok in de chat — dit tabblad sluiten stuurt niets vanzelf door.';
+  } else {
+    warn.className = '';
+  }
 }
 
 svg.addEventListener('click', (e) => {
@@ -104,10 +150,15 @@ svg.addEventListener('click', (e) => {
   stops[sel].y = Math.round(p.y);
   moved.add(sel);
   if (sel < stops.length - 1) sel++;
+  persist();
   render();
 });
 
-document.getElementById('copy').onclick = () => { out.select(); document.execCommand('copy'); };
+document.getElementById('copy').onclick = () => {
+  out.select();
+  document.execCommand('copy');
+  reminder.className = moved.size > 0 ? 'show' : '';
+};
 render();
 </script>
 </body></html>`;
