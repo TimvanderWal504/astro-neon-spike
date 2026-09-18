@@ -105,9 +105,8 @@ const beats = [
   ['07-zoek-5-londen', 33.0],
   ['08-zoek-6-zwolle', 39.0],
   ['09-duik-inzet', 44.0],
-  ['10-duik-lock', 48.0],
-  ['11-naam', 51.0],
-  ['12-eind', 53.0],
+  ['10-duik-lock', 47.0],
+  ['11-naam', 48.0],
 ];
 for (const [label, targetS] of beats) {
   await waitForClock(targetS);
