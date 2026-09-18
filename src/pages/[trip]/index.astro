@@ -681,31 +681,12 @@ const vapidPublicKey = import.meta.env.VAPID_PUBLIC_KEY ?? '';
       #blokarten.is-visible .reveal-windamb-1 { animation: revealRouteDraw 700ms cubic-bezier(0.16,1,0.3,1) 350ms forwards; }
       #blokarten.is-visible .reveal-windamb-2 { animation: revealRouteDraw 700ms cubic-bezier(0.16,1,0.3,1) 450ms forwards; }
       #blokarten.is-visible .reveal-windamb-3 { animation: revealRouteDraw 700ms cubic-bezier(0.16,1,0.3,1) 550ms forwards; }
-      /* Kicked-up sand: a wide trailing fan plus a soft dust mass for
-         weight — three small commas didn't read as "racing" at all. */
-      #blokarten .reveal-wake { stroke-dasharray: 320; stroke-dashoffset: 320; opacity: 0.85; }
-      #blokarten.is-visible .reveal-wake-1 { animation: revealRouteDraw 450ms cubic-bezier(0.16,1,0.3,1) 1350ms forwards; }
-      #blokarten.is-visible .reveal-wake-2 { animation: revealRouteDraw 450ms cubic-bezier(0.16,1,0.3,1) 1410ms forwards; }
-      #blokarten.is-visible .reveal-wake-3 { animation: revealRouteDraw 450ms cubic-bezier(0.16,1,0.3,1) 1470ms forwards; }
-      #blokarten.is-visible .reveal-wake-4 { animation: revealRouteDraw 450ms cubic-bezier(0.16,1,0.3,1) 1530ms forwards; }
-      #blokarten.is-visible .reveal-wake-5 { animation: revealRouteDraw 450ms cubic-bezier(0.16,1,0.3,1) 1590ms forwards; }
-      #blokarten .reveal-dust { opacity: 0; }
-      @keyframes revealDustIn { to { opacity: 0.16; } }
-      #blokarten.is-visible .reveal-dust { animation: revealDustIn 900ms cubic-bezier(0.16,1,0.3,1) 1300ms forwards; }
       /* Wind-rush lines swept back off the sail's leading edge, inside the
          same rotated sail group so they always lean with it. */
       #blokarten .reveal-wind { stroke-dasharray: 90; stroke-dashoffset: 90; }
       #blokarten.is-visible .reveal-wind-1 { animation: revealRouteDraw 400ms cubic-bezier(0.16,1,0.3,1) 1550ms forwards; }
       #blokarten.is-visible .reveal-wind-2 { animation: revealRouteDraw 400ms cubic-bezier(0.16,1,0.3,1) 1620ms forwards; }
       #blokarten.is-visible .reveal-wind-3 { animation: revealRouteDraw 400ms cubic-bezier(0.16,1,0.3,1) 1690ms forwards; }
-      /* Spin swoosh + spokes reveal with their wheel — same classes, now
-         wrapping a <g> (circle+spokes+swoosh together) instead of a bare
-         <circle>, so the whole wheel assembly pops in as one unit. */
-      #blokarten .reveal-swoosh { opacity: 0; }
-      @keyframes revealSwooshIn { to { opacity: 0.4; } }
-      #blokarten.is-visible .reveal-wheel-1 .reveal-swoosh { animation: revealSwooshIn 300ms ease 1100ms forwards; }
-      #blokarten.is-visible .reveal-wheel-2 .reveal-swoosh { animation: revealSwooshIn 300ms ease 1170ms forwards; }
-      #blokarten.is-visible .reveal-wheel-3 .reveal-swoosh { animation: revealSwooshIn 300ms ease 1240ms forwards; }
       /* Two distant gulls; shared entrance keyframe (only the delay
          differs per instance), same birdFlap loop Zondag's bird uses. */
       #blokarten .reveal-bird { opacity: 0; transform: translateY(10px); transform-box: fill-box; transform-origin: center; }
@@ -1228,13 +1209,10 @@ const vapidPublicKey = import.meta.env.VAPID_PUBLIC_KEY ?? '';
         #blokarten.is-visible .reveal-sail, #blokarten .reveal-sail { animation: none; stroke-dashoffset: 0; }
         #blokarten.is-visible .reveal-wheel, #blokarten .reveal-wheel { animation: none; opacity: 1; transform: none; }
         #blokarten.is-visible .reveal-track, #blokarten .reveal-track { animation: none; stroke-dashoffset: 0; }
-        #blokarten.is-visible .reveal-wake, #blokarten .reveal-wake { animation: none; stroke-dashoffset: 0; }
-        #blokarten.is-visible .reveal-dust, #blokarten .reveal-dust { animation: none; opacity: 0.16; }
         #blokarten.is-visible .reveal-wind, #blokarten .reveal-wind { animation: none; stroke-dashoffset: 0; }
         #blokarten.is-visible .reveal-wave, #blokarten .reveal-wave { animation: none; stroke-dashoffset: 0; }
         #blokarten.is-visible .reveal-foam, #blokarten .reveal-foam { animation: none; opacity: 0.5; transform: none; }
         #blokarten.is-visible .reveal-windamb, #blokarten .reveal-windamb { animation: none; stroke-dashoffset: 0; }
-        #blokarten.is-visible .reveal-swoosh, #blokarten .reveal-swoosh { animation: none; opacity: 0.4; }
         #blokarten.is-visible .reveal-bird, #blokarten .reveal-bird { animation: none; opacity: 0.42; transform: none; }
         #blokarten .reveal-bird-flap, #blokarten.is-visible .reveal-bird-flap { animation: none; transform: none; }
         #brouwerij.is-visible .reveal-mug-left, #brouwerij .reveal-mug-left { animation: none; opacity: 0.7; transform: rotate(14deg); }
@@ -2435,23 +2413,18 @@ c-22 -1 -33 -6 -33 -16 0 -8 -9 -15 -20 -15 -22 0 -26 -20 -8 -38 7 -7 9 -12
               data-kind={chapter.kind}
             >
               {chapter.id === 'blokarten' && (
-                // Rebuilt from scratch after two beach-vibe passes both
-                // still read as "nothing" on a real phone — both were only
-                // ever checked on a wide desktop crop. viewBox is now
-                // cropped tight to the actual scene (260 tall, not 580) so
-                // 'meet' fills the band on ANY container shape, portrait
-                // included, instead of centering a small content cluster
-                // inside a mostly-empty box. Every stroke is bolder too.
-                // Scene, back to front: ambient wind + 2 gulls, two rows of
-                // ocean waves with foam ticks, then the rig on the sand —
-                // straight axle+boom frame (an arced/closed shape reads as
-                // a car body, learned that the hard way), wheels with
-                // spokes + a spin-swoosh arc so they read as rolling, a
-                // wide sand-wake fan with a dust mass behind it, and the
-                // mast+sail leaning hard into the wind (only that
-                // sub-group rotates, pivoted at its own base — rotating
-                // the whole chassis put the wide-set wheels at different
-                // ground heights and read as tipping over).
+                // viewBox is cropped tight to the actual scene (260 tall,
+                // not 580) so 'meet' fills the band on ANY container shape,
+                // portrait included, instead of centering a small content
+                // cluster inside a mostly-empty box.
+                // The kart itself was rebuilt from the user's own reference
+                // photo: a low, compact single-line chassis (not a tall
+                // A-frame competing with the sail) and a bold curved
+                // pennant sail as the dominant shape, rather than a thin
+                // straight triangle. Sand-motion (wake fan + dust mass) was
+                // dropped entirely per that same round of feedback — this
+                // pass is about matching the reference's silhouette, not
+                // selling speed.
                 <div class="chapter-visual">
                   <svg class="chapter-illustration" viewBox="-40 -45 880 285" preserveAspectRatio="xMidYMid meet" aria-hidden="true">
                     {/* Sun — a plain radiating-circle glyph, reads instantly
@@ -2487,43 +2460,26 @@ c-22 -1 -33 -6 -33 -16 0 -8 -9 -15 -20 -15 -22 0 -26 -20 -8 -38 7 -7 9 -12
                     <path class="reveal-track" d="M-40,190 C160,178 320,198 500,185 C620,177 720,192 800,183" stroke={accentColor} stroke-width="1" opacity="0.14" fill="none" />
                     <g class="reveal-rig">
                       <g transform="translate(400,150)">
-                        <path class="reveal-dust" d="M-30,4 C-70,-10 -130,2 -175,32 C-220,60 -205,95 -150,92 C-100,90 -40,58 -5,30 C8,18 -5,10 -30,4 Z" fill={accentColor} />
-                        <path class="reveal-wake reveal-wake-1" d="M-78,6 C-96,10 -112,13 -128,16" stroke={accentColor} stroke-width="2.8" stroke-linecap="round" fill="none" />
-                        <path class="reveal-wake reveal-wake-2" d="M-76,12 C-106,18 -136,22 -168,28" stroke={accentColor} stroke-width="2.3" stroke-linecap="round" fill="none" />
-                        <path class="reveal-wake reveal-wake-3" d="M-68,18 C-108,28 -152,34 -192,44" stroke={accentColor} stroke-width="1.8" stroke-linecap="round" fill="none" />
-                        <path class="reveal-wake reveal-wake-4" d="M-54,24 C-102,36 -152,42 -200,54" stroke={accentColor} stroke-width="1.4" stroke-linecap="round" fill="none" />
-                        <path class="reveal-wake reveal-wake-5" d="M58,20 C42,26 26,28 10,32" stroke={accentColor} stroke-width="2" stroke-linecap="round" fill="none" />
-                        {/* Redrawn against the reference photo's actual
-                            structure: an A-frame (two struts up to a peak
-                            above the rear axle) with a long forward boom to
-                            the steered front wheel — real blokart geometry,
-                            not an abstracted cross. Still every line open
-                            and unfilled, so it stays a frame, not a body. */}
-                        <path d="M-72,0 L72,0" fill="none" stroke={accentColor} stroke-width="2.2" />
-                        <path d="M-72,0 L0,-34 L72,0" fill="none" stroke={accentColor} stroke-width="2.2" />
-                        <path d="M0,-34 L46,14" fill="none" stroke={accentColor} stroke-width="2.2" />
-                        <g class="reveal-wheel reveal-wheel-1">
-                          <circle cx="-72" cy="0" r="14" fill="none" stroke={accentColor} stroke-width="2" />
-                          <path d="M-81,-9 L-63,9 M-81,9 L-63,-9" stroke={accentColor} stroke-width="1.4" />
-                          <path class="reveal-swoosh" d="M-94,0 A22,22 0 0 1 -72,-22" stroke={accentColor} stroke-width="1.6" fill="none" />
-                        </g>
-                        <g class="reveal-wheel reveal-wheel-2">
-                          <circle cx="72" cy="0" r="14" fill="none" stroke={accentColor} stroke-width="2" />
-                          <path d="M63,-9 L81,9 M63,9 L81,-9" stroke={accentColor} stroke-width="1.4" />
-                          <path class="reveal-swoosh" d="M50,0 A22,22 0 0 1 72,-22" stroke={accentColor} stroke-width="1.6" fill="none" />
-                        </g>
-                        <g class="reveal-wheel reveal-wheel-3">
-                          <circle cx="46" cy="14" r="12" fill="none" stroke={accentColor} stroke-width="2" />
-                          <path d="M38.2,6.2 L53.8,21.8 M38.2,21.8 L53.8,6.2" stroke={accentColor} stroke-width="1.4" />
-                          <path class="reveal-swoosh" d="M26,14 A20,20 0 0 1 46,-6" stroke={accentColor} stroke-width="1.6" fill="none" />
-                        </g>
-                        <g transform="rotate(13,0,-34)">
-                          <line class="reveal-mast" x1="0" y1="-118" x2="0" y2="-34" stroke={accentColor} stroke-width="2.4" />
-                          <path d="M0,-118 L0,-34 L44,-34 Z" fill={accentColor} opacity="0.22" />
-                          <path class="reveal-sail" d="M0,-118 L0,-34 L44,-34 Z" stroke={accentColor} stroke-width="1.8" fill="none" />
-                          <path class="reveal-wind reveal-wind-1" d="M22,-104 C6,-100 -10,-97 -26,-94" stroke={accentColor} stroke-width="1.6" stroke-linecap="round" fill="none" opacity="0.5" />
-                          <path class="reveal-wind reveal-wind-2" d="M28,-78 C10,-73 -6,-70 -26,-67" stroke={accentColor} stroke-width="1.6" stroke-linecap="round" fill="none" opacity="0.45" />
-                          <path class="reveal-wind reveal-wind-3" d="M32,-50 C12,-46 -6,-43 -28,-40" stroke={accentColor} stroke-width="1.6" stroke-linecap="round" fill="none" opacity="0.4" />
+                        {/* Single bent backbone (rear wheel -> rear wheel ->
+                            mast base -> front wheel) instead of a tall
+                            A-frame — low and compact like the reference,
+                            so the sail stays the dominant shape rather than
+                            competing with a tall frame underneath it. */}
+                        <path d="M-40,14 L-8,16 L0,-6 L30,10" fill="none" stroke={accentColor} stroke-width="2.2" />
+                        <circle class="reveal-wheel reveal-wheel-1" cx="-40" cy="14" r="13" fill={accentColor} fill-opacity="0.18" stroke={accentColor} stroke-width="1.8" />
+                        <circle class="reveal-wheel reveal-wheel-2" cx="-8" cy="16" r="13" fill={accentColor} fill-opacity="0.18" stroke={accentColor} stroke-width="1.8" />
+                        <circle class="reveal-wheel reveal-wheel-3" cx="30" cy="10" r="11" fill={accentColor} fill-opacity="0.18" stroke={accentColor} stroke-width="1.8" />
+                        <g transform="rotate(13,0,-6)">
+                          <line class="reveal-mast" x1="0" y1="-118" x2="0" y2="-6" stroke={accentColor} stroke-width="2.4" />
+                          {/* Bold curved pennant, not a hard straight
+                              triangle — matches the reference's sail, and
+                              a higher fill opacity lets it read as the
+                              scene's dominant shape the way it does there. */}
+                          <path d="M4,-118 C-12,-92 -14,-50 -4,-8 L26,-14 C30,-52 24,-92 12,-116 Z" fill={accentColor} opacity="0.38" />
+                          <path class="reveal-sail" d="M4,-118 C-12,-92 -14,-50 -4,-8 L26,-14 C30,-52 24,-92 12,-116 Z" stroke={accentColor} stroke-width="1.8" fill="none" />
+                          <path class="reveal-wind reveal-wind-1" d="M18,-102 C2,-98 -14,-95 -30,-92" stroke={accentColor} stroke-width="1.6" stroke-linecap="round" fill="none" opacity="0.5" />
+                          <path class="reveal-wind reveal-wind-2" d="M22,-72 C4,-68 -12,-65 -32,-62" stroke={accentColor} stroke-width="1.6" stroke-linecap="round" fill="none" opacity="0.45" />
+                          <path class="reveal-wind reveal-wind-3" d="M20,-40 C2,-36 -14,-33 -34,-30" stroke={accentColor} stroke-width="1.6" stroke-linecap="round" fill="none" opacity="0.4" />
                         </g>
                       </g>
                     </g>
