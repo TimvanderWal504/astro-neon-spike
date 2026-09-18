@@ -33,22 +33,27 @@ export type DecoyStop = {
  * goes — only Ameland's own position stays in geodata-secret.ts, so keeping
  * these here shrinks the gated payload instead of padding it.
  *
- * Positions were measured against the real traced coastline, not guessed:
- * an equirectangular fit anchored on the known-good Ameland point
- * (~21.3 units per degree longitude, ~17.05 per degree latitude), then each
- * marker rendered over #europe-coastline and checked by eye — Calais lands
- * on the Channel narrows, Berlin inside eastern Germany, Zwolle inland in
- * the Netherlands.
+ * Positions come from an equirectangular fit anchored on the known-good
+ * Ameland point (~21.3 units per degree longitude, ~17.05 per degree
+ * latitude), each marker then rendered over #europe-coastline and checked
+ * by eye — Berlin inside eastern Germany, Zwolle inland in the
+ * Netherlands, Lyon in the south-east of France.
+ *
+ * Renaming a stop means recomputing its x/y. When Calais became Lyon the
+ * coordinate stayed behind, which left the reticle landing on the Channel
+ * narrows under a card reading "Lyon" — 109 units and most of France away.
+ * scripts/coordinaten-picker.html places these by clicking the real
+ * coastline if you'd rather point than compute.
  *
  * `w` tightens stop by stop (360 -> 280) so the hunt reads as closing in
  * rather than teleporting around at one fixed altitude.
  */
 export const DECOY_STOPS: readonly DecoyStop[] = [
-  { name: 'Berlijn', country: 'Duitsland', coord: '52.52°N 13.40°O', x: 556, y: 408, w: 360, reason: 'Te veel techno, te weinig strand' },
-  { name: 'Basel', country: 'Zwitserland', coord: '47.56°N 7.59°O', x: 430, y: 500, w: 340, reason: 'Wegens El Niño geen sneeuw' },
-  { name: 'Luxemburg', country: 'Luxemburg', coord: '49.61°N 6.13°O', x: 394, y: 456, w: 320, reason: 'In 20 minuten uitgelopen' },
-  { name: 'Calais', country: 'Frankrijk', coord: '50.95°N 1.86°O', x: 310, y: 435, w: 310, reason: 'Jeroen krijgt geen visum' },
-  { name: 'Londen', country: 'Engeland', coord: "51.51°N 0.13°W", x: 272, y: 422, w: 300, reason: 'Brexit-formulieren nog in behandeling' },
+  { name: 'Berlijn', country: 'Duitsland', coord: '52.52°N 13.40°O', x: 556, y: 408, w: 360, reason: 'Te veel techno, te weinig strand, uitwijken' },
+  { name: 'Basel', country: 'Zwitserland', coord: '47.56°N 7.59°O', x: 430, y: 500, w: 340, reason: 'Tim krijgt geen visum, andere opties bekijken' },
+  { name: 'Luxemburg', country: 'Luxemburg', coord: '49.61°N 6.13°O', x: 394, y: 456, w: 320, reason: 'In 20 minuten uitgelopen, strategie aanpassen' },
+  { name: 'Lyon', country: 'Frankrijk', coord: '45.46°N 4.50°O', x: 374, y: 523, w: 310, reason: 'Wegens El Niño geen sneeuw. uitwijken' },
+  { name: 'Londen', country: 'Engeland', coord: "51.51°N 0.13°W", x: 272, y: 422, w: 300, reason: 'Brexit-formulieren nog in behandeling. koers bijstellen' },
   { name: 'Zwolle', country: 'Nederland', coord: '52.51°N 6.09°O', x: 400, y: 408, w: 280, reason: 'Te dichtbij. Blijf zoeken.' },
 ];
 
