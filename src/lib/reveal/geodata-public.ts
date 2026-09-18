@@ -40,7 +40,7 @@ export const DECOY_STOPS: readonly DecoyStop[] = [
   { name: 'Berlijn', country: 'Duitsland', coord: '52.52°N 13.40°O', x: 471, y: 408, w: 360, reason: 'Te veel techno, te weinig strand, uitwijken' },
   { name: 'Athene', country: 'Griekenland', coord: '37.59°N 23.43°O', x: 660, y: 725, w: 340, reason: 'Niet goedgekeurd door Jenneke, andere opties bekijken' },
   { name: 'Luxemburg', country: 'Luxemburg', coord: '49.61°N 6.13°O', x: 382, y: 469, w: 320, reason: 'In 20 minuten uitgelopen, strategie aanpassen' },
-  { name: 'Madrid', country: 'Spanje', coord: '40.25°N 3.42°O', x: 202, y: 636, w: 310, reason: 'Wegens El Niño geen sneeuw. uitwijken' },
+  { name: 'Madrid', country: 'Spanje', coord: '40.25°N 3.42°W', x: 202, y: 636, w: 310, reason: 'Wegens El Niño geen sneeuw. uitwijken' },
   { name: 'Londen', country: 'Engeland', coord: "51.51°N 0.13°W", x: 305, y: 415, w: 300, reason: 'Brexit-formulieren nog in behandeling. koers bijstellen' },
   { name: 'Zwolle', country: 'Nederland', coord: '52.51°N 6.09°O', x: 388, y: 415, w: 280, reason: 'Te dichtbij. Blijf zoeken.' },
 ];
