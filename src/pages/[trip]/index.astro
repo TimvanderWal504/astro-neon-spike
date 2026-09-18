@@ -657,13 +657,6 @@ const vapidPublicKey = import.meta.env.VAPID_PUBLIC_KEY ?? '';
       @keyframes revealRigIn { to { opacity: 0.7; transform: translateX(0); } }
       #blokarten .reveal-rig { opacity: 0; transform: translateX(-140px); }
       #blokarten.is-visible .reveal-rig { animation: revealRigIn 1300ms cubic-bezier(0.16,1,0.3,1) 200ms forwards; }
-      #blokarten .reveal-mast, #blokarten .reveal-sail { stroke-dasharray: 340; stroke-dashoffset: 340; }
-      #blokarten.is-visible .reveal-mast, #blokarten.is-visible .reveal-sail { animation: revealRouteDraw 800ms cubic-bezier(0.16,1,0.3,1) 700ms forwards; }
-      @keyframes revealWheelIn { to { opacity: 1; transform: scale(1); } }
-      #blokarten .reveal-wheel { opacity: 0; transform: scale(0); transform-box: fill-box; transform-origin: center; }
-      #blokarten.is-visible .reveal-wheel-1 { animation: revealWheelIn 480ms cubic-bezier(0.34,1.56,0.64,1) 1020ms forwards; }
-      #blokarten.is-visible .reveal-wheel-2 { animation: revealWheelIn 480ms cubic-bezier(0.34,1.56,0.64,1) 1090ms forwards; }
-      #blokarten.is-visible .reveal-wheel-3 { animation: revealWheelIn 480ms cubic-bezier(0.34,1.56,0.64,1) 1160ms forwards; }
       #blokarten .reveal-track { stroke-dasharray: 1000; stroke-dashoffset: 1000; }
       #blokarten.is-visible .reveal-track { animation: revealRouteDraw 1500ms cubic-bezier(0.16,1,0.3,1) 100ms forwards; }
       /* Ocean waves — two rows, phase-shifted, plus a few foam ticks. */
@@ -681,12 +674,6 @@ const vapidPublicKey = import.meta.env.VAPID_PUBLIC_KEY ?? '';
       #blokarten.is-visible .reveal-windamb-1 { animation: revealRouteDraw 700ms cubic-bezier(0.16,1,0.3,1) 350ms forwards; }
       #blokarten.is-visible .reveal-windamb-2 { animation: revealRouteDraw 700ms cubic-bezier(0.16,1,0.3,1) 450ms forwards; }
       #blokarten.is-visible .reveal-windamb-3 { animation: revealRouteDraw 700ms cubic-bezier(0.16,1,0.3,1) 550ms forwards; }
-      /* Wind-rush lines swept back off the sail's leading edge, inside the
-         same rotated sail group so they always lean with it. */
-      #blokarten .reveal-wind { stroke-dasharray: 90; stroke-dashoffset: 90; }
-      #blokarten.is-visible .reveal-wind-1 { animation: revealRouteDraw 400ms cubic-bezier(0.16,1,0.3,1) 1550ms forwards; }
-      #blokarten.is-visible .reveal-wind-2 { animation: revealRouteDraw 400ms cubic-bezier(0.16,1,0.3,1) 1620ms forwards; }
-      #blokarten.is-visible .reveal-wind-3 { animation: revealRouteDraw 400ms cubic-bezier(0.16,1,0.3,1) 1690ms forwards; }
       /* Two distant gulls; shared entrance keyframe (only the delay
          differs per instance), same birdFlap loop Zondag's bird uses. */
       #blokarten .reveal-bird { opacity: 0; transform: translateY(10px); transform-box: fill-box; transform-origin: center; }
@@ -1205,11 +1192,7 @@ const vapidPublicKey = import.meta.env.VAPID_PUBLIC_KEY ?? '';
         /* Blokarten/brouwerij illustrations settle at their end-state
            instead of animating in (ported from Main.dc.html:238-248). */
         #blokarten.is-visible .reveal-rig, #blokarten .reveal-rig { animation: none; opacity: 0.7; transform: none; }
-        #blokarten.is-visible .reveal-mast, #blokarten .reveal-mast,
-        #blokarten.is-visible .reveal-sail, #blokarten .reveal-sail { animation: none; stroke-dashoffset: 0; }
-        #blokarten.is-visible .reveal-wheel, #blokarten .reveal-wheel { animation: none; opacity: 1; transform: none; }
         #blokarten.is-visible .reveal-track, #blokarten .reveal-track { animation: none; stroke-dashoffset: 0; }
-        #blokarten.is-visible .reveal-wind, #blokarten .reveal-wind { animation: none; stroke-dashoffset: 0; }
         #blokarten.is-visible .reveal-wave, #blokarten .reveal-wave { animation: none; stroke-dashoffset: 0; }
         #blokarten.is-visible .reveal-foam, #blokarten .reveal-foam { animation: none; opacity: 0.5; transform: none; }
         #blokarten.is-visible .reveal-windamb, #blokarten .reveal-windamb { animation: none; stroke-dashoffset: 0; }
@@ -2417,14 +2400,13 @@ c-22 -1 -33 -6 -33 -16 0 -8 -9 -15 -20 -15 -22 0 -26 -20 -8 -38 7 -7 9 -12
                 // not 580) so 'meet' fills the band on ANY container shape,
                 // portrait included, instead of centering a small content
                 // cluster inside a mostly-empty box.
-                // The kart itself was rebuilt from the user's own reference
-                // photo: a low, compact single-line chassis (not a tall
-                // A-frame competing with the sail) and a bold curved
-                // pennant sail as the dominant shape, rather than a thin
-                // straight triangle. Sand-motion (wake fan + dust mass) was
-                // dropped entirely per that same round of feedback — this
-                // pass is about matching the reference's silhouette, not
-                // selling speed.
+                // The kart is the user's own reference SVG (Gemini-
+                // generated), ported in with its exact geometry and native
+                // SMIL animations (wheel-spin blur rings, ride jiggle) kept
+                // intact — only recolored from its original flat palette
+                // to accentColor at varying opacities to match this page's
+                // hand-drawn monochrome language, and wrapped in a
+                // translate+scale to sit at this scene's proportions.
                 <div class="chapter-visual">
                   <svg class="chapter-illustration" viewBox="-40 -45 880 285" preserveAspectRatio="xMidYMid meet" aria-hidden="true">
                     {/* Sun — a plain radiating-circle glyph, reads instantly
@@ -2459,28 +2441,28 @@ c-22 -1 -33 -6 -33 -16 0 -8 -9 -15 -20 -15 -22 0 -26 -20 -8 -38 7 -7 9 -12
                     <path class="reveal-track" d="M-40,95 C160,80 320,105 500,90 C620,80 720,95 800,88" stroke={accentColor} stroke-width="1.6" opacity="0.35" fill="none" />
                     <path class="reveal-track" d="M-40,190 C160,178 320,198 500,185 C620,177 720,192 800,183" stroke={accentColor} stroke-width="1" opacity="0.14" fill="none" />
                     <g class="reveal-rig">
-                      <g transform="translate(400,150)">
-                        {/* Single bent backbone (rear wheel -> rear wheel ->
-                            mast base -> front wheel) instead of a tall
-                            A-frame — low and compact like the reference,
-                            so the sail stays the dominant shape rather than
-                            competing with a tall frame underneath it. */}
-                        <path d="M-40,14 L-8,16 L0,-6 L30,10" fill="none" stroke={accentColor} stroke-width="2.2" />
-                        <circle class="reveal-wheel reveal-wheel-1" cx="-40" cy="14" r="13" fill={accentColor} fill-opacity="0.18" stroke={accentColor} stroke-width="1.8" />
-                        <circle class="reveal-wheel reveal-wheel-2" cx="-8" cy="16" r="13" fill={accentColor} fill-opacity="0.18" stroke={accentColor} stroke-width="1.8" />
-                        <circle class="reveal-wheel reveal-wheel-3" cx="30" cy="10" r="11" fill={accentColor} fill-opacity="0.18" stroke={accentColor} stroke-width="1.8" />
-                        <g transform="rotate(13,0,-6)">
-                          <line class="reveal-mast" x1="0" y1="-118" x2="0" y2="-6" stroke={accentColor} stroke-width="2.4" />
-                          {/* Bold curved pennant, not a hard straight
-                              triangle — matches the reference's sail, and
-                              a higher fill opacity lets it read as the
-                              scene's dominant shape the way it does there. */}
-                          <path d="M4,-118 C-12,-92 -14,-50 -4,-8 L26,-14 C30,-52 24,-92 12,-116 Z" fill={accentColor} opacity="0.38" />
-                          <path class="reveal-sail" d="M4,-118 C-12,-92 -14,-50 -4,-8 L26,-14 C30,-52 24,-92 12,-116 Z" stroke={accentColor} stroke-width="1.8" fill="none" />
-                          <path class="reveal-wind reveal-wind-1" d="M18,-102 C2,-98 -14,-95 -30,-92" stroke={accentColor} stroke-width="1.6" stroke-linecap="round" fill="none" opacity="0.5" />
-                          <path class="reveal-wind reveal-wind-2" d="M22,-72 C4,-68 -12,-65 -32,-62" stroke={accentColor} stroke-width="1.6" stroke-linecap="round" fill="none" opacity="0.45" />
-                          <path class="reveal-wind reveal-wind-3" d="M20,-40 C2,-36 -14,-33 -34,-30" stroke={accentColor} stroke-width="1.6" stroke-linecap="round" fill="none" opacity="0.4" />
-                        </g>
+                      <g transform="translate(374,-21) scale(0.55)">
+                        <animateTransform attributeName="transform" type="translate" values="0,0; 0,-4; 0,0" dur="0.15s" repeatCount="indefinite" additive="sum" />
+                        <circle cx="-10" cy="330" r="12" fill="none" stroke={accentColor} stroke-width="2" opacity="0.5" />
+                        <circle cx="-10" cy="330" r="5" fill="none" stroke={accentColor} stroke-width="2" opacity="0.35" />
+                        <line x1="30" y1="315" x2="15" y2="100" stroke={accentColor} stroke-width="5" stroke-linecap="round" />
+                        <line x1="30" y1="315" x2="105" y2="335" stroke={accentColor} stroke-width="3" />
+                        <line x1="15" y1="100" x2="90" y2="305" stroke={accentColor} stroke-width="1" stroke-dasharray="2,2" opacity="0.3" />
+                        <path d="M15,100 Q100,180 85,305 L30,315 Z" fill={accentColor} opacity="0.35" stroke={accentColor} stroke-width="3" stroke-linecap="round" />
+                        <path d="M15,100 Q70,180 65,305" fill="none" stroke={accentColor} stroke-width="2" opacity="0.45" />
+                        <path d="M-5,335 L105,335 L30,315 Z" fill="none" stroke={accentColor} stroke-width="5" stroke-linejoin="round" />
+                        <circle cx="20" cy="295" r="9" fill="none" stroke={accentColor} stroke-width="2" opacity="0.6" />
+                        <path d="M15,304 L30,300 L25,325 L5,325 Z" fill="none" stroke={accentColor} stroke-width="2" stroke-linejoin="round" opacity="0.6" />
+                        <circle cx="15" cy="342" r="15" fill="none" stroke={accentColor} stroke-width="2" />
+                        <circle cx="15" cy="342" r="6" fill="none" stroke={accentColor} stroke-width="2" opacity="0.6" />
+                        <circle cx="15" cy="342" r="10" fill="none" stroke={accentColor} stroke-width="1" opacity="0.4" stroke-dasharray="8 4">
+                          <animateTransform attributeName="transform" type="rotate" from="0 15 342" to="360 15 342" dur="0.2s" repeatCount="indefinite" />
+                        </circle>
+                        <circle cx="105" cy="335" r="11" fill="none" stroke={accentColor} stroke-width="2" />
+                        <circle cx="105" cy="335" r="4" fill="none" stroke={accentColor} stroke-width="2" opacity="0.6" />
+                        <circle cx="105" cy="335" r="8" fill="none" stroke={accentColor} stroke-width="1" opacity="0.4" stroke-dasharray="6 3">
+                          <animateTransform attributeName="transform" type="rotate" from="0 105 335" to="360 105 335" dur="0.15s" repeatCount="indefinite" />
+                        </circle>
                       </g>
                     </g>
                   </svg>
