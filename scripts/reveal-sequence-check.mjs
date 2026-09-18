@@ -99,9 +99,9 @@ for (const [label, ms] of prologueBeats) {
 // rejection lands at 70%.
 const beats = [
   ['03-zoek-1-berlijn', 9.0],
-  ['04-zoek-2-basel', 15.0],
+  ['04-zoek-2-athens', 15.0],
   ['05-zoek-3-luxemburg', 21.0],
-  ['06-zoek-4-calais', 27.0],
+  ['06-zoek-4-madrid', 27.0],
   ['07-zoek-5-londen', 33.0],
   ['08-zoek-6-zwolle', 39.0],
   ['09-duik-inzet', 44.0],

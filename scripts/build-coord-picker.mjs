@@ -64,7 +64,7 @@ const html = `<!DOCTYPE html>
 </svg>
 <aside>
   <h1>Coördinaten prikken</h1>
-  <p class="hint">Klik links een plaats aan, klik daarna op de kaart waar het vizier moet landen. Groen = verplaatst. Onderaan staat de regel die ik één-op-één kan overnemen. Dit bestand heeft geen server en geen koppeling met Claude — de <strong>enige</strong> manier waarop een verplaatste pin bij Claude terechtkomt, is door het tekstvak te kopiëren en in de chat te plakken. Sluit je het tabblad zonder dat, dan blijft je werk hier bewaard (dit tabblad onthoudt het) maar heeft Claude het nooit gezien.</p>
+  <p class="hint">Klik links een plaats aan, klik daarna op de kaart waar het vizier moet landen. Groen = verplaatst. Onderaan staat de regel die ik één-op-één kan overnemen.</p>
   <p id="warn"></p>
   <ol id="list"></ol>
   <textarea id="out" readonly></textarea>

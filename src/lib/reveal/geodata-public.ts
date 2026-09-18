@@ -33,18 +33,6 @@ export type DecoyStop = {
  * goes — only Ameland's own position stays in geodata-secret.ts, so keeping
  * these here shrinks the gated payload instead of padding it.
  *
- * Positions come from an equirectangular fit anchored on the known-good
- * Ameland point (~21.3 units per degree longitude, ~17.05 per degree
- * latitude), each marker then rendered over #europe-coastline and checked
- * by eye — Berlin inside eastern Germany, Zwolle inland in the
- * Netherlands, Lyon in the south-east of France.
- *
- * Renaming a stop means recomputing its x/y. When Calais became Lyon the
- * coordinate stayed behind, which left the reticle landing on the Channel
- * narrows under a card reading "Lyon" — 109 units and most of France away.
- * scripts/coordinaten-picker.html places these by clicking the real
- * coastline if you'd rather point than compute.
- *
  * `w` tightens stop by stop (360 -> 280) so the hunt reads as closing in
  * rather than teleporting around at one fixed altitude.
  */
@@ -52,7 +40,7 @@ export const DECOY_STOPS: readonly DecoyStop[] = [
   { name: 'Berlijn', country: 'Duitsland', coord: '52.52°N 13.40°O', x: 471, y: 408, w: 360, reason: 'Te veel techno, te weinig strand, uitwijken' },
   { name: 'Athene', country: 'Griekenland', coord: '37.59°N 23.43°O', x: 660, y: 725, w: 340, reason: 'Niet goedgekeurd door Jenneke, andere opties bekijken' },
   { name: 'Luxemburg', country: 'Luxemburg', coord: '49.61°N 6.13°O', x: 382, y: 469, w: 320, reason: 'In 20 minuten uitgelopen, strategie aanpassen' },
-  { name: 'Lyon', country: 'Frankrijk', coord: '45.46°N 4.50°O', x: 354, y: 561, w: 310, reason: 'Wegens El Niño geen sneeuw. uitwijken' },
+  { name: 'Madrid', country: 'Spanje', coord: '40.25°N 3.42°O', x: 202, y: 636, w: 310, reason: 'Wegens El Niño geen sneeuw. uitwijken' },
   { name: 'Londen', country: 'Engeland', coord: "51.51°N 0.13°W", x: 305, y: 415, w: 300, reason: 'Brexit-formulieren nog in behandeling. koers bijstellen' },
   { name: 'Zwolle', country: 'Nederland', coord: '52.51°N 6.09°O', x: 388, y: 415, w: 280, reason: 'Te dichtbij. Blijf zoeken.' },
 ];

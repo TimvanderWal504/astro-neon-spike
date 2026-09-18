@@ -3182,45 +3182,42 @@ c-22 -1 -33 -6 -33 -16 0 -8 -9 -15 -20 -15 -22 0 -26 -20 -8 -38 7 -7 9 -12
           // per-device-jank risk §9's performance bar is guarding against)
           // will always soften at that multiple; the fix is to not still
           // BE looking at that same low-detail asset once it's 20+ zoom
-          // levels past what it was drawn for. Each LOD's own thresholds
-          // below overlap their neighbors' by design, so the swap reads as
-          // a crossfade rather than a cut.
-          // These thresholds and the LOD2/LOD3 scale values in
-          // geodata-secret.ts are computed together, not independently: a
-          // layer fading to full opacity AFTER the camera has already
-          // zoomed past its own natural size just shows a cropped fill
-          // with no visible shape (reported back twice now — once as
-          // "blurry", once as "still blobs, cannot see outlines" — same
-          // root cause every time). Recalibrated against the REAL traced
-          // NL outline's actual size this time (~75x45 units — the earlier
-          // hand-guessed shape was 170x160, more than double, which is why
-          // every earlier threshold pass was also off): for it to fill
-          // ~55% of frame (790/Z), that's Z≈5.8, fully filling the screen
-          // at Z≈10.5. Full visibility now targets that range instead of
-          // the old 2-4.6 window sized for the wrong shape.
-          // LOD0's fade-out (5-12) overlaps LOD1 and gives LOD2 a smooth
-          // handoff instead of the dead patch a dense frame capture caught
-          // earlier — kept as-is, still correct for the new LOD1 timing.
+          // levels past what it was drawn for.
           //
-          // LOD1 no longer fades out at all. There's no separate traced
-          // shape left to hand off to — the previous close-up SVG
-          // (WADDEN_CLUSTER_1, and the LOD3 layer it lived in) was removed
-          // entirely, so the NL sketch's own hand-drawn Wadden dash (see
-          // geodata-secret.ts's AMELAND_POINT comment for how that point
-          // was found) IS the reveal, all the way to the dive's own final
-          // zoom. That final zoom was dropped to 22x specifically so the
-          // dash stays legible there — confirmed by rendering it in
-          // isolation at 20x/50x/85x, legible through about 20-25x and
-          // abstract ribbon fragments beyond that.
+          // Thresholds were previously overlapping by design (LOD0 fading
+          // out 5-12 while LOD1 faded in 3-5), on the theory that the
+          // overlap would read as a crossfade. Screenshotted mid-dive, it
+          // instead read as both layers fully on screen at once — the
+          // Europe coastline still visible, unrelated coastline well
+          // outside the Netherlands, behind an already-formed NL outline
+          // ("Kan je [...] de europa SVG weghalen. Deze is nog steeds
+          // zichtbaar"). Same problem hit LOD2: its fade-in (8-14)
+          // overlapped LOD0's tail (still fading out until 12), so the
+          // channels ("vaargeulen") appeared while the coastline was still
+          // half-visible too.
           //
-          // LOD2 (the tidal channels — the island chain that used to share
-          // this layer is gone) fades in once the approach is underway and
-          // likewise just stays, rather than fading out to meet a shape
-          // that no longer exists.
+          // Rebuilt as a strict sequential handoff instead — each layer's
+          // window starts exactly where the previous one's ends, zero
+          // overlap, computed against the actual dive zoom curve (Zwolle's
+          // 2.82x to amelandDeep's 22x over 8s):
+          //   LOD0 (Europe coastline): full until 3x, fades out 3->4x,
+          //     gone by 4x (~1.6s into the dive — search itself never
+          //     exceeds 2.82x, so this never clips the hunt).
+          //   LOD1 (NL sketch): starts fading in at 4x, the instant LOD0
+          //     hits zero, full by 5x (~2.4s). No fadeout afterward — the
+          //     previous close-up SVG (WADDEN_CLUSTER_1 / LOD3) is gone, so
+          //     this NL sketch's own hand-drawn Wadden dash (see
+          //     geodata-secret.ts's AMELAND_POINT comment) IS the reveal
+          //     all the way to the dive's 22x end, chosen because that's
+          //     where the dash stays legible.
+          //   LOD2 (tidal channels): held back until 16x, well after LOD1
+          //     is settled and the view has narrowed down near the dash
+          //     itself, full by 20x (~7.9s) — right at the very end of the
+          //     dive rather than dueling the coastline for the same frames.
           const zoom = camera!.wide[2] / w;
-          if (lod0El) (lod0El as unknown as HTMLElement).style.opacity = String(fadeInOut(zoom, 0, 0, 5, 12));
-          if (lod1El) (lod1El as unknown as HTMLElement).style.opacity = String(ramp(3, 5, zoom));
-          (lod2Group as unknown as HTMLElement).style.opacity = String(ramp(8, 14, zoom));
+          if (lod0El) (lod0El as unknown as HTMLElement).style.opacity = String(fadeInOut(zoom, 0, 0, 3, 4));
+          if (lod1El) (lod1El as unknown as HTMLElement).style.opacity = String(ramp(4, 5, zoom));
+          (lod2Group as unknown as HTMLElement).style.opacity = String(ramp(16, 20, zoom));
 
           if (telemetryEl) {
             const altKm = Math.max(0, Math.round((w / camera!.wide[2]) * 8042));
