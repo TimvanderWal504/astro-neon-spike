@@ -3143,7 +3143,10 @@ c-22 -1 -33 -6 -33 -16 0 -8 -9 -15 -20 -15 -22 0 -26 -20 -8 -38 7 -7 9 -12
             // lands at 70% so it reads as a verdict on something you've
             // already had a moment to hope about.
             const arrived = t >= STOP_TRAVEL_FRACTION;
-            const rejected = t >= 0.7;
+            // 0.62 of a 6s stop is ~3.7s in, leaving ~2.3s to actually read
+            // the verdict. At 0.7 the rejection landed so late in the slot
+            // that it barely had time to register before the camera moved.
+            const rejected = t >= 0.62;
 
             if (index !== shownStopIndex) {
               shownStopIndex = index;

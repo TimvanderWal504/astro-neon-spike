@@ -12,11 +12,11 @@ export type Act = {
   scrollScrubbed: boolean;
 };
 
-export const TOTAL_DURATION_S = 43.0;
+export const TOTAL_DURATION_S = 53.0;
 
 /** How long each rejected candidate holds the screen, in seconds. Six of
- * them fill `search`'s 30s — change one and the other must follow. */
-export const SECONDS_PER_STOP = 5.0;
+ * them fill `search`'s 36s — change one and the other must follow. */
+export const SECONDS_PER_STOP = 6.0;
 
 // Restructured from the original 7 acts (REVEAL.md §3) after the search
 // phase turned out to be the part that worked and the Terschelling false
@@ -34,11 +34,16 @@ export const SECONDS_PER_STOP = 5.0;
 // down before pushing on to 85x, and a colour-inverting `inversion` act
 // sat between the dive and the name — both cut for adding a beat without
 // adding meaning right at the point the answer should simply arrive.
+//
+// Durations widened from 5s/5s/3s to 6s/8s/4s ("create more
+// breathingspace"): each candidate now gets 6s, so the name has time to
+// register before the rejection lands on it rather than the two arriving
+// almost together. Total 43s -> 53s.
 export const ACTS: readonly Act[] = [
   { id: 'prologue', start: 0.0, duration: 5.0, scrollScrubbed: false },
-  { id: 'search', start: 5.0, duration: 30.0, scrollScrubbed: false },
-  { id: 'dive', start: 35.0, duration: 5.0, scrollScrubbed: true },
-  { id: 'name', start: 40.0, duration: 3.0, scrollScrubbed: false },
+  { id: 'search', start: 5.0, duration: 36.0, scrollScrubbed: false },
+  { id: 'dive', start: 41.0, duration: 8.0, scrollScrubbed: true },
+  { id: 'name', start: 49.0, duration: 4.0, scrollScrubbed: false },
 ];
 
 export type ActState = {
