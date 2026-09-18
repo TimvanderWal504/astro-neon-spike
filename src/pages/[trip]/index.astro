@@ -131,6 +131,38 @@ const vapidPublicKey = import.meta.env.VAPID_PUBLIC_KEY ?? '';
       body:has(#bestemming.is-visible) .hero-map {
         opacity: 0;
       }
+
+      /* POST-REVEAL LAYOUT. Once bestemming is unlocked the page stops
+         being a countdown that promises something and becomes the trip
+         itself: the destination heads the page and the activities follow.
+         Keyed off #bestemming.is-unlocked, which comes from the server's
+         own chapter_unlocks state via /api/trip/[slug] — so every browser
+         and every device agrees without needing any per-person memory.
+
+         The hero goes rather than being trimmed: with the counter and its
+         "de rest volgt hier" promise both stale, what's left is one button
+         in a 100dvh box. The install instructions it pointed at are still
+         on the page (#installeren), just below the chapters now. */
+      body:has(#bestemming.is-unlocked) {
+        display: flex;
+        flex-direction: column;
+      }
+      body:has(#bestemming.is-unlocked) .hero {
+        display: none;
+      }
+      body:has(#bestemming.is-unlocked) .chapters {
+        order: 1;
+        padding-top: 24px;
+      }
+      body:has(#bestemming.is-unlocked) #installeren {
+        order: 2;
+      }
+      /* Ameland to the front of the chapter list. .chapters is already a
+         flex column, so this is ordering only — the DOM, the data and the
+         server response all keep their own order. */
+      body:has(#bestemming.is-unlocked) #bestemming {
+        order: -1;
+      }
       .hero-map-svg {
         width: min(88vw, 560px);
         height: auto;
@@ -513,7 +545,8 @@ const vapidPublicKey = import.meta.env.VAPID_PUBLIC_KEY ?? '';
         line-height: 1.6;
         color: #c9c6bc;
         max-width: 38ch;
-        margin: 0 0 32px;
+        margin-bottom: 32px;
+        margin-bottom: 32px;
       }
       /* HERO CTA — ported from Main.dc.html:374, links down to #installeren. */
       .hero-cta {
@@ -691,7 +724,7 @@ const vapidPublicKey = import.meta.env.VAPID_PUBLIC_KEY ?? '';
       .installeren {
         position: relative;
         z-index: 3;
-        padding: 56px 24px 96px;
+        padding: 0px 24px 96px;
         max-width: 640px;
         margin: 0 auto;
       }
@@ -2280,7 +2313,7 @@ c-22 -1 -33 -6 -33 -16 0 -8 -9 -15 -20 -15 -22 0 -26 -20 -8 -38 7 -7 9 -12
     <section id="installeren" class="installeren" data-platform="android">
       <h2 class="installeren-title">Zet 'm op je scherm</h2>
       <p class="installeren-copy">
-        Dan werken meldingen straks meteen, zodra er weer een hoofdstuk opengaat. Kies je toestel.
+        Zo krijg je meldingen zodra er iets bekend wordt. Kies je toestel.
       </p>
 
       <div class="installeren-buttons">
@@ -2594,7 +2627,7 @@ c-22 -1 -33 -6 -33 -16 0 -8 -9 -15 -20 -15 -22 0 -26 -20 -8 -38 7 -7 9 -12
             <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M18 6L6 18M6 6l12 12"/></svg>
           </button>
         </div>
-        <p class="packing-sheet-copy">Staat vast vanaf dag &eacute;&eacute;n, ook al zijn niet alle hoofdstukken al open.</p>
+        <p class="packing-sheet-copy">Handige zaken om mee te nemen. Staat vast vanaf dag &eacute;&eacute;n, ook al is nog niet alles bekend.</p>
 
         {
           packingList.map((category) => (
@@ -2948,11 +2981,18 @@ c-22 -1 -33 -6 -33 -16 0 -8 -9 -15 -20 -15 -22 0 -26 -20 -8 -38 7 -7 9 -12
         }
 
         const reducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+        // localStorage, not sessionStorage: once bestemming is unlocked the
+        // chapter moves to the top of the page, so the reveal is in view on
+        // load rather than waiting for a scroll. Session-scoped state died
+        // with the tab, which would have meant sitting through the sequence
+        // (or waiting out the skip delay) on every single reopen. Per
+        // browser is the right scope — a friend opening it for the first
+        // time on their own phone still gets the moment.
         let alreadySeen = false;
         try {
-          alreadySeen = sessionStorage.getItem('reveal-seen') === '1';
+          alreadySeen = localStorage.getItem('reveal-seen') === '1';
         } catch {
-          // sessionStorage can throw in some private-browsing modes — treat as not-seen.
+          // localStorage can throw in some private-browsing modes — treat as not-seen.
         }
 
         function markTextRevealed(instant: boolean): void {
@@ -2966,7 +3006,7 @@ c-22 -1 -33 -6 -33 -16 0 -8 -9 -15 -20 -15 -22 0 -26 -20 -8 -38 7 -7 9 -12
             chapterContent!.classList.add('reveal-text-in');
           }
           try {
-            sessionStorage.setItem('reveal-seen', '1');
+            localStorage.setItem('reveal-seen', '1');
           } catch {
             // best-effort only
           }
@@ -3249,9 +3289,14 @@ c-22 -1 -33 -6 -33 -16 0 -8 -9 -15 -20 -15 -22 0 -26 -20 -8 -38 7 -7 9 -12
         }
 
         if (skipEl) {
+          // Was 3000, chosen when the reveal only ever started because you
+          // scrolled to it — a late button kept it off the prologue. Now it
+          // can also fire unprompted on load (chapter sits at the top once
+          // unlocked), so three seconds with no way out is too long for
+          // someone who just wants to get back to the page.
           window.setTimeout(() => {
             if (!cancelled) skipEl.classList.add('is-active');
-          }, 3000);
+          }, 1000);
           skipEl.addEventListener('click', skip);
         }
         window.addEventListener('wheel', onWheel, { passive: false });
