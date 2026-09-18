@@ -92,11 +92,18 @@ export const LOD2_ISLANDS: readonly { cx: number; cy: number; rotation: number; 
 // (near the deepest point the camera actually reaches, 85x), against
 // cluster 1's real width (w≈76.0, same shape as LOD2's Ameland entry):
 // scale = 0.75 * 790 / (76 * 78) ≈ 0.0987.
-/** Ameland close-up (Act 4 deepest point / Act 5): the same traced shape
- * (WADDEN_CLUSTER_1, `traceIndex`) as LOD2's own Ameland entry, just
- * larger, plus three village-position dots (Nes, Ballum, Hollum, west to
- * east along the island's inhabited south side) sized to this shape's
- * actual footprint at scale 0.0987. */
+/** Ameland close-up: the same traced shape (WADDEN_CLUSTER_1,
+ * `traceIndex`) as LOD2's own Ameland entry, just larger, plus three
+ * village dots (Hollum, Ballum, Nes — west to east along the island's
+ * inhabited south side) sized to this shape's footprint at scale 0.0987.
+ *
+ * The village y-offsets follow the silhouette's own diagonal rather than
+ * sitting on one flat line. They used to be near-level (+0.5/+0.2/+0.4),
+ * which only looked right while the `inversion` act rendered them as light
+ * dots on a dark ground — off-island dots were still visible there. With
+ * the inversion gone they're dark-on-amber, so a dot that misses the
+ * island now vanishes into the background instead, and two of the three
+ * did exactly that. */
 export const LOD3_AMELAND = {
   cx: AMELAND_POINT[0],
   cy: AMELAND_POINT[1],
@@ -104,9 +111,9 @@ export const LOD3_AMELAND = {
   scale: 0.0987,
   traceIndex: 1 as const,
   villages: [
-    { x: AMELAND_POINT[0] - 3.5, y: AMELAND_POINT[1] + 0.5 },
-    { x: AMELAND_POINT[0] - 0.5, y: AMELAND_POINT[1] + 0.2 },
-    { x: AMELAND_POINT[0] + 3, y: AMELAND_POINT[1] + 0.4 },
+    { x: AMELAND_POINT[0] - 3.0, y: AMELAND_POINT[1] + 0.9 }, // Hollum
+    { x: AMELAND_POINT[0] - 0.5, y: AMELAND_POINT[1] + 0.3 }, // Ballum
+    { x: AMELAND_POINT[0] + 2.5, y: AMELAND_POINT[1] - 0.6 }, // Nes
   ] as { x: number; y: number }[],
 };
 
