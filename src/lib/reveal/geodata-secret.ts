@@ -110,10 +110,19 @@ export const LOD3_AMELAND = {
   rotation: -4,
   scale: 0.0987,
   traceIndex: 1 as const,
+  // Each y is the measured vertical midpoint of the silhouette at that x,
+  // not an estimate: the shape was rendered under this exact transform and
+  // probed with isPointInFill to find where the island actually starts and
+  // stops at each offset. Eyeballing the diagonal twice put Nes in open
+  // water — at x+2.5 the island only spans y-1.78..-0.96, and the guess
+  // was -0.6.
+  //   x-2.8 -> island y  0.10..1.50 (mid  0.80)
+  //   x-0.5 -> island y -0.56..0.64 (mid  0.04)
+  //   x+2.0 -> island y -1.58..-0.68 (mid -1.13)
   villages: [
-    { x: AMELAND_POINT[0] - 3.0, y: AMELAND_POINT[1] + 0.9 }, // Hollum
-    { x: AMELAND_POINT[0] - 0.5, y: AMELAND_POINT[1] + 0.3 }, // Ballum
-    { x: AMELAND_POINT[0] + 2.5, y: AMELAND_POINT[1] - 0.6 }, // Nes
+    { x: AMELAND_POINT[0] - 2.8, y: AMELAND_POINT[1] + 0.8 }, // Hollum
+    { x: AMELAND_POINT[0] - 0.5, y: AMELAND_POINT[1] + 0.04 }, // Ballum
+    { x: AMELAND_POINT[0] + 2.0, y: AMELAND_POINT[1] - 1.13 }, // Nes
   ] as { x: number; y: number }[],
 };
 
