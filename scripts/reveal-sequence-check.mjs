@@ -6,8 +6,8 @@
 //
 // Two things this gets right that the earlier version didn't:
 //
-// 1. The labels match the current 5-act, 45s timeline (prologue, search,
-//    dive, inversion, name). They used to name `lock`, `dive1`,
+// 1. The labels match the current 4-act, 43s timeline (prologue, search,
+//    dive, name). They used to name `lock`, `dive1`,
 //    `terschelling`, `mismatch` and `dive2` — acts that no longer exist —
 //    at timings from the old 36s cut, so the output read as a sequence
 //    that hadn't been built for some time.
@@ -104,12 +104,10 @@ const beats = [
   ['06-zoek-4-calais', 24.0],
   ['07-zoek-5-londen', 29.0],
   ['08-zoek-6-zwolle', 34.0],
-  ['09-duik-inzet', 35.8],
-  ['10-duik-lock', 37.5],
-  ['11-duik-diep', 39.5],
-  ['12-inversie', 41.0],
-  ['13-naam', 43.5],
-  ['14-eind', 45.0],
+  ['09-duik-inzet', 36.0],
+  ['10-duik-lock', 38.0],
+  ['11-naam', 41.0],
+  ['12-eind', 43.0],
 ];
 for (const [label, targetS] of beats) {
   await waitForClock(targetS);

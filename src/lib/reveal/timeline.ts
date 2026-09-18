@@ -2,7 +2,7 @@
 // functions so it's testable without a DOM (see scratch tests run during
 // development). All times are seconds, matching the doc's own table.
 
-export type ActId = 'prologue' | 'search' | 'dive' | 'inversion' | 'name';
+export type ActId = 'prologue' | 'search' | 'dive' | 'name';
 
 export type Act = {
   id: ActId;
@@ -12,7 +12,7 @@ export type Act = {
   scrollScrubbed: boolean;
 };
 
-export const TOTAL_DURATION_S = 45.0;
+export const TOTAL_DURATION_S = 43.0;
 
 /** How long each rejected candidate holds the screen, in seconds. Six of
  * them fill `search`'s 30s — change one and the other must follow. */
@@ -29,12 +29,16 @@ export const SECONDS_PER_STOP = 5.0;
 // (geodata-public.ts's DECOY_STOPS), ending on Zwolle — right country,
 // still wrong — which does the false bottom's job without needing a second
 // island on screen at all. Only then does the camera dive to Ameland.
+//
+// The dive is one uninterrupted move. It used to settle at 33x halfway
+// down before pushing on to 85x, and a colour-inverting `inversion` act
+// sat between the dive and the name — both cut for adding a beat without
+// adding meaning right at the point the answer should simply arrive.
 export const ACTS: readonly Act[] = [
   { id: 'prologue', start: 0.0, duration: 5.0, scrollScrubbed: false },
   { id: 'search', start: 5.0, duration: 30.0, scrollScrubbed: false },
   { id: 'dive', start: 35.0, duration: 5.0, scrollScrubbed: true },
-  { id: 'inversion', start: 40.0, duration: 2.5, scrollScrubbed: false },
-  { id: 'name', start: 42.5, duration: 2.5, scrollScrubbed: false },
+  { id: 'name', start: 40.0, duration: 3.0, scrollScrubbed: false },
 ];
 
 export type ActState = {

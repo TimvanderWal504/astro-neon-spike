@@ -243,7 +243,6 @@ const vapidPublicKey = import.meta.env.VAPID_PUBLIC_KEY ?? '';
          boundaries, not a single fixed-length CSS animation. */
       .hero-map-dive-svg.is-impact { filter: invert(1); }
       .hero-map-dive-svg.is-mismatch { filter: sepia(1) saturate(6) hue-rotate(-40deg); }
-      .hero-map-dive-svg.is-inverted { filter: invert(1) hue-rotate(180deg); transition: filter 700ms ease; }
 
       #reveal-lod2, #reveal-lod3 {
         opacity: 0;
@@ -3079,11 +3078,12 @@ c-22 -1 -33 -6 -33 -16 0 -8 -9 -15 -20 -15 -22 0 -26 -20 -8 -38 7 -7 9 -12
             }
             case 'dive': {
               // Zwolle (the last rejection, already in the right country)
-              // straight down onto Ameland, in two stages so the island has
-              // a beat at readable size before the final push.
+              // straight down onto Ameland — one move, no intermediate
+              // settle. It used to stage through 33x at the halfway point,
+              // which put a pause in exactly the moment that should just
+              // arrive somewhere.
               const from = stopPoint(DECOY_STOPS[DECOY_STOPS.length - 1]);
-              if (localT < 0.5) return interpAt(from, camera!.ameland33x, localT / 0.5);
-              return interpAt(camera!.ameland33x, camera!.amelandDeep, (localT - 0.5) / 0.5);
+              return interpAt(from, camera!.amelandDeep, localT);
             }
             default:
               return point(camera!.amelandDeep);
@@ -3174,7 +3174,6 @@ c-22 -1 -33 -6 -33 -16 0 -8 -9 -15 -20 -15 -22 0 -26 -20 -8 -38 7 -7 9 -12
             window.setTimeout(() => svgEl!.classList.remove('is-impact'), 90);
             if (navigator.vibrate) navigator.vibrate(15);
           }
-          svgEl!.classList.toggle('is-inverted', act.id === 'inversion' || act.id === 'name');
 
           // LOD crossfade by current zoom level, not by act — this is what
           // REVEAL.md §8 calls "Fase 2" and it was still missing: without

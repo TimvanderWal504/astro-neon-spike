@@ -43,7 +43,6 @@ const AMELAND_POINT: readonly [number, number] = [393, 392];
 // the shared viewBox) as 1x: 18x at the end of Duik I, 85x at the end of
 // Duik II.
 const W_1X = 790;
-const W_33X = W_1X / 33;
 const W_85X = W_1X / 85;
 
 // Only the destination's own camera targets are secret now. The search
@@ -53,9 +52,8 @@ const W_85X = W_1X / 85;
 // acts that used them.
 export const CAMERA_KEYPOINTS = {
   wide: [475, 395, W_1X] as ZoomPoint,
-  /** Where the dive settles before the final push — the island fills the
-   * frame but the villages aren't readable yet. */
-  ameland33x: [AMELAND_POINT[0], AMELAND_POINT[1], W_33X] as ZoomPoint,
+  /** The dive's single target. An intermediate 33x settle used to sit
+   * between Zwolle and here; it was cut so the dive arrives in one move. */
   amelandDeep: [AMELAND_POINT[0], AMELAND_POINT[1], W_85X] as ZoomPoint,
 } as const;
 
