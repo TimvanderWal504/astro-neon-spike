@@ -659,10 +659,23 @@ const vapidPublicKey = import.meta.env.VAPID_PUBLIC_KEY ?? '';
       #blokarten.is-visible .reveal-track { animation: revealRouteDraw 1500ms cubic-bezier(0.16,1,0.3,1) 100ms forwards; }
       /* Beach-vibe pass: kicked-up sand behind the wheels, reusing the
          same dashoffset draw-in as the ambient route/horizon lines. */
-      #blokarten .reveal-wake { stroke-dasharray: 46; stroke-dashoffset: 46; opacity: 0.75; }
-      #blokarten.is-visible .reveal-wake-1 { animation: revealRouteDraw 450ms cubic-bezier(0.16,1,0.3,1) 1400ms forwards; }
-      #blokarten.is-visible .reveal-wake-2 { animation: revealRouteDraw 450ms cubic-bezier(0.16,1,0.3,1) 1470ms forwards; }
-      #blokarten.is-visible .reveal-wake-3 { animation: revealRouteDraw 450ms cubic-bezier(0.16,1,0.3,1) 1540ms forwards; }
+      #blokarten .reveal-wake { stroke-dasharray: 220; stroke-dashoffset: 220; opacity: 0.8; }
+      #blokarten.is-visible .reveal-wake-1 { animation: revealRouteDraw 450ms cubic-bezier(0.16,1,0.3,1) 1350ms forwards; }
+      #blokarten.is-visible .reveal-wake-2 { animation: revealRouteDraw 450ms cubic-bezier(0.16,1,0.3,1) 1410ms forwards; }
+      #blokarten.is-visible .reveal-wake-3 { animation: revealRouteDraw 450ms cubic-bezier(0.16,1,0.3,1) 1470ms forwards; }
+      #blokarten.is-visible .reveal-wake-4 { animation: revealRouteDraw 450ms cubic-bezier(0.16,1,0.3,1) 1530ms forwards; }
+      #blokarten.is-visible .reveal-wake-5 { animation: revealRouteDraw 450ms cubic-bezier(0.16,1,0.3,1) 1590ms forwards; }
+      /* Soft dust mass behind the wake fan — the streaks alone read thin;
+         a low-opacity blob gives the kicked-up sand some weight. */
+      #blokarten .reveal-dust { opacity: 0; }
+      @keyframes revealDustIn { to { opacity: 0.12; } }
+      #blokarten.is-visible .reveal-dust { animation: revealDustIn 900ms cubic-bezier(0.16,1,0.3,1) 1300ms forwards; }
+      /* Wind-rush lines swept back off the sail's leading edge, inside the
+         same rotated sail group so they always lean with it. */
+      #blokarten .reveal-wind { stroke-dasharray: 60; stroke-dashoffset: 60; }
+      #blokarten.is-visible .reveal-wind-1 { animation: revealRouteDraw 400ms cubic-bezier(0.16,1,0.3,1) 1550ms forwards; }
+      #blokarten.is-visible .reveal-wind-2 { animation: revealRouteDraw 400ms cubic-bezier(0.16,1,0.3,1) 1620ms forwards; }
+      #blokarten.is-visible .reveal-wind-3 { animation: revealRouteDraw 400ms cubic-bezier(0.16,1,0.3,1) 1690ms forwards; }
       /* Two distant gulls; shared entrance keyframe (only the delay
          differs per instance), same birdFlap loop Zondag's bird uses. */
       #blokarten .reveal-bird { opacity: 0; transform: translateY(10px); transform-box: fill-box; transform-origin: center; }
@@ -1186,6 +1199,8 @@ const vapidPublicKey = import.meta.env.VAPID_PUBLIC_KEY ?? '';
         #blokarten.is-visible .reveal-wheel, #blokarten .reveal-wheel { animation: none; opacity: 1; transform: none; }
         #blokarten.is-visible .reveal-track, #blokarten .reveal-track { animation: none; stroke-dashoffset: 0; }
         #blokarten.is-visible .reveal-wake, #blokarten .reveal-wake { animation: none; stroke-dashoffset: 0; }
+        #blokarten.is-visible .reveal-dust, #blokarten .reveal-dust { animation: none; opacity: 0.12; }
+        #blokarten.is-visible .reveal-wind, #blokarten .reveal-wind { animation: none; stroke-dashoffset: 0; }
         #blokarten.is-visible .reveal-bird, #blokarten .reveal-bird { animation: none; opacity: 0.42; transform: none; }
         #blokarten .reveal-bird-flap, #blokarten.is-visible .reveal-bird-flap { animation: none; transform: none; }
         #brouwerij.is-visible .reveal-mug-left, #brouwerij .reveal-mug-left { animation: none; opacity: 0.7; transform: rotate(14deg); }
@@ -2427,9 +2442,16 @@ c-22 -1 -33 -6 -33 -16 0 -8 -9 -15 -20 -15 -22 0 -26 -20 -8 -38 7 -7 9 -12
                     </g>
                     <g class="reveal-rig">
                       <g transform="translate(400,553) scale(1.2)">
-                        <path class="reveal-wake reveal-wake-1" d="M-60,42 C-76,46 -90,50 -104,52" stroke={accentColor} stroke-width="2" stroke-linecap="round" fill="none" />
-                        <path class="reveal-wake reveal-wake-2" d="M54,42 C40,48 26,50 14,54" stroke={accentColor} stroke-width="2" stroke-linecap="round" fill="none" />
-                        <path class="reveal-wake reveal-wake-3" d="M-4,48 C-18,54 -30,56 -42,58" stroke={accentColor} stroke-width="2" stroke-linecap="round" fill="none" />
+                        {/* "Racing" was missing, not just ground/air — a
+                            wide rooster-tail fan of trailing sand (instead
+                            of three small commas) plus a soft dust mass
+                            behind it does the actual speed-selling work. */}
+                        <path class="reveal-dust" d="M-20,30 C-52,20 -92,28 -122,48 C-152,66 -142,90 -100,88 C-60,86 -20,66 0,50 C10,42 0,34 -20,30 Z" fill={accentColor} />
+                        <path class="reveal-wake reveal-wake-1" d="M-58,40 C-72,42 -84,44 -96,46" stroke={accentColor} stroke-width="2.4" stroke-linecap="round" fill="none" />
+                        <path class="reveal-wake reveal-wake-2" d="M-56,44 C-78,48 -100,50 -124,54" stroke={accentColor} stroke-width="2" stroke-linecap="round" fill="none" />
+                        <path class="reveal-wake reveal-wake-3" d="M-50,48 C-80,54 -112,58 -142,64" stroke={accentColor} stroke-width="1.6" stroke-linecap="round" fill="none" />
+                        <path class="reveal-wake reveal-wake-4" d="M-40,52 C-76,60 -114,64 -150,72" stroke={accentColor} stroke-width="1.3" stroke-linecap="round" fill="none" />
+                        <path class="reveal-wake reveal-wake-5" d="M54,42 C40,48 26,50 14,54" stroke={accentColor} stroke-width="1.8" stroke-linecap="round" fill="none" />
                         {/* Straight axle + boom, no arcs — the closed
                             trapezoid (then the strutted version after that)
                             both still traced a fender-like curve over the
@@ -2442,10 +2464,13 @@ c-22 -1 -33 -6 -33 -16 0 -8 -9 -15 -20 -15 -22 0 -26 -20 -8 -38 7 -7 9 -12
                         <circle class="reveal-wheel reveal-wheel-1" cx="-57" cy="33" r="8" fill="none" stroke={accentColor} stroke-width="1.6" />
                         <circle class="reveal-wheel reveal-wheel-2" cx="57" cy="33" r="8" fill="none" stroke={accentColor} stroke-width="1.6" />
                         <circle class="reveal-wheel reveal-wheel-3" cx="0" cy="39" r="7" fill="none" stroke={accentColor} stroke-width="1.6" />
-                        <g transform="rotate(7,0,6)">
+                        <g transform="rotate(11,0,6)">
                           <line class="reveal-mast" x1="0" y1="-112" x2="0" y2="6" stroke={accentColor} stroke-width="1.6" />
                           <path d="M0,-109 C33,-89 42,-42 24,0 L0,-6 Z" fill={accentColor} opacity="0.2" />
                           <path class="reveal-sail" d="M0,-109 C33,-89 42,-42 24,0 L0,-6 Z" stroke={accentColor} stroke-width="1.3" fill="none" />
+                          <path class="reveal-wind reveal-wind-1" d="M18,-95 C4,-92 -8,-90 -20,-88" stroke={accentColor} stroke-width="1.2" stroke-linecap="round" fill="none" opacity="0.5" />
+                          <path class="reveal-wind reveal-wind-2" d="M22,-70 C6,-66 -8,-64 -22,-62" stroke={accentColor} stroke-width="1.2" stroke-linecap="round" fill="none" opacity="0.45" />
+                          <path class="reveal-wind reveal-wind-3" d="M20,-45 C4,-42 -10,-40 -24,-38" stroke={accentColor} stroke-width="1.2" stroke-linecap="round" fill="none" opacity="0.4" />
                         </g>
                       </g>
                     </g>
