@@ -659,21 +659,10 @@ const vapidPublicKey = import.meta.env.VAPID_PUBLIC_KEY ?? '';
       #blokarten.is-visible .reveal-rig { animation: revealRigIn 1300ms cubic-bezier(0.16,1,0.3,1) 200ms forwards; }
       #blokarten .reveal-track { stroke-dasharray: 1000; stroke-dashoffset: 1000; }
       #blokarten.is-visible .reveal-track { animation: revealRouteDraw 1500ms cubic-bezier(0.16,1,0.3,1) 100ms forwards; }
-      /* Ocean waves — two rows, phase-shifted, plus a few foam ticks. */
+      /* Ocean waves — two rows, phase-shifted. */
       #blokarten .reveal-wave { stroke-dasharray: 1100; stroke-dashoffset: 1100; }
       #blokarten.is-visible .reveal-wave-1 { animation: revealRouteDraw 1400ms cubic-bezier(0.16,1,0.3,1) 80ms forwards; }
       #blokarten.is-visible .reveal-wave-2 { animation: revealRouteDraw 1400ms cubic-bezier(0.16,1,0.3,1) 220ms forwards; }
-      #blokarten .reveal-foam { opacity: 0; transform: scale(0); transform-box: fill-box; transform-origin: center; }
-      @keyframes revealFoamIn { to { opacity: 0.5; transform: scale(1); } }
-      #blokarten.is-visible .reveal-foam-1 { animation: revealFoamIn 400ms cubic-bezier(0.34,1.56,0.64,1) 1500ms forwards; }
-      #blokarten.is-visible .reveal-foam-2 { animation: revealFoamIn 400ms cubic-bezier(0.34,1.56,0.64,1) 1560ms forwards; }
-      #blokarten.is-visible .reveal-foam-3 { animation: revealFoamIn 400ms cubic-bezier(0.34,1.56,0.64,1) 1620ms forwards; }
-      /* Ambient sky wind, separate from the sail's own wind-rush lines —
-         these establish "windy beach" before the rig even slides in. */
-      #blokarten .reveal-windamb { stroke-dasharray: 160; stroke-dashoffset: 160; opacity: 0.3; }
-      #blokarten.is-visible .reveal-windamb-1 { animation: revealRouteDraw 700ms cubic-bezier(0.16,1,0.3,1) 350ms forwards; }
-      #blokarten.is-visible .reveal-windamb-2 { animation: revealRouteDraw 700ms cubic-bezier(0.16,1,0.3,1) 450ms forwards; }
-      #blokarten.is-visible .reveal-windamb-3 { animation: revealRouteDraw 700ms cubic-bezier(0.16,1,0.3,1) 550ms forwards; }
       /* Two distant gulls; shared entrance keyframe (only the delay
          differs per instance), same birdFlap loop Zondag's bird uses. */
       #blokarten .reveal-bird { opacity: 0; transform: translateY(10px); transform-box: fill-box; transform-origin: center; }
@@ -1194,8 +1183,6 @@ const vapidPublicKey = import.meta.env.VAPID_PUBLIC_KEY ?? '';
         #blokarten.is-visible .reveal-rig, #blokarten .reveal-rig { animation: none; opacity: 0.7; transform: none; }
         #blokarten.is-visible .reveal-track, #blokarten .reveal-track { animation: none; stroke-dashoffset: 0; }
         #blokarten.is-visible .reveal-wave, #blokarten .reveal-wave { animation: none; stroke-dashoffset: 0; }
-        #blokarten.is-visible .reveal-foam, #blokarten .reveal-foam { animation: none; opacity: 0.5; transform: none; }
-        #blokarten.is-visible .reveal-windamb, #blokarten .reveal-windamb { animation: none; stroke-dashoffset: 0; }
         #blokarten.is-visible .reveal-bird, #blokarten .reveal-bird { animation: none; opacity: 0.42; transform: none; }
         #blokarten .reveal-bird-flap, #blokarten.is-visible .reveal-bird-flap { animation: none; transform: none; }
         #brouwerij.is-visible .reveal-mug-left, #brouwerij .reveal-mug-left { animation: none; opacity: 0.7; transform: rotate(14deg); }
@@ -2416,9 +2403,6 @@ c-22 -1 -33 -6 -33 -16 0 -8 -9 -15 -20 -15 -22 0 -26 -20 -8 -38 7 -7 9 -12
                       <circle r="16" fill="none" stroke={accentColor} stroke-width="1.6" opacity="0.55" />
                       <path d="M16,0 L26,0 M11.3,11.3 L18.4,18.4 M0,16 L0,26 M-11.3,11.3 L-18.4,18.4 M-16,0 L-26,0 M-11.3,-11.3 L-18.4,-18.4 M0,-16 L0,-26 M11.3,-11.3 L18.4,-18.4" stroke={accentColor} stroke-width="1.6" stroke-linecap="round" opacity="0.55" />
                     </g>
-                    <path class="reveal-windamb reveal-windamb-1" d="M60,-8 L180,-14" stroke={accentColor} stroke-width="1.8" stroke-linecap="round" fill="none" />
-                    <path class="reveal-windamb reveal-windamb-2" d="M300,0 L420,-6" stroke={accentColor} stroke-width="1.8" stroke-linecap="round" fill="none" />
-                    <path class="reveal-windamb reveal-windamb-3" d="M550,-10 L670,-16" stroke={accentColor} stroke-width="1.8" stroke-linecap="round" fill="none" />
                     <g transform="translate(150,-8)">
                       <g class="reveal-bird reveal-bird-1">
                         <g class="reveal-bird-flap">
@@ -2435,9 +2419,6 @@ c-22 -1 -33 -6 -33 -16 0 -8 -9 -15 -20 -15 -22 0 -26 -20 -8 -38 7 -7 9 -12
                     </g>
                     <path class="reveal-wave reveal-wave-1" d="M-40,45 Q0,27 40,45 Q80,63 120,45 Q160,27 200,45 Q240,63 280,45 Q320,27 360,45 Q400,63 440,45 Q480,27 520,45 Q560,63 600,45 Q640,27 680,45 Q720,63 760,45 Q800,27 840,45" stroke={accentColor} stroke-width="1.8" opacity="0.4" fill="none" />
                     <path class="reveal-wave reveal-wave-2" d="M-40,65 Q-20,53 20,65 Q60,77 100,65 Q140,53 180,65 Q220,77 260,65 Q300,53 340,65 Q380,77 420,65 Q460,53 500,65 Q540,77 580,65 Q620,53 660,65 Q700,77 740,65 Q780,53 820,65" stroke={accentColor} stroke-width="1.6" opacity="0.3" fill="none" />
-                    <circle class="reveal-foam reveal-foam-1" cx="0" cy="27" r="2.4" fill={accentColor} />
-                    <circle class="reveal-foam reveal-foam-2" cx="320" cy="27" r="2.4" fill={accentColor} />
-                    <circle class="reveal-foam reveal-foam-3" cx="640" cy="27" r="2.4" fill={accentColor} />
                     <path class="reveal-track" d="M-40,95 C160,80 320,105 500,90 C620,80 720,95 800,88" stroke={accentColor} stroke-width="1.6" opacity="0.35" fill="none" />
                     <path class="reveal-track" d="M-40,190 C160,178 320,198 500,185 C620,177 720,192 800,183" stroke={accentColor} stroke-width="1" opacity="0.14" fill="none" />
                     <g class="reveal-rig">
@@ -2450,6 +2431,11 @@ c-22 -1 -33 -6 -33 -16 0 -8 -9 -15 -20 -15 -22 0 -26 -20 -8 -38 7 -7 9 -12
                         <line x1="15" y1="100" x2="90" y2="305" stroke={accentColor} stroke-width="1" stroke-dasharray="2,2" opacity="0.3" />
                         <path d="M15,100 Q100,180 85,305 L30,315 Z" fill={accentColor} opacity="0.35" stroke={accentColor} stroke-width="3" stroke-linecap="round" />
                         <path d="M15,100 Q70,180 65,305" fill="none" stroke={accentColor} stroke-width="2" opacity="0.45" />
+                        {/* Wind rushing past the sail's leading edge —
+                            the reference SVG had no wind cue at all. */}
+                        <path d="M25,150 C10,145 -5,142 -20,138" fill="none" stroke={accentColor} stroke-width="2.2" stroke-linecap="round" opacity="0.45" />
+                        <path d="M22,205 C6,200 -10,197 -26,193" fill="none" stroke={accentColor} stroke-width="2.2" stroke-linecap="round" opacity="0.4" />
+                        <path d="M20,260 C4,255 -12,252 -28,248" fill="none" stroke={accentColor} stroke-width="2.2" stroke-linecap="round" opacity="0.35" />
                         <path d="M-5,335 L105,335 L30,315 Z" fill="none" stroke={accentColor} stroke-width="5" stroke-linejoin="round" />
                         <circle cx="20" cy="295" r="9" fill="none" stroke={accentColor} stroke-width="2" opacity="0.6" />
                         <path d="M15,304 L30,300 L25,325 L5,325 Z" fill="none" stroke={accentColor} stroke-width="2" stroke-linejoin="round" opacity="0.6" />
