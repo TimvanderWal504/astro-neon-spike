@@ -49,12 +49,12 @@ export type DecoyStop = {
  * rather than teleporting around at one fixed altitude.
  */
 export const DECOY_STOPS: readonly DecoyStop[] = [
-  { name: 'Berlijn', country: 'Duitsland', coord: '52.52°N 13.40°O', x: 556, y: 408, w: 360, reason: 'Te veel techno, te weinig strand, uitwijken' },
-  { name: 'Basel', country: 'Zwitserland', coord: '47.56°N 7.59°O', x: 430, y: 500, w: 340, reason: 'Tim krijgt geen visum, andere opties bekijken' },
-  { name: 'Luxemburg', country: 'Luxemburg', coord: '49.61°N 6.13°O', x: 394, y: 456, w: 320, reason: 'In 20 minuten uitgelopen, strategie aanpassen' },
-  { name: 'Lyon', country: 'Frankrijk', coord: '45.46°N 4.50°O', x: 374, y: 523, w: 310, reason: 'Wegens El Niño geen sneeuw. uitwijken' },
-  { name: 'Londen', country: 'Engeland', coord: "51.51°N 0.13°W", x: 272, y: 422, w: 300, reason: 'Brexit-formulieren nog in behandeling. koers bijstellen' },
-  { name: 'Zwolle', country: 'Nederland', coord: '52.51°N 6.09°O', x: 400, y: 408, w: 280, reason: 'Te dichtbij. Blijf zoeken.' },
+  { name: 'Berlijn', country: 'Duitsland', coord: '52.52°N 13.40°O', x: 471, y: 408, w: 360, reason: 'Te veel techno, te weinig strand, uitwijken' },
+  { name: 'Basel', country: 'Zwitserland', coord: '47.56°N 7.59°O', x: 403, y: 528, w: 340, reason: 'Tim krijgt geen visum, andere opties bekijken' },
+  { name: 'Luxemburg', country: 'Luxemburg', coord: '49.61°N 6.13°O', x: 382, y: 469, w: 320, reason: 'In 20 minuten uitgelopen, strategie aanpassen' },
+  { name: 'Lyon', country: 'Frankrijk', coord: '45.46°N 4.50°O', x: 354, y: 561, w: 310, reason: 'Wegens El Niño geen sneeuw. uitwijken' },
+  { name: 'Londen', country: 'Engeland', coord: "51.51°N 0.13°W", x: 305, y: 415, w: 300, reason: 'Brexit-formulieren nog in behandeling. koers bijstellen' },
+  { name: 'Zwolle', country: 'Nederland', coord: '52.51°N 6.09°O', x: 388, y: 415, w: 280, reason: 'Te dichtbij. Blijf zoeken.' },
 ];
 
 /**
