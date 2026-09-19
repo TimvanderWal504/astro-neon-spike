@@ -1,5 +1,6 @@
 import { getCollection } from 'astro:content';
 import { getSql } from './db';
+import { renderChapterVisual } from './chapter-visuals';
 import { CAMERA_KEYPOINTS, ISLAND_SHAPE } from './reveal/geodata-secret';
 
 // TripState (AD-7, computed): TripContent merged with live chapter_unlocks
@@ -23,6 +24,24 @@ export type ChapterRevealData = {
 
 export type TripChapterState = {
   id: string;
+  /**
+   * Non-descriptive DOM handle for this chapter's slot in the public page
+   * ("h1", "h2", ...), derived from `order` alone.
+   *
+   * The static shell needs *some* stable per-chapter identifier to render
+   * as a slot id and for the client to match API rows against. It used to
+   * use the content id, which meant `blokarten`, `brouwerij` and
+   * `spelletjes` sat in the prerendered HTML — and in every locked row of
+   * the redacted API response — describing the programme to anyone reading
+   * the page source. `order` is already public (it drives `data-order` and
+   * the slot ordering), so keying off it adds nothing a visitor cannot
+   * already see.
+   *
+   * The real `id` stays server-side for locked chapters and remains the
+   * `chapter_unlocks` key and the admin toggle's handle, so no stored row
+   * or admin flow changes with this.
+   */
+  slot: string;
   order: number;
   kind: ChapterKind;
   title: string;
@@ -36,6 +55,10 @@ export type TripChapterState = {
   // except bestemming. Flows through redactTripState exactly like the
   // fields above: stripped whenever the chapter is locked.
   revealData: ChapterRevealData | null;
+  // Rendered illustration markup for this chapter's svgVariant, or null for
+  // the text-only variants (see chapter-visuals.ts). Gated exactly like the
+  // fields above — a locked chapter's scene never leaves the server.
+  illustration: string | null;
 };
 
 export type TripState = {
@@ -45,9 +68,10 @@ export type TripState = {
   chapters: TripChapterState[];
 };
 
+/** Public chapter rows carry `slot`, never the content `id` — see TripChapterState.slot. */
 export type RedactedChapterState =
-  | { id: string; order: number; kind: ChapterKind; unlocked: false }
-  | TripChapterState;
+  | { slot: string; order: number; kind: ChapterKind; unlocked: false }
+  | Omit<TripChapterState, 'id'>;
 
 export type RedactedTripState = {
   slug: string;
@@ -55,6 +79,16 @@ export type RedactedTripState = {
   accentColor: string;
   chapters: RedactedChapterState[];
 };
+
+/**
+ * The public DOM handle for the chapter at `order` — see
+ * TripChapterState.slot. Shared by the static shell and the API for the
+ * same reason `sortByOrder` is: if the two ever disagreed, the client
+ * would fail to match unlocked content to its slot.
+ */
+export function slotKey(order: number): string {
+  return `h${order}`;
+}
 
 /** Shared chapter-ordering rule — kept in one place so the API and the static shell can never disagree on order. */
 export function sortByOrder<T extends { order: number }>(items: readonly T[]): T[] {
@@ -83,6 +117,7 @@ export async function getTripState(slug: string): Promise<TripState | null> {
   const chapters: TripChapterState[] = sortByOrder(trip.data.chapters)
     .map((chapter) => ({
       id: chapter.id,
+      slot: slotKey(chapter.order),
       order: chapter.order,
       kind: chapter.kind,
       title: chapter.title,
@@ -91,6 +126,11 @@ export async function getTripState(slug: string): Promise<TripState | null> {
       description: chapter.description,
       svgVariant: chapter.svgVariant,
       alwaysUnlocked: chapter.alwaysUnlocked,
+      // Rendered here rather than in the page template so it travels
+      // through redactTripState with the rest of the chapter's real
+      // content — see chapter-visuals.ts's header for why it may not sit
+      // in the prerendered shell.
+      illustration: renderChapterVisual(chapter.svgVariant, trip.data.accentColor),
       // The camera/geometry fields only ever apply to the vizier-europa
       // (map-dive) chapter — computed fresh per request rather than stored,
       // so geodata-secret.ts stays the single source of truth for them.
@@ -171,18 +211,27 @@ export async function setChapterUnlocked(
 
 /**
  * Pure redaction step (AD-2): a locked chapter's entry is stripped to
- * exactly `{id, order, kind, unlocked:false}` — never its real fields. An
+ * exactly `{slot, order, kind, unlocked:false}` — never its real fields. An
  * unlocked chapter passes through with its full real fields.
+ *
+ * The content `id` is dropped from BOTH branches, so it never reaches a
+ * public response at all: `blokarten`/`brouwerij`/`spelletjes` described
+ * the programme just by being there, and the client has no use for them —
+ * it matches rows to slots via `slot` (see TripChapterState.slot). The
+ * unredacted `getTripState` keeps `id` for the admin route and for the
+ * `chapter_unlocks` writes.
  */
 export function redactTripState(state: TripState): RedactedTripState {
   return {
     slug: state.slug,
     startDate: state.startDate,
     accentColor: state.accentColor,
-    chapters: state.chapters.map((chapter): RedactedChapterState =>
-      chapter.unlocked
-        ? chapter
-        : { id: chapter.id, order: chapter.order, kind: chapter.kind, unlocked: false },
-    ),
+    chapters: state.chapters.map((chapter): RedactedChapterState => {
+      if (!chapter.unlocked) {
+        return { slot: chapter.slot, order: chapter.order, kind: chapter.kind, unlocked: false };
+      }
+      const { id: _id, ...publicChapter } = chapter;
+      return publicChapter;
+    }),
   };
 }

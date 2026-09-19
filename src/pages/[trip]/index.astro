@@ -1,6 +1,6 @@
 ---
 import { getCollection } from 'astro:content';
-import { sortByOrder } from '../../lib/trip-state';
+import { slotKey, sortByOrder } from '../../lib/trip-state';
 // Safe to prerender — see the LOD1/2/3 comment further down where it's used.
 import { NL_TRACE_WIDTH, NL_TRACE_PATHS } from '../../lib/reveal/geodata-public';
 
@@ -39,10 +39,15 @@ const { trip } = Astro.props;
 const accentColor = trip.data.accentColor;
 const startDate = trip.data.startDate;
 const slug = trip.data.slug;
+// `slot` (not the content id) is what reaches the DOM — see
+// trip-state.ts's slotKey/TripChapterState.slot for why. `isReveal` only
+// decides whether the replay button renders; like `kind` it shapes markup
+// without naming anything.
 const chapterSlots = sortByOrder(trip.data.chapters).map((chapter) => ({
-  id: chapter.id,
+  slot: slotKey(chapter.order),
   order: chapter.order,
   kind: chapter.kind,
+  isReveal: chapter.svgVariant === 'vizier-europa',
 }));
 // Static, non-gated content (AD-2: the packing-list section is exempt from
 // chapter-content-gating) — safe to read directly here, unlike chapter
@@ -127,15 +132,15 @@ const vapidPublicKey = import.meta.env.VAPID_PUBLIC_KEY ?? '';
       /* Prevents the "double map" glitch: without this, the ambient map
          stays visible (it's mid-page, not scroll-cleared) while the fixed
          dive layer (z-index 50, see .hero-map-dive) fills the whole
-         viewport on top of it the instant #bestemming comes into view. */
-      body:has(#bestemming.is-visible) .hero-map {
+         viewport on top of it the instant #h2 comes into view. */
+      body:has(#h2.is-visible) .hero-map {
         opacity: 0;
       }
 
       /* POST-REVEAL LAYOUT. Once bestemming is unlocked the page stops
          being a countdown that promises something and becomes the trip
          itself: the destination heads the page and the activities follow.
-         Keyed off #bestemming.is-unlocked, which comes from the server's
+         Keyed off #h2.is-unlocked, which comes from the server's
          own chapter_unlocks state via /api/trip/[slug] — so every browser
          and every device agrees without needing any per-person memory.
 
@@ -143,24 +148,24 @@ const vapidPublicKey = import.meta.env.VAPID_PUBLIC_KEY ?? '';
          "de rest volgt hier" promise both stale, what's left is one button
          in a 100dvh box. The install instructions it pointed at are still
          on the page (#installeren), just below the chapters now. */
-      body:has(#bestemming.is-unlocked) {
+      body:has(#h2.is-unlocked) {
         display: flex;
         flex-direction: column;
       }
-      body:has(#bestemming.is-unlocked) .hero {
+      body:has(#h2.is-unlocked) .hero {
         display: none;
       }
-      body:has(#bestemming.is-unlocked) .chapters {
+      body:has(#h2.is-unlocked) .chapters {
         order: 1;
         padding-top: 24px;
       }
-      body:has(#bestemming.is-unlocked) #installeren {
+      body:has(#h2.is-unlocked) #installeren {
         order: 2;
       }
       /* Ameland to the front of the chapter list. .chapters is already a
          flex column, so this is ordering only — the DOM, the data and the
          server response all keep their own order. */
-      body:has(#bestemming.is-unlocked) #bestemming {
+      body:has(#h2.is-unlocked) #h2 {
         order: -1;
       }
       .hero-map-svg {
@@ -206,7 +211,7 @@ const vapidPublicKey = import.meta.env.VAPID_PUBLIC_KEY ?? '';
 
       /* HERO MAP — DIVE INSTANCE (story 6). Always-present, always
          position:fixed layer, invisible (opacity:0, pointer-events:none)
-         until #bestemming becomes visible — then it fades in and plays the
+         until #h2 becomes visible — then it fades in and plays the
          original fixedScanZoomSequence/fixedScanLockMove/fixedScanLockScale/
          fixedScanLockFlash keyframes (ported unchanged from
          Main.dc.html:165-229, targets renamed to this instance's classes).
@@ -444,31 +449,31 @@ const vapidPublicKey = import.meta.env.VAPID_PUBLIC_KEY ?? '';
          .reveal-text-in class (added once the camera sequence's final act
          completes), not on .is-visible directly like the other three
          cinematic chapters — the camera/prologue sequence needs to finish
-         first. Higher specificity (#bestemming beats the generic
+         first. Higher specificity (#h2 beats the generic
          .cinematic-reveal class selector) holds it at opacity:0 despite
          .is-visible until that class is added. */
-      #bestemming.is-visible .ct-eyebrow,
-      #bestemming.is-visible .ct-title,
-      #bestemming.is-visible .ct-copy,
-      #bestemming.is-visible .ct-cta {
+      #h2.is-visible .ct-eyebrow,
+      #h2.is-visible .ct-title,
+      #h2.is-visible .ct-copy,
+      #h2.is-visible .ct-cta {
         opacity: 0;
       }
-      #bestemming .chapter-content.reveal-text-in .ct-eyebrow {
+      #h2 .chapter-content.reveal-text-in .ct-eyebrow {
         opacity: 1;
         transform: translateX(0);
         transition: opacity 700ms cubic-bezier(0.16, 1, 0.3, 1) 100ms, transform 700ms cubic-bezier(0.16, 1, 0.3, 1) 100ms;
       }
-      #bestemming .chapter-content.reveal-text-in .ct-title {
+      #h2 .chapter-content.reveal-text-in .ct-title {
         opacity: 1;
         transform: translateY(0) scale(1);
         transition: opacity 900ms cubic-bezier(0.16, 1, 0.3, 1) 260ms, transform 900ms cubic-bezier(0.16, 1, 0.3, 1) 260ms;
       }
-      #bestemming .chapter-content.reveal-text-in .ct-copy {
+      #h2 .chapter-content.reveal-text-in .ct-copy {
         opacity: 1;
         transform: translateY(0);
         transition: opacity 800ms cubic-bezier(0.16, 1, 0.3, 1) 520ms, transform 800ms cubic-bezier(0.16, 1, 0.3, 1) 520ms;
       }
-      #bestemming .chapter-content.reveal-text-in .ct-cta {
+      #h2 .chapter-content.reveal-text-in .ct-cta {
         opacity: 1;
         transform: translateY(0);
         transition: opacity 700ms cubic-bezier(0.16, 1, 0.3, 1) 680ms, transform 700ms cubic-bezier(0.16, 1, 0.3, 1) 680ms;
@@ -595,7 +600,7 @@ const vapidPublicKey = import.meta.env.VAPID_PUBLIC_KEY ?? '';
       }
       .cinematic-reveal.is-visible { opacity: 1; transform: scale(1); filter: blur(0); }
       /* bestemming's ct-eyebrow/title/copy/cta timing is now driven by the
-         reveal engine's .reveal-text-in class (see the #bestemming-scoped
+         reveal engine's .reveal-text-in class (see the #h2-scoped
          rules further down), not a fixed transition-delay — the camera
          sequence's real length varies with scroll-scrub, so a fixed delay
          can no longer be correct. */
@@ -641,7 +646,7 @@ const vapidPublicKey = import.meta.env.VAPID_PUBLIC_KEY ?? '';
          (translate(560,…)) to the viewBox's horizontal center
          (translate(400,…)) since this page's cinematic sections are
          center-aligned, not left-aligned like the mockup's. Shared
-         stroke-draw-in keyframe (revealRouteDraw) also backs #bestemming's
+         stroke-draw-in keyframe (revealRouteDraw) also backs #h2's
          .reveal-route above. */
       @keyframes revealRouteDraw { to { stroke-dashoffset: 0; } }
 
@@ -654,41 +659,62 @@ const vapidPublicKey = import.meta.env.VAPID_PUBLIC_KEY ?? '';
          down to near-nothing. Fix: a viewBox cropped tight to the actual
          scene, and every element drawn bolder (thicker strokes, bigger
          shapes) so it survives being rendered small. */
+      /* Entry animations for the three injected scenes, scoped to their
+         slot ids: #h5, #h6 and #h9 are the chapters at order 5, 6 and 9
+         (see slotKey in trip-state.ts). These used to read #blokarten /
+         #brouwerij / #zondag, which put the programme in the stylesheet
+         every visitor downloads — the same leak as the inline SVG, just in
+         CSS. The trade is that these now track chapter ORDER: reorder the
+         content and the matching rules must move with it.
+
+         Every selector below is wrapped in :global() — required, not
+         stylistic. Astro scopes this block by appending its own
+         data-astro-cid attribute to each compound, so `#h5 .reveal-rig`
+         compiles to `#h5[data-astro-cid-x] .reveal-rig[data-astro-cid-x]`.
+         Only markup written in this template carries that attribute; the
+         scenes now arrive as an injected string and do not, so the scoped
+         form matched nothing at all — every entry animation silently did
+         not run, artwork intact and stylesheet intact. Caught by driving a
+         real browser against a mocked unlock; it is invisible to the build
+         and to the typechecker, so keep it that way if these move again.
+
+         The keyframes stay scoped: Astro does not rename them, and
+         @keyframes is document-global in CSS regardless. */
       @keyframes revealRigIn { to { opacity: 0.7; transform: translateX(0); } }
-      #blokarten .reveal-rig { opacity: 0; transform: translateX(-140px); }
-      #blokarten.is-visible .reveal-rig { animation: revealRigIn 1300ms cubic-bezier(0.16,1,0.3,1) 200ms forwards; }
-      #blokarten .reveal-track { stroke-dasharray: 1000; stroke-dashoffset: 1000; }
-      #blokarten.is-visible .reveal-track { animation: revealRouteDraw 1500ms cubic-bezier(0.16,1,0.3,1) 100ms forwards; }
+      :global(#h5 .reveal-rig) { opacity: 0; transform: translateX(-140px); }
+      :global(#h5.is-visible .reveal-rig) { animation: revealRigIn 1300ms cubic-bezier(0.16,1,0.3,1) 200ms forwards; }
+      :global(#h5 .reveal-track) { stroke-dasharray: 1000; stroke-dashoffset: 1000; }
+      :global(#h5.is-visible .reveal-track) { animation: revealRouteDraw 1500ms cubic-bezier(0.16,1,0.3,1) 100ms forwards; }
       /* Ocean waves — two rows, phase-shifted. */
-      #blokarten .reveal-wave { stroke-dasharray: 1100; stroke-dashoffset: 1100; }
-      #blokarten.is-visible .reveal-wave-1 { animation: revealRouteDraw 1400ms cubic-bezier(0.16,1,0.3,1) 80ms forwards; }
-      #blokarten.is-visible .reveal-wave-2 { animation: revealRouteDraw 1400ms cubic-bezier(0.16,1,0.3,1) 220ms forwards; }
+      :global(#h5 .reveal-wave) { stroke-dasharray: 1100; stroke-dashoffset: 1100; }
+      :global(#h5.is-visible .reveal-wave-1) { animation: revealRouteDraw 1400ms cubic-bezier(0.16,1,0.3,1) 80ms forwards; }
+      :global(#h5.is-visible .reveal-wave-2) { animation: revealRouteDraw 1400ms cubic-bezier(0.16,1,0.3,1) 220ms forwards; }
       /* Two distant gulls; shared entrance keyframe (only the delay
          differs per instance), same birdFlap loop Zondag's bird uses. */
-      #blokarten .reveal-bird { opacity: 0; transform: translateY(10px); transform-box: fill-box; transform-origin: center; }
+      :global(#h5 .reveal-bird) { opacity: 0; transform: translateY(10px); transform-box: fill-box; transform-origin: center; }
       @keyframes revealGullIn { to { opacity: 0.45; transform: translateY(0); } }
-      #blokarten.is-visible .reveal-bird-1 { animation: revealGullIn 1200ms cubic-bezier(0.16,1,0.3,1) 250ms forwards; }
-      #blokarten.is-visible .reveal-bird-2 { animation: revealGullIn 1200ms cubic-bezier(0.16,1,0.3,1) 420ms forwards; }
-      #blokarten .reveal-bird-flap { transform-box: fill-box; transform-origin: center; animation: birdFlap 480ms ease-in-out infinite; }
+      :global(#h5.is-visible .reveal-bird-1) { animation: revealGullIn 1200ms cubic-bezier(0.16,1,0.3,1) 250ms forwards; }
+      :global(#h5.is-visible .reveal-bird-2) { animation: revealGullIn 1200ms cubic-bezier(0.16,1,0.3,1) 420ms forwards; }
+      :global(#h5 .reveal-bird-flap) { transform-box: fill-box; transform-origin: center; animation: birdFlap 480ms ease-in-out infinite; }
 
       /* Two mugs swing in from opposite sides and meet in the middle. */
       @keyframes revealMugLeftIn { to { opacity: 0.7; transform: rotate(14deg) translateX(0); } }
       @keyframes revealMugRightIn { to { opacity: 0.7; transform: rotate(-14deg) translateX(0); } }
-      #brouwerij .reveal-mug-left { opacity: 0; transform: rotate(14deg) translateX(-30px); transform-box: fill-box; transform-origin: center; }
-      #brouwerij .reveal-mug-right { opacity: 0; transform: rotate(-14deg) translateX(30px); transform-box: fill-box; transform-origin: center; }
-      #brouwerij.is-visible .reveal-mug-left { animation: revealMugLeftIn 700ms cubic-bezier(0.34,1.2,0.64,1) 200ms forwards; }
-      #brouwerij.is-visible .reveal-mug-right { animation: revealMugRightIn 700ms cubic-bezier(0.34,1.2,0.64,1) 200ms forwards; }
+      :global(#h6 .reveal-mug-left) { opacity: 0; transform: rotate(14deg) translateX(-30px); transform-box: fill-box; transform-origin: center; }
+      :global(#h6 .reveal-mug-right) { opacity: 0; transform: rotate(-14deg) translateX(30px); transform-box: fill-box; transform-origin: center; }
+      :global(#h6.is-visible .reveal-mug-left) { animation: revealMugLeftIn 700ms cubic-bezier(0.34,1.2,0.64,1) 200ms forwards; }
+      :global(#h6.is-visible .reveal-mug-right) { animation: revealMugRightIn 700ms cubic-bezier(0.34,1.2,0.64,1) 200ms forwards; }
       /* Clink spark, right as the mugs meet. */
       @keyframes revealClinkIn { 0% { opacity: 0; transform: scale(0.4); } 60% { opacity: 1; transform: scale(1.15); } 100% { opacity: 0.8; transform: scale(1); } }
-      #brouwerij .reveal-clink { opacity: 0; transform: scale(0.4); transform-box: fill-box; transform-origin: center; }
-      #brouwerij.is-visible .reveal-clink { animation: revealClinkIn 600ms cubic-bezier(0.16,1,0.3,1) 850ms forwards; }
+      :global(#h6 .reveal-clink) { opacity: 0; transform: scale(0.4); transform-box: fill-box; transform-origin: center; }
+      :global(#h6.is-visible .reveal-clink) { animation: revealClinkIn 600ms cubic-bezier(0.16,1,0.3,1) 850ms forwards; }
       @keyframes revealBubble1In { to { opacity: 0.6; transform: translateY(0); } }
       @keyframes revealBubble2In { to { opacity: 0.5; transform: translateY(0); } }
       @keyframes revealBubble3In { to { opacity: 0.4; transform: translateY(0); } }
-      #brouwerij .reveal-bubble { opacity: 0; transform: translateY(10px); transform-box: fill-box; }
-      #brouwerij.is-visible .reveal-bubble-1 { animation: revealBubble1In 700ms cubic-bezier(0.16,1,0.3,1) 1100ms forwards; }
-      #brouwerij.is-visible .reveal-bubble-2 { animation: revealBubble2In 700ms cubic-bezier(0.16,1,0.3,1) 1220ms forwards; }
-      #brouwerij.is-visible .reveal-bubble-3 { animation: revealBubble3In 700ms cubic-bezier(0.16,1,0.3,1) 1340ms forwards; }
+      :global(#h6 .reveal-bubble) { opacity: 0; transform: translateY(10px); transform-box: fill-box; }
+      :global(#h6.is-visible .reveal-bubble-1) { animation: revealBubble1In 700ms cubic-bezier(0.16,1,0.3,1) 1100ms forwards; }
+      :global(#h6.is-visible .reveal-bubble-2) { animation: revealBubble2In 700ms cubic-bezier(0.16,1,0.3,1) 1220ms forwards; }
+      :global(#h6.is-visible .reveal-bubble-3) { animation: revealBubble3In 700ms cubic-bezier(0.16,1,0.3,1) 1340ms forwards; }
 
       /* DUINEXCURSIE ILLUSTRATION — a walked route, not a static object like
          Blokarten's rig or Brouwerij's kettle: a footpath traces across the
@@ -701,32 +727,32 @@ const vapidPublicKey = import.meta.env.VAPID_PUBLIC_KEY ?? '';
          animation, same idiom as .hero-viewfinder's heroViewfinderPulse —
          two elements, two independent transforms, no conflict. */
       @keyframes revealDuneBackIn { to { opacity: 1; } }
-      #zondag .reveal-dune-back { opacity: 0; }
-      #zondag.is-visible .reveal-dune-back { animation: revealDuneBackIn 900ms cubic-bezier(0.16,1,0.3,1) 100ms forwards; }
+      :global(#h9 .reveal-dune-back) { opacity: 0; }
+      :global(#h9.is-visible .reveal-dune-back) { animation: revealDuneBackIn 900ms cubic-bezier(0.16,1,0.3,1) 100ms forwards; }
       @keyframes revealDuneIn { to { opacity: 0.6; transform: scale(1); } }
-      #zondag .reveal-dune { opacity: 0; transform: scale(0.94); transform-box: fill-box; transform-origin: center; }
-      #zondag.is-visible .reveal-dune { animation: revealDuneIn 1000ms cubic-bezier(0.16,1,0.3,1) 200ms forwards; }
+      :global(#h9 .reveal-dune) { opacity: 0; transform: scale(0.94); transform-box: fill-box; transform-origin: center; }
+      :global(#h9.is-visible .reveal-dune) { animation: revealDuneIn 1000ms cubic-bezier(0.16,1,0.3,1) 200ms forwards; }
       @keyframes revealTrailIn { to { opacity: 0.35; transform: scaleX(1); } }
-      #zondag .reveal-trail { opacity: 0; transform: scaleX(0); transform-box: fill-box; transform-origin: left; stroke-dasharray: 3 11; }
-      #zondag.is-visible .reveal-trail { animation: revealTrailIn 1400ms cubic-bezier(0.16,1,0.3,1) 550ms forwards; }
+      :global(#h9 .reveal-trail) { opacity: 0; transform: scaleX(0); transform-box: fill-box; transform-origin: left; stroke-dasharray: 3 11; }
+      :global(#h9.is-visible .reveal-trail) { animation: revealTrailIn 1400ms cubic-bezier(0.16,1,0.3,1) 550ms forwards; }
       @keyframes revealGrassIn { to { opacity: 0.55; transform: scaleY(1); } }
-      #zondag .reveal-grass { opacity: 0; transform: scaleY(0); transform-box: fill-box; transform-origin: bottom; }
-      #zondag.is-visible .reveal-grass-1 { animation: revealGrassIn 480ms cubic-bezier(0.34,1.56,0.64,1) 900ms forwards; }
-      #zondag.is-visible .reveal-grass-2 { animation: revealGrassIn 480ms cubic-bezier(0.34,1.56,0.64,1) 980ms forwards; }
-      #zondag.is-visible .reveal-grass-3 { animation: revealGrassIn 480ms cubic-bezier(0.34,1.56,0.64,1) 1060ms forwards; }
+      :global(#h9 .reveal-grass) { opacity: 0; transform: scaleY(0); transform-box: fill-box; transform-origin: bottom; }
+      :global(#h9.is-visible .reveal-grass-1) { animation: revealGrassIn 480ms cubic-bezier(0.34,1.56,0.64,1) 900ms forwards; }
+      :global(#h9.is-visible .reveal-grass-2) { animation: revealGrassIn 480ms cubic-bezier(0.34,1.56,0.64,1) 980ms forwards; }
+      :global(#h9.is-visible .reveal-grass-3) { animation: revealGrassIn 480ms cubic-bezier(0.34,1.56,0.64,1) 1060ms forwards; }
       @keyframes grassSway { 0%, 100% { transform: rotate(-2.5deg); } 50% { transform: rotate(2.5deg); } }
-      #zondag .reveal-grass-sway { transform-box: fill-box; transform-origin: bottom; animation: grassSway 3400ms ease-in-out infinite; }
-      #zondag .reveal-grass-1 .reveal-grass-sway { animation-delay: -400ms; }
-      #zondag .reveal-grass-2 .reveal-grass-sway { animation-delay: -1600ms; }
-      #zondag .reveal-grass-3 .reveal-grass-sway { animation-delay: -2600ms; }
+      :global(#h9 .reveal-grass-sway) { transform-box: fill-box; transform-origin: bottom; animation: grassSway 3400ms ease-in-out infinite; }
+      :global(#h9 .reveal-grass-1 .reveal-grass-sway) { animation-delay: -400ms; }
+      :global(#h9 .reveal-grass-2 .reveal-grass-sway) { animation-delay: -1600ms; }
+      :global(#h9 .reveal-grass-3 .reveal-grass-sway) { animation-delay: -2600ms; }
       @keyframes revealRabbitIn { to { opacity: 0.45; transform: scale(1); } }
-      #zondag .reveal-rabbit { opacity: 0; transform: scale(0.7); transform-box: fill-box; transform-origin: center; }
-      #zondag.is-visible .reveal-rabbit { animation: revealRabbitIn 700ms cubic-bezier(0.16,1,0.3,1) 1300ms forwards; }
+      :global(#h9 .reveal-rabbit) { opacity: 0; transform: scale(0.7); transform-box: fill-box; transform-origin: center; }
+      :global(#h9.is-visible .reveal-rabbit) { animation: revealRabbitIn 700ms cubic-bezier(0.16,1,0.3,1) 1300ms forwards; }
       @keyframes revealBirdIn { to { opacity: 0.5; transform: translate(220px, -10px) rotate(2deg); } }
-      #zondag .reveal-bird { opacity: 0; transform: translate(-80px, 6px) rotate(-4deg); transform-box: fill-box; transform-origin: center; }
-      #zondag.is-visible .reveal-bird { animation: revealBirdIn 1900ms cubic-bezier(0.16,1,0.3,1) 300ms forwards; }
+      :global(#h9 .reveal-bird) { opacity: 0; transform: translate(-80px, 6px) rotate(-4deg); transform-box: fill-box; transform-origin: center; }
+      :global(#h9.is-visible .reveal-bird) { animation: revealBirdIn 1900ms cubic-bezier(0.16,1,0.3,1) 300ms forwards; }
       @keyframes birdFlap { 0%, 100% { transform: scaleY(1); } 50% { transform: scaleY(0.55); } }
-      #zondag .reveal-bird-flap { transform-box: fill-box; transform-origin: center; animation: birdFlap 480ms ease-in-out infinite; }
+      :global(#h9 .reveal-bird-flap) { transform-box: fill-box; transform-origin: center; animation: birdFlap 480ms ease-in-out infinite; }
 
       /* INSTALLEREN — ported from Main.dc.html:402-442. The toggle's
          sc-if/setState mechanism doesn't exist in this plain-script page:
@@ -926,6 +952,14 @@ const vapidPublicKey = import.meta.env.VAPID_PUBLIC_KEY ?? '';
         max-width: 900px;
         height: min(42vh, 380px);
         flex: 0 0 auto;
+      }
+
+      /* The mount renders in every chapter slot so the static shell gives
+         nothing away about which chapters have a scene (see its markup).
+         Until the gated payload fills one it must take up no room at all,
+         or every text-only chapter would carry a 380px gap. */
+      .chapter-visual:empty {
+        display: none;
       }
       .chapter-illustration {
         width: 100%;
@@ -1180,25 +1214,25 @@ const vapidPublicKey = import.meta.env.VAPID_PUBLIC_KEY ?? '';
         }
         /* Blokarten/brouwerij illustrations settle at their end-state
            instead of animating in (ported from Main.dc.html:238-248). */
-        #blokarten.is-visible .reveal-rig, #blokarten .reveal-rig { animation: none; opacity: 0.7; transform: none; }
-        #blokarten.is-visible .reveal-track, #blokarten .reveal-track { animation: none; stroke-dashoffset: 0; }
-        #blokarten.is-visible .reveal-wave, #blokarten .reveal-wave { animation: none; stroke-dashoffset: 0; }
-        #blokarten.is-visible .reveal-bird, #blokarten .reveal-bird { animation: none; opacity: 0.42; transform: none; }
-        #blokarten .reveal-bird-flap, #blokarten.is-visible .reveal-bird-flap { animation: none; transform: none; }
-        #brouwerij.is-visible .reveal-mug-left, #brouwerij .reveal-mug-left { animation: none; opacity: 0.7; transform: rotate(14deg); }
-        #brouwerij.is-visible .reveal-mug-right, #brouwerij .reveal-mug-right { animation: none; opacity: 0.7; transform: rotate(-14deg); }
-        #brouwerij.is-visible .reveal-clink, #brouwerij .reveal-clink { animation: none; opacity: 0.8; transform: none; }
-        #brouwerij.is-visible .reveal-bubble-1, #brouwerij .reveal-bubble-1 { animation: none; opacity: 0.28; transform: none; }
-        #brouwerij.is-visible .reveal-bubble-2, #brouwerij .reveal-bubble-2 { animation: none; opacity: 0.22; transform: none; }
-        #brouwerij.is-visible .reveal-bubble-3, #brouwerij .reveal-bubble-3 { animation: none; opacity: 0.18; transform: none; }
-        #zondag.is-visible .reveal-dune-back, #zondag .reveal-dune-back { animation: none; opacity: 1; }
-        #zondag.is-visible .reveal-dune, #zondag .reveal-dune { animation: none; opacity: 0.6; transform: none; }
-        #zondag.is-visible .reveal-trail, #zondag .reveal-trail { animation: none; opacity: 0.35; transform: none; }
-        #zondag.is-visible .reveal-grass, #zondag .reveal-grass { animation: none; opacity: 0.55; transform: none; }
-        #zondag .reveal-grass-sway, #zondag.is-visible .reveal-grass-sway { animation: none; transform: none; }
-        #zondag.is-visible .reveal-rabbit, #zondag .reveal-rabbit { animation: none; opacity: 0.45; transform: none; }
-        #zondag.is-visible .reveal-bird, #zondag .reveal-bird { animation: none; opacity: 0.5; transform: none; }
-        #zondag .reveal-bird-flap, #zondag.is-visible .reveal-bird-flap { animation: none; transform: none; }
+        #h5.is-visible .reveal-rig, #h5 .reveal-rig { animation: none; opacity: 0.7; transform: none; }
+        #h5.is-visible .reveal-track, #h5 .reveal-track { animation: none; stroke-dashoffset: 0; }
+        #h5.is-visible .reveal-wave, #h5 .reveal-wave { animation: none; stroke-dashoffset: 0; }
+        #h5.is-visible .reveal-bird, #h5 .reveal-bird { animation: none; opacity: 0.42; transform: none; }
+        #h5 .reveal-bird-flap, #h5.is-visible .reveal-bird-flap { animation: none; transform: none; }
+        #h6.is-visible .reveal-mug-left, #h6 .reveal-mug-left { animation: none; opacity: 0.7; transform: rotate(14deg); }
+        #h6.is-visible .reveal-mug-right, #h6 .reveal-mug-right { animation: none; opacity: 0.7; transform: rotate(-14deg); }
+        #h6.is-visible .reveal-clink, #h6 .reveal-clink { animation: none; opacity: 0.8; transform: none; }
+        #h6.is-visible .reveal-bubble-1, #h6 .reveal-bubble-1 { animation: none; opacity: 0.28; transform: none; }
+        #h6.is-visible .reveal-bubble-2, #h6 .reveal-bubble-2 { animation: none; opacity: 0.22; transform: none; }
+        #h6.is-visible .reveal-bubble-3, #h6 .reveal-bubble-3 { animation: none; opacity: 0.18; transform: none; }
+        #h9.is-visible .reveal-dune-back, #h9 .reveal-dune-back { animation: none; opacity: 1; }
+        #h9.is-visible .reveal-dune, #h9 .reveal-dune { animation: none; opacity: 0.6; transform: none; }
+        #h9.is-visible .reveal-trail, #h9 .reveal-trail { animation: none; opacity: 0.35; transform: none; }
+        #h9.is-visible .reveal-grass, #h9 .reveal-grass { animation: none; opacity: 0.55; transform: none; }
+        #h9 .reveal-grass-sway, #h9.is-visible .reveal-grass-sway { animation: none; transform: none; }
+        #h9.is-visible .reveal-rabbit, #h9 .reveal-rabbit { animation: none; opacity: 0.45; transform: none; }
+        #h9.is-visible .reveal-bird, #h9 .reveal-bird { animation: none; opacity: 0.5; transform: none; }
+        #h9 .reveal-bird-flap, #h9.is-visible .reveal-bird-flap { animation: none; transform: none; }
       }
     </style>
   </head>
@@ -2387,249 +2421,18 @@ c-22 -1 -33 -6 -33 -16 0 -8 -9 -15 -20 -15 -22 0 -26 -20 -8 -38 7 -7 9 -12
           return (
             <section
               class={`chapter-slot ${isCinematic ? 'cinematic-reveal' : 'reveal'}`}
-              id={chapter.id}
+              id={chapter.slot}
               data-order={chapter.order}
               data-kind={chapter.kind}
             >
-              {chapter.id === 'blokarten' && (
-                // viewBox is cropped tight to the actual scene (260 tall,
-                // not 580) so 'meet' fills the band on ANY container shape,
-                // portrait included, instead of centering a small content
-                // cluster inside a mostly-empty box.
-                // The kart is the user's own reference SVG (Gemini-
-                // generated), ported in with its exact geometry and native
-                // SMIL animations (wheel-spin blur rings, ride jiggle) kept
-                // intact — only recolored from its original flat palette
-                // to accentColor at varying opacities to match this page's
-                // hand-drawn monochrome language, and wrapped in a
-                // translate+scale to sit at this scene's proportions.
-                <div class="chapter-visual">
-                  <svg class="chapter-illustration" viewBox="-40 -45 880 285" preserveAspectRatio="xMidYMid meet" aria-hidden="true">
-                    {/* Sun — a plain radiating-circle glyph, reads instantly
-                        even in hairline monochrome, unlike almost anything
-                        else that could fill that corner. */}
-                    <g transform="translate(740,-15)">
-                      <circle r="16" fill="none" stroke={accentColor} stroke-width="1.6" opacity="0.55" />
-                      <path d="M16,0 L26,0 M11.3,11.3 L18.4,18.4 M0,16 L0,26 M-11.3,11.3 L-18.4,18.4 M-16,0 L-26,0 M-11.3,-11.3 L-18.4,-18.4 M0,-16 L0,-26 M11.3,-11.3 L18.4,-18.4" stroke={accentColor} stroke-width="1.6" stroke-linecap="round" opacity="0.55" />
-                    </g>
-                    <g transform="translate(150,-8)">
-                      <g class="reveal-bird reveal-bird-1">
-                        <g class="reveal-bird-flap">
-                          <path d="M0,0 C-10,-7 -21,-6 -28,0 C-18,-1 -10,1 0,6 C10,1 18,-1 28,0 C21,-6 10,-7 0,0 Z" fill={accentColor} />
-                        </g>
-                      </g>
-                    </g>
-                    <g transform="translate(650,4)">
-                      <g class="reveal-bird reveal-bird-2">
-                        <g class="reveal-bird-flap">
-                          <path d="M0,0 C-9,-6 -18,-5 -24,0 C-15,-1 -9,1 0,5 C9,1 15,-1 24,0 C18,-5 9,-6 0,0 Z" fill={accentColor} />
-                        </g>
-                      </g>
-                    </g>
-                    <path class="reveal-wave reveal-wave-1" d="M-40,45 Q0,27 40,45 Q80,63 120,45 Q160,27 200,45 Q240,63 280,45 Q320,27 360,45 Q400,63 440,45 Q480,27 520,45 Q560,63 600,45 Q640,27 680,45 Q720,63 760,45 Q800,27 840,45" stroke={accentColor} stroke-width="1.8" opacity="0.4" fill="none" />
-                    <path class="reveal-wave reveal-wave-2" d="M-40,65 Q-20,53 20,65 Q60,77 100,65 Q140,53 180,65 Q220,77 260,65 Q300,53 340,65 Q380,77 420,65 Q460,53 500,65 Q540,77 580,65 Q620,53 660,65 Q700,77 740,65 Q780,53 820,65" stroke={accentColor} stroke-width="1.6" opacity="0.3" fill="none" />
-                    <path class="reveal-track" d="M-40,95 C160,80 320,105 500,90 C620,80 720,95 800,88" stroke={accentColor} stroke-width="1.6" opacity="0.35" fill="none" />
-                    <path class="reveal-track" d="M-40,190 C160,178 320,198 500,185 C620,177 720,192 800,183" stroke={accentColor} stroke-width="1" opacity="0.14" fill="none" />
-                    <g class="reveal-rig">
-                      <g transform="translate(368,-67) scale(0.68)">
-                        <animateTransform attributeName="transform" type="translate" values="0,0; 0,-4; 0,0" dur="0.15s" repeatCount="indefinite" additive="sum" />
-                        <circle cx="-10" cy="330" r="12" fill="none" stroke={accentColor} stroke-width="2" opacity="0.5" />
-                        <circle cx="-10" cy="330" r="5" fill="none" stroke={accentColor} stroke-width="2" opacity="0.35" />
-                        <line x1="30" y1="315" x2="15" y2="100" stroke={accentColor} stroke-width="5" stroke-linecap="round" />
-                        <line x1="30" y1="315" x2="105" y2="335" stroke={accentColor} stroke-width="3" />
-                        <line x1="15" y1="100" x2="90" y2="305" stroke={accentColor} stroke-width="1" stroke-dasharray="2,2" opacity="0.3" />
-                        <path d="M15,100 Q100,180 85,305 L30,315 Z" fill={accentColor} opacity="0.35" stroke={accentColor} stroke-width="3" stroke-linecap="round" />
-                        <path d="M15,100 Q70,180 65,305" fill="none" stroke={accentColor} stroke-width="2" opacity="0.45" />
-                        {/* Wind rushing past the sail's leading edge —
-                            the reference SVG had no wind cue at all. */}
-                        <path d="M25,150 C10,145 -5,142 -20,138" fill="none" stroke={accentColor} stroke-width="2.2" stroke-linecap="round" opacity="0.45" />
-                        <path d="M22,205 C6,200 -10,197 -26,193" fill="none" stroke={accentColor} stroke-width="2.2" stroke-linecap="round" opacity="0.4" />
-                        <path d="M20,260 C4,255 -12,252 -28,248" fill="none" stroke={accentColor} stroke-width="2.2" stroke-linecap="round" opacity="0.35" />
-                        <path d="M-5,335 L105,335 L30,315 Z" fill="none" stroke={accentColor} stroke-width="5" stroke-linejoin="round" />
-                        <circle cx="20" cy="295" r="9" fill="none" stroke={accentColor} stroke-width="2" opacity="0.6" />
-                        <path d="M15,304 L30,300 L25,325 L5,325 Z" fill="none" stroke={accentColor} stroke-width="2" stroke-linejoin="round" opacity="0.6" />
-                        <circle cx="15" cy="342" r="15" fill="none" stroke={accentColor} stroke-width="2" />
-                        <circle cx="15" cy="342" r="6" fill="none" stroke={accentColor} stroke-width="2" opacity="0.6" />
-                        <circle cx="15" cy="342" r="10" fill="none" stroke={accentColor} stroke-width="1" opacity="0.4" stroke-dasharray="8 4">
-                          <animateTransform attributeName="transform" type="rotate" from="0 15 342" to="360 15 342" dur="0.2s" repeatCount="indefinite" />
-                        </circle>
-                        <circle cx="105" cy="335" r="11" fill="none" stroke={accentColor} stroke-width="2" />
-                        <circle cx="105" cy="335" r="4" fill="none" stroke={accentColor} stroke-width="2" opacity="0.6" />
-                        <circle cx="105" cy="335" r="8" fill="none" stroke={accentColor} stroke-width="1" opacity="0.4" stroke-dasharray="6 3">
-                          <animateTransform attributeName="transform" type="rotate" from="0 105 335" to="360 105 335" dur="0.15s" repeatCount="indefinite" />
-                        </circle>
-                      </g>
-                    </g>
-                  </svg>
-                </div>
-              )}
-              {chapter.id === 'brouwerij' && (
-                // Two beer mugs clinking together — replaces an earlier
-                // kettle-based illustration that read as unrecognizable
-                // once shrunk behind this page's centered text (see git
-                // history). Each mug is authored upright, local origin at
-                // its own center, handle on its outward side; the tilt
-                // toward each other is a plain SVG rotate on the wrapping
-                // <g>, not hand-plotted rotated coordinates. A small spark
-                // marks the clink point, with a few rising bubbles for life.
-                // Own .chapter-visual band, viewBox tightened around the two
-                // mugs specifically (they're a compact, off-center group),
-                // preserveAspectRatio "meet" so the clink point never crops.
-                <div class="chapter-visual">
-                  <svg class="chapter-illustration" viewBox="260 500 280 195" preserveAspectRatio="xMidYMid meet" aria-hidden="true">
-                    <g class="reveal-mug-left">
-                      <g transform="translate(345,600) rotate(14)">
-                        <path d="M-28,-40 L28,-40 L24,42 Q24,48 18,48 L-18,48 Q-24,48 -24,42 Z" fill={accentColor} opacity="0.1" />
-                        <path d="M-28,-40 L28,-40 L24,42 Q24,48 18,48 L-18,48 Q-24,48 -24,42 Z" stroke={accentColor} stroke-width="1.5" fill="none" />
-                        <path d="M-22,-30 L22,-30 L19,40 L-19,40 Z" fill={accentColor} opacity="0.22" />
-                        <path d="M-24,-30 L24,-30" stroke={accentColor} stroke-width="1" opacity="0.5" />
-                        <path
-                          d="M-30,-40 Q-22,-50 -14,-40 Q-6,-50 2,-40 Q10,-50 18,-40 Q26,-48 30,-40"
-                          stroke={accentColor}
-                          stroke-width="1.3"
-                          fill="none"
-                        />
-                        <path d="M-24,-14 C-50,-14 -50,26 -24,26" stroke={accentColor} stroke-width="1.5" fill="none" />
-                        <circle class="reveal-bubble reveal-bubble-1" cx="-6" cy="10" r="2.2" fill={accentColor} />
-                        <circle class="reveal-bubble reveal-bubble-2" cx="8" cy="-6" r="1.6" fill={accentColor} />
-                      </g>
-                    </g>
-                    <g class="reveal-mug-right">
-                      <g transform="translate(455,600) rotate(-14)">
-                        <path d="M-28,-40 L28,-40 L24,42 Q24,48 18,48 L-18,48 Q-24,48 -24,42 Z" fill={accentColor} opacity="0.1" />
-                        <path d="M-28,-40 L28,-40 L24,42 Q24,48 18,48 L-18,48 Q-24,48 -24,42 Z" stroke={accentColor} stroke-width="1.5" fill="none" />
-                        <path d="M-22,-30 L22,-30 L19,40 L-19,40 Z" fill={accentColor} opacity="0.22" />
-                        <path d="M-24,-30 L24,-30" stroke={accentColor} stroke-width="1" opacity="0.5" />
-                        <path
-                          d="M-30,-40 Q-22,-50 -14,-40 Q-6,-50 2,-40 Q10,-50 18,-40 Q26,-48 30,-40"
-                          stroke={accentColor}
-                          stroke-width="1.3"
-                          fill="none"
-                        />
-                        <path d="M24,-14 C50,-14 50,26 24,26" stroke={accentColor} stroke-width="1.5" fill="none" />
-                        <circle class="reveal-bubble reveal-bubble-3" cx="6" cy="8" r="2" fill={accentColor} />
-                      </g>
-                    </g>
-                    <g class="reveal-clink">
-                      <g transform="translate(400,552)">
-                        <path d="M0,-11 L0,11 M-11,0 L11,0 M-8,-8 L8,8 M-8,8 L8,-8" stroke={accentColor} stroke-width="1.4" />
-                        <circle cx="-16" cy="10" r="2" fill={accentColor} />
-                        <circle cx="17" cy="-6" r="1.6" fill={accentColor} />
-                      </g>
-                    </g>
-                  </svg>
-                </div>
-              )}
-              {chapter.id === 'zondag' && (
-                // Hand-drawn dune scene — a walked route, not a static
-                // object. The dune ridge is built from explicit on-curve
-                // peak anchors (-180,-70 and 160,-55, relative to each
-                // shape's own inner translate) instead of letting bezier
-                // control points imply a peak, specifically so the grass
-                // and rabbit below can sit exactly on the ridge rather than
-                // floating above it. Paint order back-to-front: bird (sky),
-                // footpath, far dune, near dune, grass, rabbit (foreground).
-                // IMPORTANT: every animated reveal-* class here is a bare
-                // outer <g> with NO transform attribute of its own — the
-                // static translate lives on an unclassed inner <g>, same
-                // split as Blokarten's reveal-rig above. A CSS `transform`
-                // on an SVG element replaces its `transform` attribute
-                // instead of composing with it, so putting the position and
-                // the animated class on the same element silently discards
-                // the position the moment the entrance animation applies.
-                // See the CSS block above for the reveal-* keyframes.
-                // Own .chapter-visual band, viewBox tightened to this scene's
-                // actual content (bird near the top, dune/grass/rabbit lower),
-                // preserveAspectRatio "meet" so the ridge is never cropped.
-                <div class="chapter-visual">
-                  <svg class="chapter-illustration" viewBox="-40 150 880 500" preserveAspectRatio="xMidYMid meet" aria-hidden="true">
-                    <g class="reveal-bird">
-                      <g transform="translate(200,190)">
-                        <g class="reveal-bird-flap">
-                          <path
-                            d="M0,0 C-14,-10 -30,-8 -40,0 C-26,-2 -14,2 0,8 C14,2 26,-2 40,0 C30,-8 14,-10 0,0 Z"
-                            fill={accentColor}
-                          />
-                        </g>
-                      </g>
-                    </g>
-                    <path
-                      class="reveal-trail"
-                      d="M-40,470 C120,450 200,500 340,470 C460,445 560,490 680,460 C760,440 800,455 840,450"
-                      stroke={accentColor}
-                      stroke-width="2.4"
-                      stroke-linecap="round"
-                      fill="none"
-                    />
-                    <g class="reveal-dune-back">
-                      <g transform="translate(400,460)">
-                        <path
-                          d="M-420,160 C-320,10 -220,-10 -100,20 C20,50 120,-10 240,10 C340,26 400,70 420,160 Z"
-                          fill={accentColor}
-                          opacity="0.07"
-                        />
-                      </g>
-                    </g>
-                    <g class="reveal-dune">
-                      <g transform="translate(400,480)">
-                        <path
-                          d="M-400,150 C-320,-20 -260,-70 -180,-70 C-120,-70 -80,-30 -40,-20 C40,-8 100,-55 160,-55 C240,-55 320,20 400,150 Z"
-                          fill={accentColor}
-                          opacity="0.12"
-                        />
-                        <path
-                          d="M-400,150 C-320,-20 -260,-70 -180,-70 C-120,-70 -80,-30 -40,-20 C40,-8 100,-55 160,-55 C240,-55 320,20 400,150 Z"
-                          stroke={accentColor}
-                          stroke-width="1.5"
-                          fill="none"
-                        />
-                      </g>
-                    </g>
-                    <g class="reveal-grass reveal-grass-1">
-                      <g transform="translate(220,410)">
-                        <g class="reveal-grass-sway">
-                          <path d="M-6,0 C-10,-30 -4,-46 2,-58" stroke={accentColor} stroke-width="1.3" fill="none" />
-                          <path d="M0,0 C0,-34 4,-50 8,-64" stroke={accentColor} stroke-width="1.3" fill="none" />
-                          <path d="M6,0 C10,-28 14,-42 18,-52" stroke={accentColor} stroke-width="1.3" fill="none" />
-                        </g>
-                      </g>
-                    </g>
-                    <g class="reveal-grass reveal-grass-2">
-                      <g transform="translate(360,460)">
-                        <g class="reveal-grass-sway">
-                          <path d="M-6,0 C-10,-30 -4,-46 2,-58" stroke={accentColor} stroke-width="1.3" fill="none" />
-                          <path d="M0,0 C0,-34 4,-50 8,-64" stroke={accentColor} stroke-width="1.3" fill="none" />
-                          <path d="M6,0 C10,-28 14,-42 18,-52" stroke={accentColor} stroke-width="1.3" fill="none" />
-                        </g>
-                      </g>
-                    </g>
-                    <g class="reveal-grass reveal-grass-3">
-                      <g transform="translate(560,425)">
-                        <g class="reveal-grass-sway">
-                          <path d="M-6,0 C-10,-30 -4,-46 2,-58" stroke={accentColor} stroke-width="1.3" fill="none" />
-                          <path d="M0,0 C0,-34 4,-50 8,-64" stroke={accentColor} stroke-width="1.3" fill="none" />
-                          <path d="M6,0 C10,-28 14,-42 18,-52" stroke={accentColor} stroke-width="1.3" fill="none" />
-                        </g>
-                      </g>
-                    </g>
-                    <g class="reveal-rabbit">
-                      <g transform="translate(400,460)">
-                        <path
-                          d="M-14,10 C-14,-6 -4,-14 6,-12 C10,-20 16,-24 18,-18 C20,-14 16,-10 14,-8 C20,-4 22,4 16,10 C8,16 -8,16 -14,10 Z"
-                          fill={accentColor}
-                          opacity="0.14"
-                        />
-                        <path
-                          d="M-14,10 C-14,-6 -4,-14 6,-12 C10,-20 16,-24 18,-18 C20,-14 16,-10 14,-8 C20,-4 22,4 16,10 C8,16 -8,16 -14,10 Z"
-                          stroke={accentColor}
-                          stroke-width="1.2"
-                          fill="none"
-                        />
-                      </g>
-                    </g>
-                  </svg>
-                </div>
-              )}
+              {/* Illustration mount. Deliberately empty and identical in
+                  every slot: which chapters have a scene, and what that
+                  scene shows, is itself information about the programme,
+                  so the markup arrives from the gated API on unlock
+                  instead of sitting in this prerendered shell. See
+                  chapter-visuals.ts. `.chapter-visual:empty` collapses it
+                  until then, so a text-only chapter reserves no band. */}
+              <div class="chapter-visual" data-visual-mount />
               {isCinematic ? (
                 <div class="chapter-content">
                   <p class="chapter-meta ct-eyebrow">
@@ -2642,8 +2445,8 @@ c-22 -1 -33 -6 -33 -16 0 -8 -9 -15 -20 -15 -22 0 -26 -20 -8 -38 7 -7 9 -12
                       page, so the button would sit under the trip's own
                       title offering to play the 45-second hunt for an
                       answer the reader is currently looking at. */}
-                  {chapter.id !== 'bestemming' && (
-                    <button type="button" class="chapter-replay ct-cta" data-replay-target={chapter.id}>
+                  {!chapter.isReveal && (
+                    <button type="button" class="chapter-replay ct-cta" data-replay-target={chapter.slot}>
                       Bekijk opnieuw
                     </button>
                   )}
@@ -2732,7 +2535,7 @@ c-22 -1 -33 -6 -33 -16 0 -8 -9 -15 -20 -15 -22 0 -26 -20 -8 -38 7 -7 9 -12
       const startISO = body.dataset.start;
       const tripSlug = body.dataset.tripSlug;
 
-      // Set once #bestemming's reveal observer fires (see IntersectionObserver
+      // Set once #h2's reveal observer fires (see IntersectionObserver
       // setup below) — stops startViewfinderWander's recursive step() so an
       // un-stopped tick can't resume overwriting the ambient map's inline
       // transform style after the dive sequence's CSS animation ends.
@@ -2836,7 +2639,7 @@ c-22 -1 -33 -6 -33 -16 0 -8 -9 -15 -20 -15 -22 0 -26 -20 -8 -38 7 -7 9 -12
               if (entry.isIntersecting) {
                 entry.target.classList.add('is-visible');
                 revealObserver.unobserve(entry.target);
-                if (entry.target.id === 'bestemming') {
+                if (entry.target.id === 'h2') {
                   wanderStopped = true;
                 }
               }
@@ -2876,7 +2679,7 @@ c-22 -1 -33 -6 -33 -16 0 -8 -9 -15 -20 -15 -22 0 -26 -20 -8 -38 7 -7 9 -12
           const chapters = payload.data?.chapters ?? [];
           for (const chapter of chapters) {
             if (!chapter.unlocked) continue;
-            const slot = document.getElementById(chapter.id);
+            const slot = document.getElementById(chapter.slot);
             if (!slot) continue;
 
             slot.classList.add('is-unlocked');
@@ -2893,15 +2696,27 @@ c-22 -1 -33 -6 -33 -16 0 -8 -9 -15 -20 -15 -22 0 -26 -20 -8 -38 7 -7 9 -12
             const descEl = slot.querySelector('[data-field="description"]');
             if (descEl) descEl.textContent = chapter.description ?? '';
 
+            // This chapter's scene, gated exactly like the text above: the
+            // markup only exists in this response because the server
+            // already confirmed the chapter is unlocked (see
+            // chapter-visuals.ts). innerHTML is safe here in a way it
+            // would not be for the fields above — this is our own static
+            // SVG from the content build, never anything a user supplied,
+            // which is also why the text fields keep using textContent.
+            const visualMount = slot.querySelector('[data-visual-mount]');
+            if (visualMount && chapter.illustration) {
+              visualMount.innerHTML = chapter.illustration;
+            }
+
             // REVEAL.md's map-dive: the destination coordinate/name/geometry
             // only ever exists in memory here, after this chapter's own
             // unlock check has already passed — never in the static HTML,
             // never in a locked API response (see revealData in
             // trip-state.ts). Doesn't start the sequence immediately: it
-            // waits for #bestemming to actually scroll into view (see
+            // waits for #h2 to actually scroll into view (see
             // armReveal below), same trigger the rest of the page already
             // uses for its own reveal animations.
-            if (chapter.id === 'bestemming' && chapter.revealData) {
+            if (chapter.revealData) {
               armReveal(chapter.revealData);
             }
           }
@@ -2914,7 +2729,7 @@ c-22 -1 -33 -6 -33 -16 0 -8 -9 -15 -20 -15 -22 0 -26 -20 -8 -38 7 -7 9 -12
 
       // --- REVEAL.md camera sequence (Ameland) --------------------------
       // Armed once (revealData arrives from loadTripState), but only
-      // actually starts once #bestemming scrolls into view — a dedicated
+      // actually starts once #h2 scrolls into view — a dedicated
       // observer, not the shared one below, so this stays fully decoupled
       // from the other chapters' own reveal timing.
       type RevealPayload = {
@@ -2929,7 +2744,7 @@ c-22 -1 -33 -6 -33 -16 0 -8 -9 -15 -20 -15 -22 0 -26 -20 -8 -38 7 -7 9 -12
       function armReveal(revealData: RevealPayload): void {
         if (revealArmed) return;
         revealArmed = true;
-        const bestemmingEl = document.getElementById('bestemming');
+        const bestemmingEl = document.getElementById('h2');
         if (!bestemmingEl) return;
         const trigger = new IntersectionObserver(
           (entries) => {
@@ -2966,7 +2781,7 @@ c-22 -1 -33 -6 -33 -16 0 -8 -9 -15 -20 -15 -22 0 -26 -20 -8 -38 7 -7 9 -12
         const stopReasonEl = document.querySelector<HTMLElement>('[data-reveal-stop-reason]');
         const skipEl = document.querySelector<HTMLButtonElement>('[data-reveal-skip]');
         const debugEl = document.querySelector<HTMLElement>('[data-reveal-debug]');
-        const chapterContent = document.querySelector<HTMLElement>('#bestemming .chapter-content');
+        const chapterContent = document.querySelector<HTMLElement>('#h2 .chapter-content');
         if (!diveLayer || !svgEl || !zoomG || !motionG || !scaleG || !prologueEl || !chapterContent) {
           console.error('[reveal] missing an expected element — see initReveal');
           return;
