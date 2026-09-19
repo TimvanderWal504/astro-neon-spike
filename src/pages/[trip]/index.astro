@@ -2270,11 +2270,20 @@ c-22 -1 -33 -6 -33 -16 0 -8 -9 -15 -20 -15 -22 0 -26 -20 -8 -38 7 -7 9 -12
             <circle cx="455" cy="400" r="195" fill="none" stroke={accentColor} stroke-width="0.7" opacity="0.14"/>
           </g>
           <use id="reveal-lod0" href="#europe-coastline" />
-          <!-- LOD1: the user's own hand-drawn Netherlands outline (see
-               NL_TRACE_PATHS's comment in geodata-public.ts) — many small
-               same-color fragments, because that's what a vtraced pen
-               stroke actually is, not one outline path. Doesn't encode
-               which Wadden island is the destination either way. -->
+          {/* LOD1: the user's own hand-drawn Netherlands outline (see
+              NL_TRACE_PATHS's comment in geodata-public.ts) — many small
+              same-color fragments, because that's what a vtraced pen
+              stroke actually is, not one outline path. Encodes nothing
+              about the destination either way.
+
+              Deliberately an Astro expression comment, NOT an HTML one: an
+              HTML comment in this template is delivered verbatim in the
+              prerendered page, readable by any visitor via view-source
+              regardless of unlock state. The previous version of this
+              comment narrowed the destination to a specific island group
+              that way — a text leak of exactly the kind the whole
+              geodata-public/geodata-secret split exists to prevent. Keep
+              any note that touches on where the trip goes in this form. */}
           <g id="reveal-lod1" transform={`translate(${NL_CENTER.x},${NL_CENTER.y}) scale(${NL_SCALE})`} fill={accentColor} fill-opacity="0.8" stroke="none">
             {NL_TRACE_PATHS.map((p) => (
               <path d={p.d} transform={`translate(${p.tx},${p.ty})`} />
