@@ -1243,7 +1243,7 @@ const vapidPublicKey = import.meta.env.VAPID_PUBLIC_KEY ?? '';
     <div class="hero">
       <div class="hero-text">
         <div class="hero-days" data-days-left>&hellip;</div>
-        <div class="hero-days-label">dagen tot vertrek</div>
+        <div class="hero-days-label" data-days-left-label>dagen tot vertrek</div>
         <p class="hero-copy">De rest volgt hier, stuk voor stuk, zodra het zover is.</p>
         <a href="#installeren" class="hero-cta">
           Zet 'm op je scherm
@@ -2554,9 +2554,12 @@ c-22 -1 -33 -6 -33 -16 0 -8 -9 -15 -20 -15 -22 0 -26 -20 -8 -38 7 -7 9 -12
       }
 
       function renderDaysLeft(): void {
-        const daysLeft = String(computeDaysLeft());
+        const daysLeft = computeDaysLeft();
         document.querySelectorAll('[data-days-left]').forEach((el) => {
-          el.textContent = daysLeft;
+          el.textContent = String(daysLeft);
+        });
+        document.querySelectorAll('[data-days-left-label]').forEach((el) => {
+          el.textContent = daysLeft === 1 ? 'dag tot vertrek' : 'dagen tot vertrek';
         });
       }
 
