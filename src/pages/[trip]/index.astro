@@ -2542,9 +2542,15 @@ c-22 -1 -33 -6 -33 -16 0 -8 -9 -15 -20 -15 -22 0 -26 -20 -8 -38 7 -7 9 -12
       let wanderStopped = false;
 
       function computeDaysLeft(): number {
-        const target = new Date(startISO ?? '');
-        const now = new Date();
-        return Math.max(0, Math.ceil((target.getTime() - now.getTime()) / 86400000));
+        const normalizeToMidnight = (date) => {
+          const d = new Date(date);
+          d.setHours(0, 0, 0, 0);
+          return d;
+        };
+
+        const target = normalizeToMidnight(new Date(startISO ?? ''));
+        const now = normalizeToMidnight(new Date());
+        return Math.max(0, Math.floor((target.getTime() - now.getTime()) / 86400000));
       }
 
       function renderDaysLeft(): void {
