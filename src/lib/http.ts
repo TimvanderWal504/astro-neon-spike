@@ -1,7 +1,7 @@
-// Shared JSON envelope helpers (AD-8 / Consistency Conventions): all 4 API
-// routes share `{ok:true,data}` / `{ok:false,error}`. Story 3 introduces this
-// helper and is the first route to use it; the other 3 stub routes still
-// hand-roll the shape until their own stories land.
+// Shared JSON envelope helpers (AD-8 / Consistency Conventions): every API
+// route under src/pages/api/ answers `{ok:true,data}` / `{ok:false,error}`
+// through these two, so the page and the admin can parse any response the
+// same way.
 
 export function jsonOk(data: unknown, init: ResponseInit = {}): Response {
   const headers = new Headers(init.headers);
