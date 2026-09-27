@@ -74,6 +74,13 @@ self.addEventListener('notificationclick', (event) => {
           // through to the next candidate instead of silently doing nothing.
           try {
             await client.focus();
+            // A client that was sitting in the background is still running
+            // whatever build it started with. Tapping a notification is the
+            // user asking to see what's new, so tell the page — it reloads
+            // itself if (and only if) a newer deploy is live (see
+            // checkForUpdate in src/pages/[trip]/index.astro). Deciding
+            // that page-side keeps the push payload title/body only (AD-4).
+            client.postMessage({ type: 'notification-opened' });
             return;
           } catch (err) {
             console.error('notificationclick: focus failed', err);

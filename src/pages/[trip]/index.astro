@@ -354,6 +354,10 @@ const vapidPublicKey = import.meta.env.VAPID_PUBLIC_KEY ?? '';
         max-width: min(72vw, 420px);
         opacity: 0;
         pointer-events: none;
+        /* The script swaps this card's text to the next candidate at
+           STOP_SWAP_FRACTION into each stop (~0.9s), counting on this
+           fade-out being long over by then. Lengthening it past that
+           brings back the next city showing through the fade. */
         transition: opacity 260ms ease;
       }
       .reveal-stop.is-active {
@@ -2995,7 +2999,7 @@ c-22 -1 -33 -6 -33 -16 0 -8 -9 -15 -20 -15 -22 0 -26 -20 -8 -38 7 -7 9 -12
         }
 
         // Which rejected candidate the search is on, and how far into its own
-        // 5 seconds. Each stop spends its first 40% travelling and the rest
+        // SECONDS_PER_STOP (6s). Each stop spends its first 40% travelling and the rest
         // held still — the hold is where the name, the coordinate and the
         // rejection get to land, so it has to be the longer half.
         const STOP_TRAVEL_FRACTION = 0.4;
@@ -3398,6 +3402,9 @@ c-22 -1 -33 -6 -33 -16 0 -8 -9 -15 -20 -15 -22 0 -26 -20 -8 -38 7 -7 9 -12
             // the next poll.
             void checkForUpdate();
           }
+          if (event.data && event.data.type === 'notification-opened') {
+            void checkForUpdate({ reloadIfNew: true });
+          }
         });
       }
 
@@ -3409,21 +3416,34 @@ c-22 -1 -33 -6 -33 -16 0 -8 -9 -15 -20 -15 -22 0 -26 -20 -8 -38 7 -7 9 -12
       // against /version.json (see src/pages/version.json.ts) whenever it
       // comes back into view, comes back online, and every few minutes
       // while visible, and offers a reload once they differ. Offers, never
-      // forces: an automatic reload could land mid-reveal or mid-read.
+      // forces: an automatic reload could land mid-reveal or mid-read —
+      // except straight after a notification tap (reloadIfNew), where the
+      // user has just asked to see what's new.
       const PAGE_BUILD_ID = __BUILD_ID__;
       const UPDATE_POLL_MS = 5 * 60 * 1000;
       const updateBanner = document.getElementById('update-banner');
       const updateButton = document.getElementById('update-banner-button');
       let updateAvailable = false;
 
-      async function checkForUpdate(): Promise<void> {
-        if (updateAvailable || !navigator.onLine || document.visibilityState !== 'visible') return;
+      async function checkForUpdate({ reloadIfNew = false } = {}): Promise<void> {
+        if (updateAvailable) {
+          if (reloadIfNew) window.location.reload();
+          return;
+        }
+        // The visibility guard is for the background polls only: the
+        // notification-opened message can arrive a beat before the focused
+        // page reports itself visible again.
+        if (!navigator.onLine || (!reloadIfNew && document.visibilityState !== 'visible')) return;
         try {
           const res = await fetch('/version.json', { cache: 'no-store' });
           if (!res.ok) return;
           const { buildId } = await res.json();
           if (typeof buildId === 'string' && buildId !== PAGE_BUILD_ID) {
             updateAvailable = true;
+            if (reloadIfNew) {
+              window.location.reload();
+              return;
+            }
             if (updateBanner) updateBanner.hidden = false;
           }
         } catch {
