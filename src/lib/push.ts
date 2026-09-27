@@ -22,6 +22,13 @@ export type PushFanOutResult = {
   sent: number;
   failed: number;
   total: number;
+  /**
+   * Set when the fan-out never got as far as trying a single subscription,
+   * so a caller can tell "nobody to send to" apart from "couldn't send at
+   * all" -- both are 0/0/0 otherwise, and admin/notify.ts used to report
+   * either one as a successful "verstuurd naar 0 abonnees".
+   */
+  error?: 'not-configured' | 'subscriptions-unavailable';
 };
 
 /**
@@ -63,7 +70,7 @@ async function fanOutPush(
   const privateJWK = process.env.VAPID_PRIVATE_KEY;
   if (!privateJWK?.trim()) {
     console.error('fanOutPush: VAPID_PRIVATE_KEY is not set; skipping push fan-out.');
-    return { sent: 0, failed: 0, total: 0 };
+    return { sent: 0, failed: 0, total: 0, error: 'not-configured' };
   }
 
   let rows: StoredSubscription[];
@@ -77,7 +84,7 @@ async function fanOutPush(
     // above) -- a DB read failure here must not propagate any differently
     // than an individual send failure does below.
     console.error('fanOutPush: failed to read subscriptions', err);
-    return { sent: 0, failed: 0, total: 0 };
+    return { sent: 0, failed: 0, total: 0, error: 'subscriptions-unavailable' };
   }
 
   const results = await Promise.all(

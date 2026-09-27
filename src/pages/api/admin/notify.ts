@@ -63,6 +63,16 @@ export const POST: APIRoute = async ({ request, cookies }) => {
 
     const result = await sendCustomNotification(tripSlug, title.trim(), body.trim());
 
+    // Unlike admin/toggle.ts, where a push is a side effect of the real
+    // write, here the push IS the action — a fan-out that couldn't start
+    // is this request failing, not a 200 with zero recipients.
+    if (result.error === 'not-configured') {
+      return jsonError(503, 'Meldingen zijn niet geconfigureerd op de server (VAPID-sleutel ontbreekt).');
+    }
+    if (result.error === 'subscriptions-unavailable') {
+      return jsonError(503, 'Kon de lijst met abonnees niet ophalen. Probeer het opnieuw.');
+    }
+
     return jsonOk(result);
   } catch (err) {
     console.error('admin/notify failed:', err);

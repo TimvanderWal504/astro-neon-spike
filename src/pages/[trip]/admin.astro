@@ -630,12 +630,23 @@ Astro.response.headers.set('Cache-Control', 'private, no-store');
 
           if (res.status === 200 && payload && payload.ok === true) {
             const sent = typeof payload.data?.sent === 'number' ? payload.data.sent : 0;
+            const failed = typeof payload.data?.failed === 'number' ? payload.data.failed : 0;
+            // Nobody subscribed isn't an error, but "verstuurd naar 0"
+            // read like one that went fine — say what actually happened.
+            if (sent === 0 && failed === 0) {
+              return { ok: true, message: 'Niemand heeft meldingen aanstaan, er is niets verstuurd.' };
+            }
+            if (sent === 0) {
+              return {
+                ok: false,
+                message: `Versturen is mislukt voor alle ${failed} abonnee${failed === 1 ? '' : 's'}.`,
+              };
+            }
+            const sentText =
+              sent === 1 ? 'Melding verstuurd naar 1 abonnee' : `Melding verstuurd naar ${sent} abonnees`;
             return {
               ok: true,
-              message:
-                sent === 1
-                  ? 'Melding verstuurd naar 1 abonnee.'
-                  : `Melding verstuurd naar ${sent} abonnees.`,
+              message: failed > 0 ? `${sentText}, ${failed} mislukt.` : `${sentText}.`,
             };
           }
           return {
