@@ -2542,7 +2542,7 @@ c-22 -1 -33 -6 -33 -16 0 -8 -9 -15 -20 -15 -22 0 -26 -20 -8 -38 7 -7 9 -12
       let wanderStopped = false;
 
       function computeDaysLeft(): number {
-        const normalizeToMidnight = (date) => {
+        const normalizeToMidnight = (date: Date): Date => {
           const d = new Date(date);
           d.setHours(0, 0, 0, 0);
           return d;
@@ -2550,7 +2550,9 @@ c-22 -1 -33 -6 -33 -16 0 -8 -9 -15 -20 -15 -22 0 -26 -20 -8 -38 7 -7 9 -12
 
         const target = normalizeToMidnight(new Date(startISO ?? ''));
         const now = normalizeToMidnight(new Date());
-        return Math.max(0, Math.floor((target.getTime() - now.getTime()) / 86400000));
+        // round, not floor: across a DST switch two local midnights are
+        // 23h or 25h apart, and floor would turn 23h into one day short.
+        return Math.max(0, Math.round((target.getTime() - now.getTime()) / 86400000));
       }
 
       function renderDaysLeft(): void {
@@ -3119,21 +3121,34 @@ c-22 -1 -33 -6 -33 -16 0 -8 -9 -15 -20 -15 -22 0 -26 -20 -8 -38 7 -7 9 -12
           rafId = requestAnimationFrame(tick);
         }
 
-        function finish(): void {
-          markTextRevealed(false);
+        // Everything the sequence ever switches on, switched back off —
+        // shared by the natural end and Overslaan so the two can't drift.
+        // They used to be two hand-maintained lists, and skip()'s copy
+        // forgot the candidate card: .reveal-stop is its own fixed-position
+        // element, NOT inside .hero-map-dive, so fading the dive layer out
+        // didn't hide it. Skipping mid-hunt killed the rAF loop (the only
+        // code that ever clears the card) and left whichever candidate was
+        // up — "Berlijn", the first one — pinned over the page for good.
+        function teardown(): void {
+          cancelled = true;
+          cancelAnimationFrame(rafId);
+          window.removeEventListener('wheel', onWheel);
+          prologueEl!.classList.remove('is-active');
+          diveLayer!.style.opacity = '0';
+          svgEl!.classList.remove('is-impact', 'is-mismatch');
+          stopEl?.classList.remove('is-active', 'is-rejected');
           if (skipEl) skipEl.classList.remove('is-active');
           if (telemetryEl) telemetryEl.classList.remove('is-active');
-          diveLayer!.style.opacity = '0';
+        }
+
+        function finish(): void {
+          teardown();
+          markTextRevealed(false);
         }
 
         function skip(): void {
-          cancelled = true;
-          cancelAnimationFrame(rafId);
-          prologueEl!.classList.remove('is-active');
-          diveLayer!.style.opacity = '0';
+          teardown();
           markTextRevealed(true);
-          if (skipEl) skipEl.classList.remove('is-active');
-          if (telemetryEl) telemetryEl.classList.remove('is-active');
         }
 
         if (skipEl) {
@@ -3147,7 +3162,6 @@ c-22 -1 -33 -6 -33 -16 0 -8 -9 -15 -20 -15 -22 0 -26 -20 -8 -38 7 -7 9 -12
           }, 1000);
           skipEl.addEventListener('click', skip);
         }
-        window.addEventListener('wheel', onWheel, { passive: false });
 
         prologueEl.classList.add('is-active');
         void typePrologue().then(() => {
@@ -3162,6 +3176,11 @@ c-22 -1 -33 -6 -33 -16 0 -8 -9 -15 -20 -15 -22 0 -26 -20 -8 -38 7 -7 9 -12
           // hold a second time with nothing happening on screen.
           startTime = performance.now() - 5000;
           lastFrameTime = performance.now();
+          // Only now: before this, startTime is still 0, so onWheel's
+          // elapsedS is just time-since-page-load and could land inside the
+          // scroll-scrubbed dive act, swallowing the page's own scrolling
+          // during the prologue.
+          window.addEventListener('wheel', onWheel, { passive: false });
           rafId = requestAnimationFrame(tick);
         });
       }
