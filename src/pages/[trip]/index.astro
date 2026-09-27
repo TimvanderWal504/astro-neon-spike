@@ -883,6 +883,61 @@ const vapidPublicKey = import.meta.env.VAPID_PUBLIC_KEY ?? '';
         color: #c9c6bc;
       }
 
+      /* UPDATE-MELDING — shown once /version.json reports a newer build
+         than this page was made from (see checkForUpdate in the script).
+         No mockup for this either; built from the same pieces as
+         .notify-toggle/.hero-cta. z-index 45 sits under the reveal's dive
+         layer (50) and prologue (60) on purpose: a deploy landing mid-
+         sequence waits until the sequence has cleared instead of
+         interrupting it. Pinned to the top, not the bottom: the bottom
+         edge belongs to .packing-toggle (z-index 65), which sat right on
+         top of the Bijwerken button there. */
+      .update-banner {
+        position: fixed;
+        left: 50%;
+        top: calc(16px + env(safe-area-inset-top));
+        transform: translateX(-50%);
+        z-index: 45;
+        width: min(calc(100vw - 32px), 460px);
+        display: flex;
+        align-items: center;
+        gap: 16px;
+        padding: 14px 14px 14px 20px;
+        border-radius: 14px;
+        border: 1px solid rgba(244, 241, 234, 0.18);
+        background: rgba(10, 13, 12, 0.94);
+        box-shadow: 0 12px 40px rgba(0, 0, 0, 0.45);
+        color: #f4f1ea;
+      }
+      .update-banner[hidden] {
+        display: none;
+      }
+      .update-banner-text {
+        margin: 0;
+        flex: 1 1 auto;
+        font-size: 14px;
+        line-height: 1.45;
+      }
+      .update-banner-btn {
+        flex: 0 0 auto;
+        padding: 10px 18px;
+        border: 0;
+        border-radius: 999px;
+        background: var(--accent);
+        color: #0a0d0c;
+        font-family: inherit;
+        font-weight: 600;
+        font-size: 14px;
+        cursor: pointer;
+      }
+      .update-banner-btn:hover {
+        opacity: 0.8;
+      }
+      .update-banner-btn:focus-visible {
+        outline: 1px solid var(--accent);
+        outline-offset: 3px;
+      }
+
       /* CHAPTER SLOTS */
       .chapters {
         position: relative;
@@ -2358,6 +2413,12 @@ c-22 -1 -33 -6 -33 -16 0 -8 -9 -15 -20 -15 -22 0 -26 -20 -8 -38 7 -7 9 -12
     <button type="button" class="reveal-skip" data-reveal-skip>Overslaan</button>
     <div class="reveal-debug" data-reveal-debug aria-hidden="true"></div>
 
+    <!-- Update-melding: see checkForUpdate in the script below. -->
+    <div class="update-banner" id="update-banner" role="status" hidden>
+      <p class="update-banner-text">Er staat een nieuwe versie van de site klaar.</p>
+      <button type="button" class="update-banner-btn" id="update-banner-button">Bijwerken</button>
+    </div>
+
     <!-- INSTALLEREN — ported from Main.dc.html:402-442. No .reveal class:
          renders statically at full opacity (story 1.6 scoped the reveal
          system to chapter slots only). data-platform defaults to
@@ -3335,6 +3396,46 @@ c-22 -1 -33 -6 -33 -16 0 -8 -9 -15 -20 -15 -22 0 -26 -20 -8 -38 7 -7 9 -12
           }
         });
       }
+
+      // Update-melding. The service worker is a pure network passthrough,
+      // so any fresh load already gets the latest deploy — the gap is a
+      // page that never reloads: an installed PWA left open, or resumed
+      // from the background days later, keeps running whatever build it
+      // started with. So the page compares the build id it was made from
+      // against /version.json (see src/pages/version.json.ts) whenever it
+      // comes back into view, comes back online, and every few minutes
+      // while visible, and offers a reload once they differ. Offers, never
+      // forces: an automatic reload could land mid-reveal or mid-read.
+      const PAGE_BUILD_ID = __BUILD_ID__;
+      const UPDATE_POLL_MS = 5 * 60 * 1000;
+      const updateBanner = document.getElementById('update-banner');
+      const updateButton = document.getElementById('update-banner-button');
+      let updateAvailable = false;
+
+      async function checkForUpdate(): Promise<void> {
+        if (updateAvailable || !navigator.onLine || document.visibilityState !== 'visible') return;
+        try {
+          const res = await fetch('/version.json', { cache: 'no-store' });
+          if (!res.ok) return;
+          const { buildId } = await res.json();
+          if (typeof buildId === 'string' && buildId !== PAGE_BUILD_ID) {
+            updateAvailable = true;
+            if (updateBanner) updateBanner.hidden = false;
+          }
+        } catch {
+          // Offline or mid-deploy — the next check will pick it up.
+        }
+      }
+
+      updateButton?.addEventListener('click', () => window.location.reload());
+      document.addEventListener('visibilitychange', () => void checkForUpdate());
+      window.addEventListener('online', () => void checkForUpdate());
+      // Restored from the back/forward cache: the page is as old as when it
+      // was left, however long ago that was.
+      window.addEventListener('pageshow', (event) => {
+        if (event.persisted) void checkForUpdate();
+      });
+      window.setInterval(() => void checkForUpdate(), UPDATE_POLL_MS);
 
       // Meldingen aanzetten (story 8, AD-4): guest opt-in control near
       // #installeren. Every outcome shows its own explicit message —
