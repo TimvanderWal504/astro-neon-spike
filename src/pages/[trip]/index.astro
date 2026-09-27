@@ -2938,6 +2938,12 @@ c-22 -1 -33 -6 -33 -16 0 -8 -9 -15 -20 -15 -22 0 -26 -20 -8 -38 7 -7 9 -12
         // held still — the hold is where the name, the coordinate and the
         // rejection get to land, so it has to be the longer half.
         const STOP_TRAVEL_FRACTION = 0.4;
+        // When, within a stop's travel, the card's text is swapped to the
+        // new candidate: 0.15 of a 6s stop is ~0.9s, well past .reveal-stop's
+        // 260ms fade-out (and .reveal-stop-reason's 200ms), so the swap
+        // always happens on an invisible card. Must stay below
+        // STOP_TRAVEL_FRACTION or the card would arrive before its text.
+        const STOP_SWAP_FRACTION = 0.15;
         function stopStateAt(localT: number): { index: number; t: number } {
           const n = DECOY_STOPS.length;
           const scaled = Math.min(n - 0.0001, Math.max(0, localT * n));
@@ -3032,7 +3038,12 @@ c-22 -1 -33 -6 -33 -16 0 -8 -9 -15 -20 -15 -22 0 -26 -20 -8 -38 7 -7 9 -12
             // that it barely had time to register before the camera moved.
             const rejected = t >= 0.62;
 
-            if (index !== shownStopIndex) {
+            // The swap waits until the previous card has faded out. It used
+            // to happen the instant the index changed — the same frame
+            // is-active came off — so the 260ms fade-out played with the
+            // NEXT city's name already in it, unstruck, giving away where
+            // the camera was headed before it got there.
+            if (index !== shownStopIndex && t >= STOP_SWAP_FRACTION) {
               shownStopIndex = index;
               rejectedStopIndex = -1;
               if (stopNameEl) stopNameEl.textContent = stop.name;
@@ -3040,7 +3051,7 @@ c-22 -1 -33 -6 -33 -16 0 -8 -9 -15 -20 -15 -22 0 -26 -20 -8 -38 7 -7 9 -12
               if (stopReasonEl) stopReasonEl.textContent = stop.reason;
               stopEl?.classList.remove('is-rejected');
             }
-            stopEl?.classList.toggle('is-active', arrived);
+            stopEl?.classList.toggle('is-active', arrived && index === shownStopIndex);
             if (rejected && rejectedStopIndex !== index) {
               rejectedStopIndex = index;
               stopEl?.classList.add('is-rejected');
@@ -3049,9 +3060,11 @@ c-22 -1 -33 -6 -33 -16 0 -8 -9 -15 -20 -15 -22 0 -26 -20 -8 -38 7 -7 9 -12
               if (navigator.vibrate) navigator.vibrate([30, 50, 30]);
             }
           } else {
-            stopEl?.classList.remove('is-active', 'is-rejected');
-            shownStopIndex = -1;
-            rejectedStopIndex = -1;
+            // Only is-active: the last card fades out as it was (struck,
+            // verdict up) instead of un-striking mid-fade, and the indices
+            // stay put so a scrub back into the hunt doesn't re-fire the
+            // rejection flash.
+            stopEl?.classList.remove('is-active');
           }
 
           // The one real lock-on: the moment the dive commits to Ameland.
