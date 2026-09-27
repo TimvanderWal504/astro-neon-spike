@@ -349,6 +349,29 @@ Astro.response.headers.set('Cache-Control', 'private, no-store');
                   </div>
                 </li>
               </ul>
+              {/* Announces a new deploy with one tap. Deliberately not
+                  automatic on every push to main: most deploys are small
+                  fixes nobody needs to be pinged about. Tapping the push
+                  opens the trip page fresh, which is the new version; an
+                  already-open page gets the same push broadcast and shows
+                  its own update banner (see index.astro). */}
+              <div class="notify-section" data-update-section>
+                <p class="admin-label mono">Website-update aankondigen</p>
+                <p class="admin-placeholder-copy">
+                  Stuurt iedereen met meldingen aan een pushmelding dat er een nieuwe versie van de site staat.
+                  Doe dit pas nadat de deploy live is.
+                </p>
+                <button
+                  class="admin-submit"
+                  type="button"
+                  data-update-announce
+                  data-trip-slug={tripState.slug}
+                >
+                  Update aankondigen
+                </button>
+                <p class="admin-error mono" hidden role="alert" aria-live="polite" data-update-error />
+                <p class="admin-success mono" hidden role="status" aria-live="polite" data-update-success />
+              </div>
               <div class="notify-section" data-notify-section>
                 <p class="admin-label mono">Melding versturen</p>
                 <form data-notify-form data-trip-slug={tripState.slug}>
@@ -587,50 +610,15 @@ Astro.response.headers.set('Cache-Control', 'private, no-store');
     </script>
 
     <script>
-      const notifyForm = document.querySelector('[data-notify-form]');
-      const notifyTitleInput = document.querySelector('[data-notify-title]');
-      const notifyBodyInput = document.querySelector('[data-notify-body]');
-      const notifySubmitBtn = document.querySelector('[data-notify-submit]');
-      const notifyErrorEl = document.querySelector('[data-notify-error]');
-      const notifySuccessEl = document.querySelector('[data-notify-success]');
-
-      function hideNotifyMessages(): void {
-        if (notifyErrorEl instanceof HTMLElement) {
-          notifyErrorEl.hidden = true;
-          notifyErrorEl.textContent = '';
-        }
-        if (notifySuccessEl instanceof HTMLElement) {
-          notifySuccessEl.hidden = true;
-          notifySuccessEl.textContent = '';
-        }
-      }
-
-      function showNotifyError(message: string): void {
-        if (!(notifyErrorEl instanceof HTMLElement)) return;
-        notifyErrorEl.textContent = message;
-        notifyErrorEl.hidden = false;
-      }
-
-      function showNotifySuccess(message: string): void {
-        if (!(notifySuccessEl instanceof HTMLElement)) return;
-        notifySuccessEl.textContent = message;
-        notifySuccessEl.hidden = false;
-      }
-
-      notifyForm?.addEventListener('submit', async (event) => {
-        event.preventDefault();
-        hideNotifyMessages();
-
-        const tripSlug =
-          notifyForm instanceof HTMLFormElement ? notifyForm.dataset.tripSlug : undefined;
-        const title = notifyTitleInput instanceof HTMLInputElement ? notifyTitleInput.value.trim() : '';
-        const body =
-          notifyBodyInput instanceof HTMLTextAreaElement ? notifyBodyInput.value.trim() : '';
-
-        if (!tripSlug || !title || !body) return;
-
-        if (notifySubmitBtn instanceof HTMLButtonElement) notifySubmitBtn.disabled = true;
-
+      // One POST /api/admin/notify round-trip, shared by the free-form
+      // message below and the "Update aankondigen" button. Resolves to the
+      // text to show the admin: which of the two elements it goes in is
+      // `ok`.
+      async function sendNotification(
+        tripSlug: string,
+        title: string,
+        body: string,
+      ): Promise<{ ok: boolean; message: string }> {
         try {
           const res = await fetch('/api/admin/notify', {
             method: 'POST',
@@ -642,24 +630,90 @@ Astro.response.headers.set('Cache-Control', 'private, no-store');
 
           if (res.status === 200 && payload && payload.ok === true) {
             const sent = typeof payload.data?.sent === 'number' ? payload.data.sent : 0;
-            showNotifySuccess(
-              sent === 1
-                ? 'Melding verstuurd naar 1 abonnee.'
-                : `Melding verstuurd naar ${sent} abonnees.`,
-            );
-            if (notifyForm instanceof HTMLFormElement) notifyForm.reset();
-          } else {
-            showNotifyError(
-              (payload && typeof payload.error === 'string' && payload.error) ||
-                'Er ging iets mis. Probeer het opnieuw.',
-            );
+            return {
+              ok: true,
+              message:
+                sent === 1
+                  ? 'Melding verstuurd naar 1 abonnee.'
+                  : `Melding verstuurd naar ${sent} abonnees.`,
+            };
           }
+          return {
+            ok: false,
+            message:
+              (payload && typeof payload.error === 'string' && payload.error) ||
+              'Er ging iets mis. Probeer het opnieuw.',
+          };
         } catch (err) {
           console.error(err);
-          showNotifyError('Er ging iets mis. Probeer het opnieuw.');
-        } finally {
-          if (notifySubmitBtn instanceof HTMLButtonElement) notifySubmitBtn.disabled = false;
+          return { ok: false, message: 'Er ging iets mis. Probeer het opnieuw.' };
         }
+      }
+
+      function showResult(
+        errorEl: Element | null,
+        successEl: Element | null,
+        result: { ok: boolean; message: string } | null,
+      ): void {
+        for (const el of [errorEl, successEl]) {
+          if (el instanceof HTMLElement) {
+            el.hidden = true;
+            el.textContent = '';
+          }
+        }
+        if (!result) return;
+        const target = result.ok ? successEl : errorEl;
+        if (target instanceof HTMLElement) {
+          target.textContent = result.message;
+          target.hidden = false;
+        }
+      }
+
+      const notifyForm = document.querySelector('[data-notify-form]');
+      const notifyTitleInput = document.querySelector('[data-notify-title]');
+      const notifyBodyInput = document.querySelector('[data-notify-body]');
+      const notifySubmitBtn = document.querySelector('[data-notify-submit]');
+      const notifyErrorEl = document.querySelector('[data-notify-error]');
+      const notifySuccessEl = document.querySelector('[data-notify-success]');
+
+      notifyForm?.addEventListener('submit', async (event) => {
+        event.preventDefault();
+        showResult(notifyErrorEl, notifySuccessEl, null);
+
+        const tripSlug =
+          notifyForm instanceof HTMLFormElement ? notifyForm.dataset.tripSlug : undefined;
+        const title = notifyTitleInput instanceof HTMLInputElement ? notifyTitleInput.value.trim() : '';
+        const body =
+          notifyBodyInput instanceof HTMLTextAreaElement ? notifyBodyInput.value.trim() : '';
+
+        if (!tripSlug || !title || !body) return;
+
+        if (notifySubmitBtn instanceof HTMLButtonElement) notifySubmitBtn.disabled = true;
+        const result = await sendNotification(tripSlug, title, body);
+        showResult(notifyErrorEl, notifySuccessEl, result);
+        if (result.ok && notifyForm instanceof HTMLFormElement) notifyForm.reset();
+        if (notifySubmitBtn instanceof HTMLButtonElement) notifySubmitBtn.disabled = false;
+      });
+
+      const UPDATE_TITLE = 'De site is bijgewerkt';
+      const UPDATE_BODY = 'Er staat een nieuwe versie klaar. Tik om hem te openen.';
+      const updateButton = document.querySelector('[data-update-announce]');
+      const updateErrorEl = document.querySelector('[data-update-error]');
+      const updateSuccessEl = document.querySelector('[data-update-success]');
+
+      updateButton?.addEventListener('click', async () => {
+        if (!(updateButton instanceof HTMLButtonElement)) return;
+        const tripSlug = updateButton.dataset.tripSlug;
+        if (!tripSlug) return;
+        // A push to everyone can't be taken back — one confirm instead of
+        // letting a stray tap on a phone send it.
+        if (!window.confirm('Pushmelding over de update naar iedereen sturen?')) return;
+
+        showResult(updateErrorEl, updateSuccessEl, null);
+        updateButton.disabled = true;
+        const result = await sendNotification(tripSlug, UPDATE_TITLE, UPDATE_BODY);
+        showResult(updateErrorEl, updateSuccessEl, result);
+        updateButton.disabled = false;
       });
     </script>
   </body>

@@ -3393,6 +3393,10 @@ c-22 -1 -33 -6 -33 -16 0 -8 -9 -15 -20 -15 -22 0 -26 -20 -8 -38 7 -7 9 -12
         navigator.serviceWorker.addEventListener('message', (event) => {
           if (event.data && event.data.type === 'trip-updated') {
             loadTripState();
+            // Covers the admin's "Update aankondigen" push too: an already-
+            // open page shows its update banner right away instead of at
+            // the next poll.
+            void checkForUpdate();
           }
         });
       }
