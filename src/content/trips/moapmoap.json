@@ -34,8 +34,8 @@
       "kind": "knap",
       "title": "Onderweg naar het appartement",
       "time": "Vrijdag 2 oktober, 14:45",
-      "location": "Bliekeduun 8, Hollum",
-      "description": "14:45 — De boot, stipt, overtocht duurt tot 16:00.\n16:00 — Fietsen naar het appartement.",
+      "location": "Bliekeduun 6, 9161 CP Hollum",
+      "description": "14:45 — De boot, stipt, overtocht duurt tot ca. 15:35.\n15:35 — Fietsen ophalen in Nes en door naar het appartement.",
       "svgVariant": "knap-vrijdag"
     },
     {
@@ -44,7 +44,7 @@
       "kind": "knap",
       "title": "Geen programma, wel spelletjes.",
       "time": "Vrijdag 2 oktober, 18:45",
-      "location": "Bliekeduun 8, Hollum",
+      "location": "Bliekeduun 6, 9161 CP Hollum",
       "description": "18:45 — Geen programma, wel spelletjes, bier en goede verhalen. Er staat er in elk geval één spel vast op het bord: Risk.",
       "svgVariant": "knap-vrijdag"
     },
@@ -84,7 +84,7 @@
       "kind": "knap",
       "title": "Uitchecken",
       "time": "Zondag 4 oktober, 11:00",
-      "location": "Bliekeduun 8, Hollum",
+      "location": "Bliekeduun 6, 9161 CP Hollum",
       "description": "11:00 — Uitchecken bij het appartement. Wees gerust, we hebben nog een activiteit te gaan. We zijn nog niet klaar.",
       "svgVariant": "knap-zondag"
     },
@@ -105,7 +105,7 @@
       "title": "Onderweg naar het vaste land",
       "time": "Zondag 4 oktober, 16:00",
       "location": "Grândyk 2B, 9151 AE Holwert",
-      "description": "16:00 — De boot, stipt, overtocht duurt tot 17:15.\n17:15 — Aankomst op het vaste land, einde van de trip.",
+      "description": "16:00 — De boot, stipt, overtocht duurt tot ca. 16:50.\n16:50 — Aankomst op het vaste land, einde van de trip.",
       "svgVariant": "knap-zondag"
     }
   ],
@@ -165,6 +165,57 @@
         { "id": "spellen", "label": "Kaartspellen/spelletjes" },
         { "id": "snacks", "label": "Goodie-bag items (snoep, drankjes)" }
       ]
-    }   
-  ]
+    }
+  ],
+  "organizerGuide": {
+    "runbook": [
+      {
+        "label": "Vrijdag 2 oktober",
+        "items": [
+          { "time": "11:30", "title": "Verzamelen bij Van der Valk + lunchen", "detail": "Uiterlijk 12:30 weg.", "location": "Van der Valk Zwolle, Nieuwleusenerdijk 1, 8028 PH Zwolle", "owner": "Peter & Tim", "chapterId": "verzamelen" },
+          { "time": "14:15", "title": "Aankomst Holwert", "detail": "Mikken op 14:15 voor de boot van 14:45, aankomst Nes ca. 15:35 (overtocht ca. 50 minuten). Missen we die, dan de boot van 16:00 (aankomst ca. 16:50).", "location": "Grândyk 2B, 9151 AE Holwert", "chapterId": "vrijdag" },
+          { "time": null, "title": "Boottickets", "detail": "Via Wagenborg Passagiersdiensten.", "owner": "Tim", "url": "https://www.wpd.nl" },
+          { "time": null, "title": "Fietsen huren", "detail": "Worden afgeleverd op dit adres. € 154 ter plekke afrekenen.", "location": "Oude Steiger 1, 9163 GV Nes" },
+          { "time": "16:45", "title": "Aankomst huisje", "detail": "Aankomst kan vanaf 16:00. Na de boot (15:35) fietsen ophalen in Nes en ca. 45 minuten fietsen naar Hollum, dus waarschijnlijk rond 16:45. Rondleiding door het huis + wat uitleg (waarschijnlijk 20–30 minuten).", "location": "Bliekeduun 6, 9161 CP Hollum", "owner": "Peter & Tim" },
+          { "time": null, "title": "Boodschappen bij de PLUS", "detail": "Gelijk na aankomst.", "location": "Olfert Pieter Lapstraat 4, 9161 BV Hollum", "owner": "Tim" },
+          { "time": null, "title": "Eten bestellen bij Il Vulcano", "detail": "Gelijk meenemen?", "url": "http://www.ilvulcano.nl/", "owner": "Peter" },
+          { "time": "19:00", "title": "Avondprogramma", "detail": "Helemaal niks. Waarschijnlijk rond 19:00 klaar met eten, daarna spelletjes enzo.", "owner": "Niemand", "chapterId": "spelletjes" }
+        ]
+      },
+      {
+        "label": "Zaterdag 3 oktober",
+        "items": [
+          { "time": "07:15", "title": "Vroeg uit de veren", "detail": "Ontbijten tot 08:30, klaarmaken en uiterlijk 08:45 weg.", "owner": "Tim" },
+          { "time": "09:15", "title": "Blokarten", "detail": "09:15 aanwezig, 09:30 start, rond 10:30 klaar.", "location": "Westerpad 1A, 9163 KM Nes", "owner": "Tim", "chapterId": "blokarten" },
+          { "time": null, "title": "Vroeg lunchen in het huisje" },
+          { "time": "12:30", "title": "Amelander Bierbrouwerij", "detail": "Rondleiding van 60–75 minuten. Daarna drinken bij de brouwerij en dan richting huis.", "location": "Smitteweg 6, 9162 EC Ballum", "owner": "Tim", "chapterId": "brouwerij" },
+          { "time": null, "title": "Chillen bij het huis", "detail": "Geen verder programma." },
+          { "time": "18:30", "title": "Eten bij De Welvaart", "detail": "Menukaart van De Welvaart vooraf bekijken.", "location": "Burenlaan 4, 9161 AK Hollum", "url": "https://dewelvaartameland.nl/menukaart/", "owner": "Tim", "chapterId": "uit eten" },
+          { "time": null, "title": "Kijken waar het schip strandt", "owner": "Ieder voor zich en god voor ons allen" }
+        ]
+      },
+      {
+        "label": "Zondag 4 oktober",
+        "items": [
+          { "time": "08:30", "title": "Later uit de veren", "detail": "Uiterlijk 08:30 op. Ontbijten kan tot 10:30." },
+          { "time": "09:00", "title": "Bagage klaar", "detail": "Koffers worden opgehaald, bagage klaar rond 9 à 10 uur.", "owner": "Peter" },
+          { "time": "11:00", "title": "Uitchecken", "detail": "Uiterlijk 11:00.", "location": "Bliekeduun 6, 9161 CP Hollum", "owner": "Peter & Tim", "chapterId": "uitchecken" },
+          { "time": "11:30", "title": "Duinexcursie", "detail": "11:30–14:00. € 140 contant afrekenen.", "location": "Jan Roepespad 1, 9161 AM Hollum", "owner": "Peter", "chapterId": "zondag" },
+          { "time": "14:00", "title": "Richting veerboot of eiland ontdekken", "detail": "Na 14:00 klaar. Richting veerboot, of verder het eiland ontdekken.", "owner": "Tim" },
+          { "time": "15:20", "title": "Bij de veerboot + fietsen inleveren", "detail": "Uiterlijk 15:20 bij de veerboot. Fietsen inleveren op dit adres.", "location": "Oude Steiger 1, 9163 GV Nes", "owner": "Peter & Tim" },
+          { "time": "16:00", "title": "Veerboot terug", "detail": "Vertrek vanaf Nes, aankomst Holwert ca. 16:50 (overtocht ca. 50 minuten).", "location": "Grândyk 2B, 9151 AE Holwert", "chapterId": "terug" },
+          { "time": "17:15", "title": "Eten onderweg", "detail": "Gewoon langs de weg — maar waar? Nog uitzoeken.", "owner": "Peter & Tim" }
+        ]
+      }
+    ],
+    "notes": [
+      "Ter plekke afrekenen: fietsen € 154, duinexcursie € 140 (contant!)."
+    ],
+    "links": [
+      { "label": "Wagenborg Passagiersdiensten", "url": "https://www.wpd.nl", "note": "Boot Holwert ⇄ Ameland: dienstregeling en tickets" },
+      { "label": "Il Vulcano", "url": "http://www.ilvulcano.nl/", "note": "Eten bestellen vrijdagavond" },
+      { "label": "Menukaart De Welvaart", "url": "https://dewelvaartameland.nl/menukaart/", "note": "Zaterdagavond 18:30" },
+      { "label": "Buienradar", "url": "https://www.buienradar.nl", "note": "Weer checken voor het blokarten en de duinen" }
+    ]
+  }
 }

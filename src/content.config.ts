@@ -79,6 +79,40 @@ const packingCategorySchema = z.object({
   items: z.array(packingItemSchema).min(1),
 });
 
+// One line of the organizer's draaiboek. `chapterId` optionally ties the item
+// to a chapter so the admin view can show its live Onthuld/Op slot state.
+const runbookItemSchema = z.object({
+  time: z.string().nullable().default(null),
+  title: z.string().min(1),
+  detail: z.string().optional(),
+  location: z.string().optional(),
+  owner: z.string().optional(),
+  url: z.string().url().optional(),
+  chapterId: z.string().optional(),
+});
+
+// Organizer-only briefing for the admin "Draaiboek" tab: the day-by-day
+// runbook plus practical notes and handy links. Deliberately NOT copied into
+// TripState by getTripState — it is read straight from the collection by the
+// admin route only, so it can never reach /api/trip or the public shell.
+const organizerGuideSchema = z
+  .object({
+    runbook: z
+      .array(z.object({ label: z.string().min(1), items: z.array(runbookItemSchema).min(1) }))
+      .default([]),
+    notes: z.array(z.string().min(1)).default([]),
+    links: z
+      .array(
+        z.object({
+          label: z.string().min(1),
+          url: z.string().url(),
+          note: z.string().optional(),
+        }),
+      )
+      .default([]),
+  })
+  .default({ runbook: [], notes: [], links: [] });
+
 const tripSchema = z
   .object({
     // Only source of truth for a trip's identity — the `<slug>.json`
@@ -94,6 +128,7 @@ const tripSchema = z
     accentColor: z.string().regex(/^#[0-9A-Fa-f]{6}$/, 'accentColor must be a 6-digit hex color'),
     chapters: z.array(chapterSchema),
     packingList: z.array(packingCategorySchema).min(1),
+    organizerGuide: organizerGuideSchema,
   })
   .refine(
     (trip) => new Set(trip.chapters.map((chapter) => chapter.id)).size === trip.chapters.length,
@@ -115,6 +150,15 @@ const tripSchema = z
   .refine(
     (trip) => new Set(trip.chapters.map((chapter) => chapter.order)).size === trip.chapters.length,
     { message: 'chapters[].order must be unique within a trip', path: ['chapters'] },
+  )
+  .refine(
+    (trip) => {
+      const chapterIds = new Set(trip.chapters.map((chapter) => chapter.id));
+      return trip.organizerGuide.runbook.every((day) =>
+        day.items.every((item) => !item.chapterId || chapterIds.has(item.chapterId)),
+      );
+    },
+    { message: 'organizerGuide.runbook[].items[].chapterId must match a chapter id', path: ['organizerGuide'] },
   );
 
 const trips = defineCollection({
