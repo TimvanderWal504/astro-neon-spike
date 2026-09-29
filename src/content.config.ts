@@ -101,6 +101,21 @@ const organizerGuideSchema = z
       .array(z.object({ label: z.string().min(1), items: z.array(runbookItemSchema).min(1) }))
       .default([]),
     notes: z.array(z.string().min(1)).default([]),
+    // Themed lists of practical info (e.g. the rental's house manual),
+    // each rendered under its own heading.
+    infoBlocks: z
+      .array(z.object({ label: z.string().min(1), items: z.array(z.string().min(1)).min(1) }))
+      .default([]),
+    // Rendered as tap-to-call links.
+    contacts: z
+      .array(
+        z.object({
+          label: z.string().min(1),
+          phone: z.string().regex(/^\+?[0-9 ()-]+$/, 'phone must be digits, spaces, dashes or a leading +'),
+          note: z.string().optional(),
+        }),
+      )
+      .default([]),
     links: z
       .array(
         z.object({
@@ -111,7 +126,7 @@ const organizerGuideSchema = z
       )
       .default([]),
   })
-  .default({ runbook: [], notes: [], links: [] });
+  .default({ runbook: [], notes: [], infoBlocks: [], contacts: [], links: [] });
 
 const tripSchema = z
   .object({

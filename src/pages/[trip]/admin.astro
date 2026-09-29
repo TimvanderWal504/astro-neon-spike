@@ -12,6 +12,7 @@ import {
   buildScheduleFromChapters,
   getOrganizerGuide,
   mapsSearchUrl,
+  telHref,
   type OrganizerGuide,
 } from '../../lib/organizer-guide';
 
@@ -472,6 +473,13 @@ Astro.response.headers.set('Cache-Control', 'private, no-store');
         font-size: 14px;
         font-weight: 500;
       }
+      .guide-phone {
+        margin-left: 6px;
+        font-size: 13px;
+        font-weight: 400;
+        color: var(--accent, #e3a64a);
+        white-space: nowrap;
+      }
       .guide-link-note {
         font-size: 13px;
         color: #9a9a91;
@@ -510,11 +518,11 @@ Astro.response.headers.set('Cache-Control', 'private, no-store');
             {tripState ? (
               <>
               <div class="admin-tabs" role="tablist" aria-label="Admin-onderdelen" data-tablist>
-                <button type="button" class="admin-tab" role="tab" id="tab-onthullen" aria-controls="panel-onthullen" aria-selected="true" data-tab="onthullen">Onthullen</button>
+                <button type="button" class="admin-tab" role="tab" id="tab-draaiboek" aria-controls="panel-draaiboek" aria-selected="true" data-tab="draaiboek">Draaiboek</button>
+                <button type="button" class="admin-tab" role="tab" id="tab-onthullen" aria-controls="panel-onthullen" aria-selected="false" tabindex="-1" data-tab="onthullen">Onthullen</button>
                 <button type="button" class="admin-tab" role="tab" id="tab-meldingen" aria-controls="panel-meldingen" aria-selected="false" tabindex="-1" data-tab="meldingen">Meldingen</button>
-                <button type="button" class="admin-tab" role="tab" id="tab-draaiboek" aria-controls="panel-draaiboek" aria-selected="false" tabindex="-1" data-tab="draaiboek">Draaiboek</button>
               </div>
-              <section class="admin-panel" role="tabpanel" id="panel-onthullen" aria-labelledby="tab-onthullen" data-tab-panel="onthullen">
+              <section class="admin-panel" role="tabpanel" id="panel-onthullen" aria-labelledby="tab-onthullen" data-tab-panel="onthullen" hidden>
               <ul class="chapter-list" aria-label="Hoofdstukken">
                 {tripState.chapters.map((chapter) => (
                   <li class="chapter-row" data-chapter-row>
@@ -656,7 +664,7 @@ Astro.response.headers.set('Cache-Control', 'private, no-store');
                 <p class="admin-success mono" hidden role="status" aria-live="polite" data-update-success />
               </div>
               </section>
-              <section class="admin-panel" role="tabpanel" id="panel-draaiboek" aria-labelledby="tab-draaiboek" data-tab-panel="draaiboek" hidden>
+              <section class="admin-panel" role="tabpanel" id="panel-draaiboek" aria-labelledby="tab-draaiboek" data-tab-panel="draaiboek">
                 <p class="schedule-intro">
                   Vertrek <span class="schedule-start">{startDateLabel}</span>. Het volledige
                   draaiboek, ook wat nog op slot staat — alleen zichtbaar voor jou.
@@ -732,6 +740,33 @@ Astro.response.headers.set('Cache-Control', 'private, no-store');
                     </ul>
                   </div>
                 )}
+                {organizerGuide && organizerGuide.contacts.length > 0 && (
+                  <div class="schedule-day">
+                    <h2 class="admin-label mono schedule-day-label">Telefoonnummers</h2>
+                    <ul class="guide-links">
+                      {organizerGuide.contacts.map((contact) => (
+                        <li>
+                          <a href={telHref(contact.phone)}>
+                            <span class="guide-link-label">
+                              {contact.label} <span class="guide-phone mono">{contact.phone}</span>
+                            </span>
+                            {contact.note && <span class="guide-link-note">{contact.note}</span>}
+                          </a>
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
+                )}
+                {organizerGuide?.infoBlocks.map((block) => (
+                  <div class="schedule-day">
+                    <h2 class="admin-label mono schedule-day-label">{block.label}</h2>
+                    <ul class="guide-notes">
+                      {block.items.map((item) => (
+                        <li>{item}</li>
+                      ))}
+                    </ul>
+                  </div>
+                ))}
                 {organizerGuide && organizerGuide.links.length > 0 && (
                   <div class="schedule-day">
                     <h2 class="admin-label mono schedule-day-label">Handige links</h2>

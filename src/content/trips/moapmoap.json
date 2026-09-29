@@ -142,8 +142,7 @@
         { "id": "zeep", "label": "Zeep/bodywash" },
         { "id": "shampoo", "label": "Shampoo" },
         { "id": "medicijnen", "label": "Eventuele medicijnen" },
-        { "id": "scheren", "label": "Scheerapparaat + scheerschuim" },
-        { "id": "handdoeken", "label": "Handdoeken (minstens 2)" }
+        { "id": "scheren", "label": "Scheerapparaat + scheerschuim" }
       ]
     },
     {
@@ -172,13 +171,14 @@
       {
         "label": "Vrijdag 2 oktober",
         "items": [
-          { "time": "11:30", "title": "Verzamelen bij Van der Valk + lunchen", "detail": "Uiterlijk 12:30 weg.", "location": "Van der Valk Zwolle, Nieuwleusenerdijk 1, 8028 PH Zwolle", "owner": "Peter & Tim", "chapterId": "verzamelen" },
-          { "time": "14:15", "title": "Aankomst Holwert", "detail": "Mikken op 14:15 voor de boot van 14:45, aankomst Nes ca. 15:35 (overtocht ca. 50 minuten). Missen we die, dan de boot van 16:00 (aankomst ca. 16:50).", "location": "Grândyk 2B, 9151 AE Holwert", "chapterId": "vrijdag" },
-          { "time": null, "title": "Boottickets", "detail": "Via Wagenborg Passagiersdiensten.", "owner": "Tim", "url": "https://www.wpd.nl" },
-          { "time": null, "title": "Fietsen huren", "detail": "Worden afgeleverd op dit adres. € 154 ter plekke afrekenen.", "location": "Oude Steiger 1, 9163 GV Nes" },
-          { "time": "16:45", "title": "Aankomst huisje", "detail": "Aankomst kan vanaf 16:00. Na de boot (15:35) fietsen ophalen in Nes en ca. 45 minuten fietsen naar Hollum, dus waarschijnlijk rond 16:45. Rondleiding door het huis + wat uitleg (waarschijnlijk 20–30 minuten).", "location": "Bliekeduun 6, 9161 CP Hollum", "owner": "Peter & Tim" },
+          { "time": "11:30", "title": "Verzamelen bij Van der Valk + lunchen", "detail": "Geen reservering, we lopen gewoon binnen. Uiterlijk 12:30 weg.", "location": "Van der Valk Zwolle, Nieuwleusenerdijk 1, 8028 PH Zwolle", "owner": "Peter & Tim", "chapterId": "verzamelen" },
+          { "time": "14:15", "title": "Aankomst Holwert", "detail": "Mikken op 14:15 voor de boot van 14:45, aankomst Nes ca. 15:35 (overtocht ca. 50 minuten). Missen we die, dan de boot van 16:00 (aankomst ca. 16:50). Geen parkeerreservering: auto's op de bonnefooi parkeren bij de veerhaven.", "location": "Grândyk 2B, 9151 AE Holwert", "chapterId": "vrijdag" },
+          { "time": null, "title": "Boottickets", "detail": "Geregeld: 7 e-tickets bij Wagenborg, retour veerdienst (heen vr 14:45 Holwert → Ameland, terug zo 16:00 → Holwert). QR-codes via \"E-tickets boot\" onder Handige links.", "owner": "Tim", "url": "https://www.wpd.nl" },
+          { "time": null, "title": "Rick & Ronja laten weten met welke boot we komen", "detail": "Vraag van de eigenaren van het huisje: de caretakers doen de check-in en wonen in Nes, 15 minuten rijden. Nummers staan onder Telefoonnummers.", "owner": "Tim" },
+          { "time": "15:35", "title": "Fietsen ophalen bij Kiewiet", "detail": "Fietsverhuur Kiewiet, vestiging veerdam: direct bij de boot. 7× extra luxe fiets (7 versnellingen, hoog model), 2 t/m 4 oktober. € 154 afrekenen bij het afhalen. Gelijk de bagageservice voor zondag regelen (koffers ophalen bij het huisje); die kosten waarschijnlijk ook meteen afrekenen.", "location": "Oude Steiger 1, 9163 GV Nes" },
+          { "time": "16:45", "title": "Aankomst huisje Sela", "detail": "Aankomst kan vanaf 16:00. Na de boot (15:35) fietsen ophalen en ca. 45 minuten fietsen naar Hollum, dus waarschijnlijk rond 16:45. Rick en Ronja (caretakers) geven een korte rondleiding + uitleg (waarschijnlijk 20–30 minuten). Bedden zijn opgemaakt en handdoeken liggen klaar.", "location": "Bliekeduun 6, 9161 CP Hollum", "owner": "Peter & Tim" },
           { "time": null, "title": "Boodschappen bij de PLUS", "detail": "Gelijk na aankomst.", "location": "Olfert Pieter Lapstraat 4, 9161 BV Hollum", "owner": "Tim" },
-          { "time": null, "title": "Eten bestellen bij Il Vulcano", "detail": "Gelijk meenemen?", "url": "http://www.ilvulcano.nl/", "owner": "Peter" },
+          { "time": null, "title": "Eten bestellen bij Il Vulcano", "detail": "Online bestellen wanneer het ons uitkomt.", "url": "http://www.ilvulcano.nl/", "owner": "Peter" },
           { "time": "19:00", "title": "Avondprogramma", "detail": "Helemaal niks. Waarschijnlijk rond 19:00 klaar met eten, daarna spelletjes enzo.", "owner": "Niemand", "chapterId": "spelletjes" }
         ]
       },
@@ -186,11 +186,11 @@
         "label": "Zaterdag 3 oktober",
         "items": [
           { "time": "07:15", "title": "Vroeg uit de veren", "detail": "Ontbijten tot 08:30, klaarmaken en uiterlijk 08:45 weg.", "owner": "Tim" },
-          { "time": "09:15", "title": "Blokarten", "detail": "09:15 aanwezig, 09:30 start, rond 10:30 klaar.", "location": "Westerpad 1A, 9163 KM Nes", "owner": "Tim", "chapterId": "blokarten" },
+          { "time": "09:15", "title": "Blokarten", "detail": "Bij Ameland Adventure, melden op het Westerpad 1A. 09:15 aanwezig, 09:30 start, rond 10:30 klaar. Al betaald: € 245 voor 7 personen (factuur 1-78064-86397, klantnummer K86397).", "location": "Westerpad 1A, 9163 KM Nes", "url": "https://www.amelandadventure.nl", "owner": "Tim", "chapterId": "blokarten" },
           { "time": null, "title": "Vroeg lunchen in het huisje" },
-          { "time": "12:30", "title": "Amelander Bierbrouwerij", "detail": "Rondleiding van 60–75 minuten. Daarna drinken bij de brouwerij en dan richting huis.", "location": "Smitteweg 6, 9162 EC Ballum", "owner": "Tim", "chapterId": "brouwerij" },
+          { "time": "12:30", "title": "Amelander Bierbrouwerij", "detail": "We sluiten aan bij een groep die om 12:30 een rondleiding heeft (afgesproken met Doeke en Eva Visser). Rondleiding van 60–75 minuten. Daarna drinken bij de brouwerij en dan richting huis. Rondleiding is al betaald. Contact: info@amelanderbier.nl.", "location": "Smitteweg 6, 9162 EC Ballum", "url": "https://www.amelanderbier.nl", "owner": "Tim", "chapterId": "brouwerij" },
           { "time": null, "title": "Chillen bij het huis", "detail": "Geen verder programma." },
-          { "time": "18:30", "title": "Eten bij De Welvaart", "detail": "Menukaart van De Welvaart vooraf bekijken.", "location": "Burenlaan 4, 9161 AK Hollum", "url": "https://dewelvaartameland.nl/menukaart/", "owner": "Tim", "chapterId": "uit eten" },
+          { "time": "18:30", "title": "Eten bij De Welvaart", "detail": "Reservering bevestigd: zaterdag 3 oktober, 18:30, 7 personen, op naam van Tim van der Wal. Wijzigen of annuleren via de knop \"Reservering beheren\" in de bevestigingsmail. Menukaart vooraf bekijken.", "location": "Burenlaan 4, 9161 AK Hollum", "url": "https://dewelvaartameland.nl/menukaart/", "owner": "Tim", "chapterId": "uit eten" },
           { "time": null, "title": "Kijken waar het schip strandt", "owner": "Ieder voor zich en god voor ons allen" }
         ]
       },
@@ -198,24 +198,54 @@
         "label": "Zondag 4 oktober",
         "items": [
           { "time": "08:30", "title": "Later uit de veren", "detail": "Uiterlijk 08:30 op. Ontbijten kan tot 10:30." },
-          { "time": "09:00", "title": "Bagage klaar", "detail": "Koffers worden opgehaald, bagage klaar rond 9 à 10 uur.", "owner": "Peter" },
-          { "time": "11:00", "title": "Uitchecken", "detail": "Uiterlijk 11:00.", "location": "Bliekeduun 6, 9161 CP Hollum", "owner": "Peter & Tim", "chapterId": "uitchecken" },
-          { "time": "11:30", "title": "Duinexcursie", "detail": "11:30–14:00. € 140 contant afrekenen.", "location": "Jan Roepespad 1, 9161 AM Hollum", "owner": "Peter", "chapterId": "zondag" },
+          { "time": "09:00", "title": "Bagage klaar", "detail": "Koffers worden opgehaald door de bagageservice van fietsverhuur Kiewiet (geregeld bij het afhalen van de fietsen op vrijdag). Bagage klaar rond 9 à 10 uur.", "owner": "Peter" },
+          { "time": "11:00", "title": "Uitchecken", "detail": "Uiterlijk 11:00 (check-out gaat via Rick en Ronja). Later kan soms in overleg, als er geen gasten na ons komen. Gebruikte wijnen uit het huis aanvullen voor vertrek (zie Het huisje).", "location": "Bliekeduun 6, 9161 CP Hollum", "owner": "Peter & Tim", "chapterId": "uitchecken" },
+          { "time": "11:30", "title": "Duinexcursie", "detail": "Met dé Amelander Strandjutter Harmen Wijnberg, 11:30–14:00. € 140 contant afrekenen. Nummer staat onder Telefoonnummers.", "location": "Jan Roepespad 1, 9161 AM Hollum", "owner": "Peter", "chapterId": "zondag" },
           { "time": "14:00", "title": "Richting veerboot of eiland ontdekken", "detail": "Na 14:00 klaar. Richting veerboot, of verder het eiland ontdekken.", "owner": "Tim" },
-          { "time": "15:20", "title": "Bij de veerboot + fietsen inleveren", "detail": "Uiterlijk 15:20 bij de veerboot. Fietsen inleveren op dit adres.", "location": "Oude Steiger 1, 9163 GV Nes", "owner": "Peter & Tim" },
+          { "time": "15:20", "title": "Bij de veerboot + fietsen inleveren", "detail": "Uiterlijk 15:20 bij de veerboot. Fietsen inleveren bij Kiewiet, vestiging veerdam (direct bij de boot).", "location": "Oude Steiger 1, 9163 GV Nes", "owner": "Peter & Tim" },
           { "time": "16:00", "title": "Veerboot terug", "detail": "Vertrek vanaf Nes, aankomst Holwert ca. 16:50 (overtocht ca. 50 minuten).", "location": "Grândyk 2B, 9151 AE Holwert", "chapterId": "terug" },
           { "time": "17:15", "title": "Eten onderweg", "detail": "Gewoon langs de weg — maar waar? Nog uitzoeken.", "owner": "Peter & Tim" }
         ]
       }
     ],
     "notes": [
-      "Ter plekke afrekenen: fietsen € 154, duinexcursie € 140 (contant!)."
+      "Ter plekke afrekenen: fietsen € 154 en waarschijnlijk de bagageservice (bij het afhalen), duinexcursie € 140 (contant!).",
+      "Al betaald: blokarten € 245 en de rondleiding bij de brouwerij."
+    ],
+    "contacts": [
+      { "label": "Alarmnummer", "phone": "112", "note": "Politie, ambulance, brandweer" },
+      { "label": "Huisarts Lappenschaar", "phone": "0519-554175" },
+      { "label": "Huisarts Maters", "phone": "0519-542018" },
+      { "label": "Fietsverhuur Kiewiet", "phone": "0519-542130", "note": "Fietsen (veerdam) en bagageservice" },
+      { "label": "Amelander Bierbrouwerij", "phone": "0519-554365", "note": "Rondleiding zaterdag 12:30. Zij hebben het nummer van Tim" },
+      { "label": "Taxi Cosi Tax", "phone": "0519-543200", "note": "Vaste tarieven per persoon, van dorp naar dorp" }
+    ],
+    "infoBlocks": [
+      {
+        "label": "Het huisje (Sela)",
+        "items": [
+          "Keuken: de Quooker geeft kokend water met \"double push turn\": de ronde knop twee keer indrukken en bij de tweede keer tegen de klok in draaien. Terugdraaien = uit.",
+          "Jura-koffiemachine met melkschuimer; de handleiding ligt in het kastje rechtsboven de Jura.",
+          "De keukenlades zijn dubbeldeks (er zit nog een lade boven). Snijplanken liggen in de bovenste lade naast het fornuis: niet op het aanrechtblad snijden.",
+          "Vaatwasser: eerst het filter checken op etensresten, anders verstopping of foutmeldingen.",
+          "Eten en drinken in huis: gebruik en vul in redelijkheid aan. Gebruikte wijnen aanvullen met dezelfde fles, te koop bij Wijnen van Egbert in het centrum van Hollum (€ 16–38).",
+          "Verwarming: vloerverwarming beneden, thermostaat naast de keuken. De haard heeft een handleiding eraan en gaat niet vanzelf uit.",
+          "Kelder: Finse sauna. Max. 2 scheppen water per kwartier, op een handdoek zitten, en na gebruik uitzetten (gaat niet vanzelf uit). Ook een zonnebank (18+).",
+          "Badkamers: ventilatie aan/uit met 'RFT' op het display. Geen natte handdoeken op het teakhout laten liggen. Geelbruin kraanwater is duinwater en gewoon drinkbaar.",
+          "Wasmachine en droger zijn er; zo min mogelijk zand en schelpen meewassen.",
+          "Afval: papier en restafval apart. Volle zakken niet op het terras (meeuwen), maar naar de ondergrondse containers aan de hoofdstraat; daar staan ook glasbakken.",
+          "Huisregels: niet roken in huis, geen balspellen in huis of tuin (daar is het duin voor), geen huisdieren. Gaat er iets kapot, dan even melden.",
+          "Sonos-boxen bedienen met de Sonos-app via de wifi."
+        ]
+      }
     ],
     "links": [
       { "label": "Wagenborg Passagiersdiensten", "url": "https://www.wpd.nl", "note": "Boot Holwert ⇄ Ameland: dienstregeling en tickets" },
       { "label": "Il Vulcano", "url": "http://www.ilvulcano.nl/", "note": "Eten bestellen vrijdagavond" },
       { "label": "Menukaart De Welvaart", "url": "https://dewelvaartameland.nl/menukaart/", "note": "Zaterdagavond 18:30" },
-      { "label": "Buienradar", "url": "https://www.buienradar.nl", "note": "Weer checken voor het blokarten en de duinen" }
+      { "label": "Buienradar", "url": "https://www.buienradar.nl", "note": "Weer checken voor het blokarten en de duinen" },
+      { "label": "Ameland Adventure", "url": "https://www.amelandadventure.nl", "note": "Blokarten zaterdag 09:30" },
+      { "label": "Amelander Bierbrouwerij", "url": "https://www.amelanderbier.nl", "note": "Rondleiding zaterdag 12:30" }
     ]
   }
 }
