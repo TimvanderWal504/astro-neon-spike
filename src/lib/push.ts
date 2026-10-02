@@ -43,9 +43,8 @@ export type PushFanOutResult = {
 export async function sendChapterUnlockedPush(
   tripSlug: string,
   chapterTitle: string,
-  chapterId: string,
 ): Promise<void> {
-  await fanOutPush(tripSlug, 'Nieuwe update beschikbaar!', chapterTitle, chapterId);
+  await fanOutPush(tripSlug, 'Nieuwe update beschikbaar!', chapterTitle);
 }
 
 export type PublicNotification = {
@@ -53,8 +52,6 @@ export type PublicNotification = {
   title: string;
   body: string;
   createdAt: string;
-  /** Server-side only: lets the API drop the entry if its chapter is locked again. */
-  chapterId: string | null;
 };
 
 /** Latest notifications for a trip, newest first (shown on the public page). */
@@ -64,16 +61,15 @@ export async function listNotifications(
 ): Promise<PublicNotification[]> {
   const sql = getSql();
   const rows = (await sql`
-    SELECT id, title, body, chapter_id, created_at FROM notifications
+    SELECT id, title, body, created_at FROM notifications
     WHERE trip_slug = ${tripSlug}
     ORDER BY created_at DESC, id DESC
     LIMIT ${limit}
-  `) as { id: string | number; title: string; body: string; chapter_id: string | null; created_at: Date | string }[];
+  `) as { id: string | number; title: string; body: string; created_at: Date | string }[];
   return rows.map((row) => ({
     id: Number(row.id),
     title: row.title,
     body: row.body,
-    chapterId: row.chapter_id,
     createdAt: new Date(row.created_at).toISOString(),
   }));
 }
@@ -82,13 +78,12 @@ async function recordNotification(
   tripSlug: string,
   title: string,
   body: string,
-  chapterId: string | null,
 ): Promise<void> {
   try {
     const sql = getSql();
     await sql`
-      INSERT INTO notifications (trip_slug, title, body, chapter_id)
-      VALUES (${tripSlug}, ${title}, ${body}, ${chapterId})
+      INSERT INTO notifications (trip_slug, title, body)
+      VALUES (${tripSlug}, ${title}, ${body})
     `;
   } catch (err) {
     // Logging the notification must never block the push itself.
@@ -108,14 +103,14 @@ export async function sendCustomNotification(
   title: string,
   body: string,
 ): Promise<PushFanOutResult> {
-  return fanOutPush(tripSlug, title, body);
+  return fanOutPush(tripSlug, title, body, { record: true });
 }
 
 async function fanOutPush(
   tripSlug: string,
   title: string,
   body: string,
-  chapterId: string | null = null,
+  { record = false }: { record?: boolean } = {},
 ): Promise<PushFanOutResult> {
   const privateJWK = process.env.VAPID_PRIVATE_KEY;
   if (!privateJWK?.trim()) {
@@ -123,9 +118,10 @@ async function fanOutPush(
     return { sent: 0, failed: 0, total: 0, error: 'not-configured' };
   }
 
-  // Recorded before sending so it shows on the page even for guests who
-  // never subscribed to push (or whose delivery fails).
-  await recordNotification(tripSlug, title, body, chapterId);
+  // Only admin-authored notifications are shown on the page (not the
+  // automatic chapter-unlock push). Recorded before sending so it shows
+  // even if delivery to some devices fails.
+  if (record) await recordNotification(tripSlug, title, body);
 
   let rows: StoredSubscription[];
   try {
