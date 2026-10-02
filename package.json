@@ -10,6 +10,7 @@
   "scripts": {
     "dev": "astro dev",
     "build": "astro build",
+    "vercel-build": "if [ \"$VERCEL_ENV\" = production ]; then node scripts/migrate.mjs; fi && astro build",
     "preview": "astro preview",
     "typecheck": "astro check",
     "migrate": "node scripts/migrate.mjs"
