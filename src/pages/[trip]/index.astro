@@ -887,6 +887,56 @@ const vapidPublicKey = import.meta.env.VAPID_PUBLIC_KEY ?? '';
         color: #c9c6bc;
       }
 
+      /* MELDINGEN — small blocks, one per notification sent. Same border/
+         surface language as .update-banner and .notify-toggle. */
+      .meldingen {
+        margin: 32px auto 0;
+        padding: 0 16px;
+        max-width: 460px;
+      }
+      .meldingen[hidden] {
+        display: none;
+      }
+      .meldingen-title {
+        margin: 0 0 12px;
+        font-size: 14px;
+        font-weight: 600;
+        color: #c9c6bc;
+      }
+      .meldingen-list {
+        list-style: none;
+        margin: 0;
+        padding: 0;
+        display: flex;
+        flex-direction: column;
+        gap: 8px;
+      }
+      .melding {
+        padding: 10px 14px;
+        border-radius: 10px;
+        border: 1px solid rgba(244, 241, 234, 0.18);
+        border-left: 3px solid var(--accent);
+        background: rgba(10, 13, 12, 0.6);
+        color: #f4f1ea;
+      }
+      .melding-title {
+        margin: 0;
+        font-size: 13px;
+        font-weight: 600;
+        line-height: 1.4;
+      }
+      .melding-body {
+        margin: 2px 0 0;
+        font-size: 13px;
+        line-height: 1.45;
+        color: #c9c6bc;
+      }
+      .melding-time {
+        margin: 6px 0 0;
+        font-size: 11px;
+        color: #8d8a80;
+      }
+
       /* UPDATE-MELDING — shown once /version.json reports a newer build
          than this page was made from (see checkForUpdate in the script).
          No mockup for this either; built from the same pieces as
@@ -2473,6 +2523,14 @@ c-22 -1 -33 -6 -33 -16 0 -8 -9 -15 -20 -15 -22 0 -26 -20 -8 -38 7 -7 9 -12
       </div>
     </section>
 
+    <!-- MELDINGEN — every notification sent for this trip, as small blocks.
+         Filled by loadTripState; hidden while there are none. Text is set
+         via textContent only (admin-authored, but never trusted as HTML). -->
+    <section class="meldingen" id="meldingen" aria-label="Meldingen" hidden>
+      <h2 class="meldingen-title">Meldingen</h2>
+      <ul class="meldingen-list" id="meldingen-list"></ul>
+    </section>
+
     <!-- CHAPTER SLOTS — only id/order/kind drive this markup. Each slot
          stays display:none (see .chapter-slot) until client-side JS adds
          .is-unlocked, so a locked chapter has no visible trace at all —
@@ -2745,12 +2803,48 @@ c-22 -1 -33 -6 -33 -16 0 -8 -9 -15 -20 -15 -22 0 -26 -20 -8 -38 7 -7 9 -12
       // Merge real content into unlocked chapter slots via the redacted
       // trip-state API (AD-2). Locked chapters are never touched — they
       // stay display:none (see .chapter-slot), invisible until unlocked.
+      type NotificationItem = { id: number; title: string; body: string; createdAt: string };
+
+      function renderNotifications(items: NotificationItem[]): void {
+        const section = document.getElementById('meldingen');
+        const list = document.getElementById('meldingen-list');
+        if (!(section instanceof HTMLElement) || !(list instanceof HTMLElement)) return;
+
+        const formatter = new Intl.DateTimeFormat('nl-NL', {
+          day: 'numeric',
+          month: 'short',
+          hour: '2-digit',
+          minute: '2-digit',
+        });
+
+        list.replaceChildren(
+          ...items.map((item) => {
+            const li = document.createElement('li');
+            li.className = 'melding';
+            const title = document.createElement('p');
+            title.className = 'melding-title';
+            title.textContent = item.title;
+            const body = document.createElement('p');
+            body.className = 'melding-body';
+            body.textContent = item.body;
+            const time = document.createElement('p');
+            time.className = 'melding-time mono';
+            time.textContent = formatter.format(new Date(item.createdAt));
+            li.append(title, body, time);
+            return li;
+          }),
+        );
+        section.hidden = items.length === 0;
+      }
+
       async function loadTripState(): Promise<void> {
         if (!tripSlug) return;
         try {
           const res = await fetch(`/api/trip/${encodeURIComponent(tripSlug)}`);
           const payload = await res.json();
           if (!payload.ok) return;
+
+          renderNotifications(payload.data?.notifications ?? []);
 
           const chapters = payload.data?.chapters ?? [];
           for (const chapter of chapters) {

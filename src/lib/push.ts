@@ -43,8 +43,57 @@ export type PushFanOutResult = {
 export async function sendChapterUnlockedPush(
   tripSlug: string,
   chapterTitle: string,
+  chapterId: string,
 ): Promise<void> {
-  await fanOutPush(tripSlug, 'Nieuwe update beschikbaar!', chapterTitle);
+  await fanOutPush(tripSlug, 'Nieuwe update beschikbaar!', chapterTitle, chapterId);
+}
+
+export type PublicNotification = {
+  id: number;
+  title: string;
+  body: string;
+  createdAt: string;
+  /** Server-side only: lets the API drop the entry if its chapter is locked again. */
+  chapterId: string | null;
+};
+
+/** Latest notifications for a trip, newest first (shown on the public page). */
+export async function listNotifications(
+  tripSlug: string,
+  limit = 20,
+): Promise<PublicNotification[]> {
+  const sql = getSql();
+  const rows = (await sql`
+    SELECT id, title, body, chapter_id, created_at FROM notifications
+    WHERE trip_slug = ${tripSlug}
+    ORDER BY created_at DESC, id DESC
+    LIMIT ${limit}
+  `) as { id: string | number; title: string; body: string; chapter_id: string | null; created_at: Date | string }[];
+  return rows.map((row) => ({
+    id: Number(row.id),
+    title: row.title,
+    body: row.body,
+    chapterId: row.chapter_id,
+    createdAt: new Date(row.created_at).toISOString(),
+  }));
+}
+
+async function recordNotification(
+  tripSlug: string,
+  title: string,
+  body: string,
+  chapterId: string | null,
+): Promise<void> {
+  try {
+    const sql = getSql();
+    await sql`
+      INSERT INTO notifications (trip_slug, title, body, chapter_id)
+      VALUES (${tripSlug}, ${title}, ${body}, ${chapterId})
+    `;
+  } catch (err) {
+    // Logging the notification must never block the push itself.
+    console.error('fanOutPush: failed to record notification', err);
+  }
 }
 
 /**
@@ -66,12 +115,17 @@ async function fanOutPush(
   tripSlug: string,
   title: string,
   body: string,
+  chapterId: string | null = null,
 ): Promise<PushFanOutResult> {
   const privateJWK = process.env.VAPID_PRIVATE_KEY;
   if (!privateJWK?.trim()) {
     console.error('fanOutPush: VAPID_PRIVATE_KEY is not set; skipping push fan-out.');
     return { sent: 0, failed: 0, total: 0, error: 'not-configured' };
   }
+
+  // Recorded before sending so it shows on the page even for guests who
+  // never subscribed to push (or whose delivery fails).
+  await recordNotification(tripSlug, title, body, chapterId);
 
   let rows: StoredSubscription[];
   try {

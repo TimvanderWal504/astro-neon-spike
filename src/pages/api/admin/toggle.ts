@@ -78,7 +78,7 @@ export const POST: APIRoute = async ({ request, cookies }) => {
     // completes; a send failure is logged but never fails this response.
     if (result.previousUnlocked !== true && result.unlocked === true) {
       try {
-        await sendChapterUnlockedPush(tripSlug, chapter.title);
+        await sendChapterUnlockedPush(tripSlug, chapter.title, chapter.id);
       } catch (err) {
         console.error('admin/toggle: push fan-out failed:', err);
       }
